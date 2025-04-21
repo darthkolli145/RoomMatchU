@@ -52,3 +52,57 @@ export default tseslint.config({
   },
 })
 ```
+
+# RoomMatchU
+
+RoomMatchU is a web application for finding roommate groups. It allows users to browse listings, search for roommates, and match based on compatibility questionnaires.
+
+## Features
+
+- Browse property listings
+- Find roommates based on compatibility
+- User authentication with Google
+- Create and manage listings
+- Chat with potential roommates
+
+## Environment Setup
+
+This project uses environment variables to store Firebase configuration. Follow these steps to set up your environment:
+
+1. Copy the `.env.example` file to create a new `.env` file:
+   ```
+   cp .env.example .env
+   ```
+
+2. Fill in your Firebase project details in the `.env` file:
+   ```
+   VITE_FIREBASE_API_KEY=your_actual_api_key
+   VITE_FIREBASE_AUTH_DOMAIN=your-project-id.firebaseapp.com
+   VITE_FIREBASE_PROJECT_ID=your-project-id
+   VITE_FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
+   VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+   VITE_FIREBASE_APP_ID=your_app_id
+   ```
+
+3. Never commit your `.env` file to the repository as it contains sensitive information.
+
+## Getting Started
+
+To run the development server:
+
+```bash
+npm run dev
+```
+
+To build for production:
+
+```bash
+npm run build
+```
+
+## Tech Stack
+
+- React with TypeScript
+- Firebase (Authentication, Firestore, Hosting)
+- React Router for navigation
+- Vite for development and building
