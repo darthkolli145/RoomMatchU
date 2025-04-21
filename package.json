@@ -1,0 +1,11 @@
+{
+  "name": "roommatchu-root",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "cd RoomMatchU && npx vite",
+    "build": "cd RoomMatchU && npm run build",
+    "preview": "cd RoomMatchU && npm run preview"
+  }
+} 
