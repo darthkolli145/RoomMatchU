@@ -217,65 +217,67 @@ export default function Home() {
         </div>
       )}
 
-      <section className="listings-section">
-        <div className="section-header">
-          <h2>New Listings!</h2>
-          <Link to="/listings" className="see-more-link">See More</Link>
-        </div>
-        <div className="listings-grid">
-          {newListings.length > 0 ? (
-            newListings.map(listing => (
-              <ListingCard 
-                key={listing.id} 
-                listing={listing}
-                onFavorite={handleFavorite}
-              />
-            ))
-          ) : (
-            <div className="no-listings">No listings found</div>
-          )}
-        </div>
-      </section>
+      <div className="sections-container">
+        <section className="listings-section">
+          <div className="section-header">
+            <h2>New Listings!</h2>
+            <Link to="/listings" className="see-more-link">See More</Link>
+          </div>
+          <div className="listings-grid home-grid">
+            {newListings.length > 0 ? (
+              newListings.map(listing => (
+                <ListingCard 
+                  key={listing.id} 
+                  listing={listing}
+                  onFavorite={handleFavorite}
+                />
+              ))
+            ) : (
+              <div className="no-listings">No listings found</div>
+            )}
+          </div>
+        </section>
 
-      <section className="listings-section">
-        <div className="section-header">
-          <h2>Looking for Roommates?</h2>
-          <Link to="/roommates" className="see-more-link">See More</Link>
-        </div>
-        <div className="listings-grid">
-          {roommateListings.length > 0 ? (
-            roommateListings.map(listing => (
-              <ListingCard 
-                key={listing.id} 
-                listing={listing}
-                onFavorite={handleFavorite}
-              />
-            ))
-          ) : (
-            <div className="no-listings">No roommate listings found</div>
-          )}
-        </div>
-      </section>
+        <section className="listings-section">
+          <div className="section-header">
+            <h2>Looking for Roommates?</h2>
+            <Link to="/roommates" className="see-more-link">See More</Link>
+          </div>
+          <div className="listings-grid home-grid">
+            {roommateListings.length > 0 ? (
+              roommateListings.map(listing => (
+                <ListingCard 
+                  key={listing.id} 
+                  listing={listing}
+                  onFavorite={handleFavorite}
+                />
+              ))
+            ) : (
+              <div className="no-listings">No roommate listings found</div>
+            )}
+          </div>
+        </section>
 
-      <section className="listings-section">
-        <div className="section-header">
-          <h2>Based on Questionnaire</h2>
-          <Link to="/matches" className="see-more-link">See More</Link>
-        </div>
-        <div className="listings-grid">
-          {matchedListings.length > 0 ? (
-            matchedListings.map(listing => (
-              <ListingCard 
-                key={listing.id} 
-                listing={listing}
-                onFavorite={handleFavorite}
-              />
-            ))
-          ) : (
-            <div className="no-listings">No matched listings found</div>
-          )}
-        </div>
-      </section>
+        <section className="listings-section">
+          <div className="section-header">
+            <h2>Based on Questionnaire</h2>
+            <Link to="/matches" className="see-more-link">See More</Link>
+          </div>
+          <div className="listings-grid home-grid">
+            {matchedListings.length > 0 ? (
+              matchedListings.map(listing => (
+                <ListingCard 
+                  key={listing.id} 
+                  listing={listing}
+                  onFavorite={handleFavorite}
+                />
+              ))
+            ) : (
+              <div className="no-listings">No matched listings found</div>
+            )}
+          </div>
+        </section>
+      </div>
     </div>
   );
 } 
