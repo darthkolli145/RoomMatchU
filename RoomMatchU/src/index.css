@@ -408,13 +408,59 @@ input:focus, select:focus, textarea:focus {
   color: var(--text-secondary);
 }
 
+.post-listing-page {
+  max-width: 600px;
+  margin: 50px auto;
+  padding: 20px;
+  background-color: #f8f9fa; /* light background for the form section */
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
 
-.nav-link {
+.post-listing-page h1 {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.post-listing-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* space between each field */
+}
+
+.post-listing-form label {
+  display: flex;
+  flex-direction: column;
+  font-weight: bold;
+  color: #333;
+}
+
+.post-listing-form input,
+.post-listing-form textarea,
+.post-listing-form select {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.post-listing-form textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.post-listing-form button {
+  background-color: #4CAF50;
   color: white;
-  margin-left: 15px;
-  text-decoration: none;
+  border: none;
+  padding: 12px;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
-.nav-link:hover {
-  text-decoration: underline;
+.post-listing-form button:hover {
+  background-color: #45a049;
 }
+
