@@ -12,11 +12,9 @@ export default function Navbar() {
         <Link to="/" className="navbar-brand">RoomMatchU</Link>
       </div>
       <div className="navbar-right">
-      
-        <Link to="/post-listing" className="nav-link">Post A Listing</Link>
-        {currentUser ? (
+              {currentUser ? (
           <>
-            <Link to="/create-listing" className="icon-btn">
+            <Link to="/post-listing" className="icon-btn">
               <span className="material-icon">add</span>
             </Link>
             <Link to="/favorites" className="icon-btn">
