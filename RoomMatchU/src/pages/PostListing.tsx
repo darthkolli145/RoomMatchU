@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { postListing } from '../firebase/firebaseHelpers';
 
 export default function PostListing() {
   const [formData, setFormData] = useState({
@@ -16,10 +17,16 @@ export default function PostListing() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    alert('Listing submitted! (connect to firebase later)');
+    try {
+      const listingId = await postListing(formData);
+      alert(`Listing submitted! ID: ${listingId}`);
+      console.log('Successfully posted:', listingId);
+    } catch (error) {
+      console.error('Failed to submit listing:', error);
+      alert('Failed to submit listing. Check console for details.');
+    }
   };
 
   return (
