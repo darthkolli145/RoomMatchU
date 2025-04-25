@@ -62,8 +62,8 @@ input:focus, select:focus, textarea:focus {
 
 .content {
   flex: 1;
-  padding: 20px;
-  max-width: 1200px;
+  padding: 0px;
+  max-width: 1500px;
   margin: 0 auto;
   width: 100%;
 }
@@ -188,6 +188,32 @@ input:focus, select:focus, textarea:focus {
   color: var(--text-secondary);
 }
 
+.sections-container {
+  display: flex;
+  gap: 20px;                     /* 20px between containers */
+  justify-content: space-between;
+  flex-wrap: wrap;               /* Allows stacking on smaller screens */
+  margin: 0 0px;                /* 20px from screen edges */
+  box-sizing: border-box;
+}
+
+.sections-container .listings-section {
+  flex: 1 1 0;                   /* Grow and shrink evenly */
+  min-width: 300px;             /* Prevents them from shrinking too small */
+  background-color: var(--card-color);
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+}
+
+/* Optional: make it responsive (stack on small screens) */
+@media (max-width: 900px) {
+  .sections-container {
+    flex-direction: column;
+  }
+}
+
 .listings-section {
   margin: 40px 0;
 }
@@ -206,14 +232,21 @@ input:focus, select:focus, textarea:focus {
 
 .listings-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
+  gap: 10px;
+}
+
+.home-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.listings-page-grid {
+  grid-template-columns: repeat(3, 1fr);
 }
 
 /* Listing Card */
 .listing-card {
   background-color: var(--card-color);
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s, box-shadow 0.2s;
@@ -279,18 +312,17 @@ input:focus, select:focus, textarea:focus {
 }
 
 .listing-details {
-  padding: 15px;
+  padding: 2px;
 }
 
 .listing-title {
-  font-size: 1.1rem;
-  margin-bottom: 5px;
+  font-size: 1rem;
 }
 
 .listing-location, .listing-info {
   color: var(--text-secondary);
-  font-size: 0.9rem;
-  margin-bottom: 5px;
+  font-size: 0.8rem;
+  margin-bottom: 3px;
 }
 
 /* Listings Page */
@@ -375,3 +407,60 @@ input:focus, select:focus, textarea:focus {
   font-size: 1.2rem;
   color: var(--text-secondary);
 }
+
+.post-listing-page {
+  max-width: 600px;
+  margin: 50px auto;
+  padding: 20px;
+  background-color: #f8f9fa; /* light background for the form section */
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.post-listing-page h1 {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.post-listing-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* space between each field */
+}
+
+.post-listing-form label {
+  display: flex;
+  flex-direction: column;
+  font-weight: bold;
+  color: #333;
+}
+
+.post-listing-form input,
+.post-listing-form textarea,
+.post-listing-form select {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.post-listing-form textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.post-listing-form button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.post-listing-form button:hover {
+  background-color: #45a049;
+}
+

@@ -232,7 +232,7 @@ export default function Listings() {
             <p>{filteredListings.length} listings found</p>
           </div>
           
-          <div className="listings-grid">
+          <div className="listings-grid listings-page-grid">
             {filteredListings.length > 0 ? (
               filteredListings.map(listing => (
                 <ListingCard 
