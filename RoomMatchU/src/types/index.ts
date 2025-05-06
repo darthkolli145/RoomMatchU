@@ -7,12 +7,27 @@ export type User = {
 };
 
 export type UserQuestionnaire = {
+  fullname: string[];
   lifestyle: string[];
   cleanliness: string;
   noiseLevel: string;
   sleepSchedule: string;
+  yearlvl: string;
   visitors: string;
-  sharing: string[];
+  Gender: string;
+  sharing: string[],
+  Hobbies: string[];
+  email: string[];
+  Major: string[];
+  wakeupSchedule: string;
+  roommateCleanliness: string;
+  okvisitors: string;
+  overnightGuests: string;
+  studySpot: string;
+  pets: string;
+  okPets: string;
+  prefGender: string;
+  dealMust: string[]
 };
 
 export type ListingType = {

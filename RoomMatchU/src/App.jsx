@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Listings from './pages/Listings';
 import PostListing from './pages/PostListing';
+import Questionnaire from './pages/Questionnaire';
 import './App.css';
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/listings" element={<Listings />} />
               <Route path="/post-listing" element={<PostListing />} />
+              <Route path="/questionnaire" element={<Questionnaire />} />
               {/* Add more routes as you build additional pages */}
             </Routes>
           </main>
