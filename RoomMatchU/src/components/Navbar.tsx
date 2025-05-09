@@ -39,8 +39,10 @@ export default function Navbar() {
               </button>
               {showUserMenu && (
                 <div className="user-menu">
+                  <Link to="/questionnaire">Questionnaire</Link>
                   <Link to="/profile">View Profile</Link>
                   <Link to="/settings">Settings</Link>
+
                   <button onClick={signOut}>Sign Out</button>
                 </div>
               )}
