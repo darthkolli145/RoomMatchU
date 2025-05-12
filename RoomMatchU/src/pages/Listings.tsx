@@ -195,8 +195,17 @@ export default function Listings() {
   };
 
   const handleFavorite = (listingId: string) => {
-    console.log('Favorited listing:', listingId);
-    // In a real app, this would add/remove the listing from favorites in Firestore
+    let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+
+    if (favorites.includes(listingId)) {
+      favorites = favorites.filter((id: string) => id !== listingId);
+    } else {
+      favorites.push(listingId);
+    }
+
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+    console.log('Updated favorites:', favorites);
+      // In a real app, this would add/remove the listing from favorites in Firestore
   };
 
   if (loading) {
@@ -234,13 +243,21 @@ export default function Listings() {
           
           <div className="listings-grid listings-page-grid">
             {filteredListings.length > 0 ? (
-              filteredListings.map(listing => (
-                <ListingCard 
-                  key={listing.id} 
-                  listing={listing}
-                  onFavorite={handleFavorite}
-                />
-              ))
+              (() => {
+                const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+
+                return filteredListings.map(listing => {
+                  const isFavorited = favorites.includes(listing.id);
+                  return (
+                    <ListingCard 
+                      key={listing.id} 
+                      listing={listing}
+                      isFavorited={isFavorited}
+                      onFavorite={handleFavorite}
+                    />
+                  );
+                });
+              })()
             ) : (
               <div className="no-listings">
                 <p>No listings found matching your criteria.</p>

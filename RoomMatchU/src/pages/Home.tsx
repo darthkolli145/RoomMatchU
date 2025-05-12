@@ -178,7 +178,15 @@ export default function Home() {
   };
 
   const handleFavorite = (listingId: string) => {
-    console.log('Favorited listing:', listingId);
+    let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+
+    if (favorites.includes(listingId)) {
+      favorites = favorites.filter((id: string) => id !== listingId);
+    } else {
+      favorites.push(listingId);
+    }
+
+    localStorage.setItem('favorites', JSON.stringify(favorites));
     // In a real app, this would add/remove the listing from favorites in Firestore
   };
 
@@ -225,13 +233,21 @@ export default function Home() {
           </div>
           <div className="listings-grid home-grid">
             {newListings.length > 0 ? (
-              newListings.map(listing => (
-                <ListingCard 
-                  key={listing.id} 
-                  listing={listing}
-                  onFavorite={handleFavorite}
-                />
-              ))
+              (() => {
+                const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+
+                return newListings.map(listing => {
+                  const isFavorited = favorites.includes(listing.id);
+                  return (
+                    <ListingCard 
+                      key={listing.id} 
+                      listing={listing}
+                      isFavorited={isFavorited}
+                      onFavorite={handleFavorite}
+                    />
+                  );
+                });
+              })()
             ) : (
               <div className="no-listings">No listings found</div>
             )}
@@ -245,13 +261,21 @@ export default function Home() {
           </div>
           <div className="listings-grid home-grid">
             {roommateListings.length > 0 ? (
-              roommateListings.map(listing => (
-                <ListingCard 
-                  key={listing.id} 
-                  listing={listing}
-                  onFavorite={handleFavorite}
-                />
-              ))
+              (() => {
+                const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+
+                return roommateListings.map(listing => {
+                  const isFavorited = favorites.includes(listing.id);
+                  return (
+                    <ListingCard 
+                      key={listing.id} 
+                      listing={listing}
+                      isFavorited={isFavorited}
+                      onFavorite={handleFavorite}
+                    />
+                  );
+                });
+              })()
             ) : (
               <div className="no-listings">No roommate listings found</div>
             )}
@@ -265,13 +289,21 @@ export default function Home() {
           </div>
           <div className="listings-grid home-grid">
             {matchedListings.length > 0 ? (
-              matchedListings.map(listing => (
-                <ListingCard 
-                  key={listing.id} 
-                  listing={listing}
-                  onFavorite={handleFavorite}
-                />
-              ))
+              (() => {
+                const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+
+                return matchedListings.map(listing => {
+                  const isFavorited = favorites.includes(listing.id);
+                  return (
+                    <ListingCard 
+                      key={listing.id} 
+                      listing={listing}
+                      isFavorited={isFavorited}
+                      onFavorite={handleFavorite}
+                    />
+                  );
+                });
+              })()
             ) : (
               <div className="no-listings">No matched listings found</div>
             )}
