@@ -10,6 +10,7 @@ import { db } from "./config";
 import { auth } from "./config";
 import { User } from "firebase/auth";
 import { QuestionnaireCategory } from "../types";
+import { UserQuestionnaire } from "../types";
 
 // Input from the PostListing form
 export interface ListingFormData {
@@ -110,4 +111,20 @@ export const fetchListings = async (): Promise<Listing[]> => {
     console.error("Error fetching listings:", error);
     throw error;
   }
+};
+
+
+export const postQuestionnaire = async (questionnaireData: UserQuestionnaire): Promise<string> => {
+  const user = auth.currentUser as User | null;
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
+
+  const docRef = await addDoc(collection(db, "questionnaireResponses"), {
+    ...questionnaireData,
+    userId: user.uid,
+    createdAt: serverTimestamp(),
+  });
+
+  return docRef.id;
 };
