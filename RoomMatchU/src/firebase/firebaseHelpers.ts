@@ -3,15 +3,14 @@ import {
   collection,
   getDocs,
   addDoc,
-  setDoc,
-  deleteDoc,
   serverTimestamp,
-  Timestamp,
-  doc
+  Timestamp
 } from "firebase/firestore";
-import { db, auth } from "./config";
+import { db } from "./config";
+import { auth } from "./config";
 import { User } from "firebase/auth";
 import { QuestionnaireCategory } from "../types";
+import { UserQuestionnaire } from "../types";
 
 // Input from the PostListing form
 export interface ListingFormData {
@@ -114,17 +113,18 @@ export const fetchListings = async (): Promise<Listing[]> => {
   }
 };
 
-// Add a favorite listing
-export const addFavorite = async (listingId: string) => {
-  const user = auth.currentUser;
-  if (!user) throw new Error("User not authenticated");
-  await setDoc(doc(db, `users/${user.uid}/favorites/${listingId}`), { favoritedAt: new Date() });
-};
 
-// Fetch all favorite listing IDs
-export const fetchFavorites = async (): Promise<string[]> => {
-  const user = auth.currentUser;
-  if (!user) throw new Error("User not authenticated");
-  const snapshot = await getDocs(collection(db, `users/${user.uid}/favorites`));
-  return snapshot.docs.map(doc => doc.id);
+export const postQuestionnaire = async (questionnaireData: UserQuestionnaire): Promise<string> => {
+  const user = auth.currentUser as User | null;
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
+
+  const docRef = await addDoc(collection(db, "questionnaireResponses"), {
+    ...questionnaireData,
+    userId: user.uid,
+    createdAt: serverTimestamp(),
+  });
+
+  return docRef.id;
 };
