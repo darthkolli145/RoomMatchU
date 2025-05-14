@@ -3,11 +3,13 @@ import {
   collection,
   getDocs,
   addDoc,
+  setDoc,
+  deleteDoc,
   serverTimestamp,
-  Timestamp
+  Timestamp,
+  doc
 } from "firebase/firestore";
-import { db } from "./config";
-import { auth } from "./config";
+import { db, auth } from "./config";
 import { User } from "firebase/auth";
 import { QuestionnaireCategory } from "../types";
 
@@ -110,4 +112,19 @@ export const fetchListings = async (): Promise<Listing[]> => {
     console.error("Error fetching listings:", error);
     throw error;
   }
+};
+
+// Add a favorite listing
+export const addFavorite = async (listingId: string) => {
+  const user = auth.currentUser;
+  if (!user) throw new Error("User not authenticated");
+  await setDoc(doc(db, `users/${user.uid}/favorites/${listingId}`), { favoritedAt: new Date() });
+};
+
+// Fetch all favorite listing IDs
+export const fetchFavorites = async (): Promise<string[]> => {
+  const user = auth.currentUser;
+  if (!user) throw new Error("User not authenticated");
+  const snapshot = await getDocs(collection(db, `users/${user.uid}/favorites`));
+  return snapshot.docs.map(doc => doc.id);
 };
