@@ -147,3 +147,10 @@ export const fetchFavorites = async () => {
 
   return snapshot.docs.map(doc => doc.id); // listing IDs
 };
+
+// Remove a favorite listing
+export const removeFavorite = async (listingId: string) => {
+  const user = auth.currentUser;
+  if (!user) throw new Error("User not authenticated");
+  await deleteDoc(doc(db, `users/${user.uid}/favorites/${listingId}`));
+};
