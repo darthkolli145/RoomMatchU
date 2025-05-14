@@ -3,11 +3,13 @@ import {
   collection,
   getDocs,
   addDoc,
+  setDoc,
+  deleteDoc,
   serverTimestamp,
-  Timestamp
+  Timestamp,
+  doc
 } from "firebase/firestore";
-import { db } from "./config";
-import { auth } from "./config";
+import { db, auth } from "./config";
 import { User } from "firebase/auth";
 import { QuestionnaireCategory } from "../types";
 import { UserQuestionnaire } from "../types";
@@ -113,7 +115,6 @@ export const fetchListings = async (): Promise<Listing[]> => {
   }
 };
 
-
 export const postQuestionnaire = async (questionnaireData: UserQuestionnaire): Promise<string> => {
   const user = auth.currentUser as User | null;
   if (!user) {
@@ -127,4 +128,22 @@ export const postQuestionnaire = async (questionnaireData: UserQuestionnaire): P
   });
 
   return docRef.id;
+};
+
+export const addFavorite = async (listingId: string) => {
+  const user = auth.currentUser;
+  if (!user) throw new Error("User not authenticated");
+
+  const favRef = doc(db, `users/${user.uid}/favorites/${listingId}`);
+  await setDoc(favRef, { favoritedAt: new Date() });
+};
+
+export const fetchFavorites = async () => {
+  const user = auth.currentUser;
+  if (!user) throw new Error("User not authenticated");
+
+  const favCollection = collection(db, `users/${user.uid}/favorites`);
+  const snapshot = await getDocs(favCollection);
+
+  return snapshot.docs.map(doc => doc.id); // listing IDs
 };
