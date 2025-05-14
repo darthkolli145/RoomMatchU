@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { auth, db } from '../firebase';
+import { auth, db, googleProvider } from '../firebase/config';
 import { User as FirebaseUser, signInWithPopup, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { User, UserQuestionnaire } from '../types';
@@ -79,9 +79,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async () => {
     try {
-      // Replace with your actual sign-in logic
-      console.log('Sign in logic goes here');
-      // Example: await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      await fetchUserData(result.user);
     } catch (error) {
       console.error('Error signing in:', error);
     }
