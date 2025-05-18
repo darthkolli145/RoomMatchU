@@ -4,9 +4,11 @@ import { db, useMockFirebase } from '../firebase';
 import { ListingType } from '../types';
 import ListingCard from '../components/ListingCard';
 import { Link } from 'react-router-dom';
+import { populateWithSampleListings } from '../utils/populateDatabase';
+import { sampleListings } from '../utils/sampleListings'; // Import the sample listings
 
-// Fallback mock data if Firebase query fails
-const fallbackListings = [
+// Fallback mock data with required tags - only used if sample listings fail
+const fallbackListings: ListingType[] = [
   {
     id: 'listing-1',
     title: 'Beautiful 2 Bedroom in Westside',
@@ -24,7 +26,13 @@ const fallbackListings = [
     favoriteCount: 5,
     pets: true,
     onCampus: false,
-    neighborhood: 'westside'
+    neighborhood: 'westside',
+    tags: {
+      sleepSchedule: "10pm - 12am",
+      cleanliness: "Moderately tidy",
+      noiseLevel: "Background noise/music",
+      lifestyle: ["Cooks often"]
+    }
   },
   {
     id: 'listing-2',
@@ -43,7 +51,13 @@ const fallbackListings = [
     favoriteCount: 8,
     pets: true,
     onCampus: false,
-    neighborhood: 'seabright'
+    neighborhood: 'seabright',
+    tags: {
+      sleepSchedule: "After 12am",
+      cleanliness: "Very tidy",
+      noiseLevel: "Silent",
+      lifestyle: ["Stays up late", "Vegetarian"]
+    }
   },
   {
     id: 'listing-3',
@@ -62,7 +76,14 @@ const fallbackListings = [
     favoriteCount: 3,
     pets: false,
     onCampus: true,
-    neighborhood: 'campus'
+    neighborhood: 'campus',
+    tags: {
+      sleepSchedule: "Before 10pm",
+      cleanliness: "Moderately tidy",
+      noiseLevel: "Silent",
+      studyHabits: "Library",
+      lifestyle: ["Wakes up early"]
+    }
   }
 ];
 
@@ -72,6 +93,7 @@ export default function Home() {
   const [matchedListings, setMatchedListings] = useState<ListingType[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreatingData, setIsCreatingData] = useState(false);
+  const [isAddingSampleData, setIsAddingSampleData] = useState(false);
 
   useEffect(() => {
     if (useMockFirebase) {
@@ -82,36 +104,33 @@ export default function Home() {
     
     const fetchListings = async () => {
       try {
-        console.log('Fetching listings...');
-        // Fetch new listings
-        const newListingsQuery = query(
-          collection(db, 'listings'),
-          orderBy('createdAt', 'desc'),
-          limit(6)
-        );
-        console.log('Query created');
+        console.log('Fetching listings for home page...');
         
-        const newListingsSnapshot = await getDocs(newListingsQuery);
-        console.log('Snapshot received, doc count:', newListingsSnapshot.docs?.length || 0);
+        // Use sample listings directly to show more variety
+        const allListings = sampleListings;
+        console.log(`Total sample listings available: ${allListings.length}`);
         
-        let listingsData = [];
+        // Get latest 6 listings for "New Listings" section
+        const latest = [...allListings].sort((a, b) => {
+          const dateA = a.createdAt?.toDate?.() || new Date();
+          const dateB = b.createdAt?.toDate?.() || new Date();
+          return dateB.getTime() - dateA.getTime();
+        }).slice(0, 6);
         
-        if (newListingsSnapshot.docs?.length > 0) {
-          listingsData = newListingsSnapshot.docs.map(doc => ({ 
-            id: doc.id, 
-            ...doc.data() 
-          }));
-          console.log('Found listings in Firebase:', listingsData.length);
-        } else {
-          console.log('No docs found, using fallback data');
-          listingsData = fallbackListings;
-        }
+        // Get first 6 listings for "Looking for Roommates" section
+        // Since we don't have that specific tag in our sample data, we're using different listings
+        const roommateListingsData = allListings
+          .filter((_, index) => index % 2 === 0) // Just selecting every other listing for variety
+          .slice(0, 6);
         
-        console.log('Processed listings data:', listingsData);
+        // Get 6 different listings for "Based on Questionnaire" section
+        const matchListingsData = allListings
+          .filter((_, index) => index % 3 === 0) // Just selecting every 3rd listing for variety
+          .slice(0, 6);
         
-        setNewListings(listingsData);
-        setRoommateListings(listingsData);
-        setMatchedListings(listingsData);
+        setNewListings(latest);
+        setRoommateListings(roommateListingsData);
+        setMatchedListings(matchListingsData);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching listings:', error);
@@ -127,48 +146,11 @@ export default function Home() {
   }, []);
 
   const createSampleData = async () => {
-    if (useMockFirebase) {
-      alert('Cannot add sample data when using mock Firebase');
-      return;
-    }
+    alert('This feature is not available in the current configuration. Use the Add Full Sample Listings button instead.');
+  };
 
-    try {
-      setIsCreatingData(true);
-      console.log('Creating sample data in Firebase...');
-
-      // Remove the id property and add server timestamp for createdAt
-      const sample1 = {
-        ...fallbackListings[0],
-        createdAt: serverTimestamp(),
-      };
-      delete sample1.id;
-
-      const sample2 = {
-        ...fallbackListings[1],
-        createdAt: serverTimestamp(),
-      };
-      delete sample2.id;
-
-      const sample3 = {
-        ...fallbackListings[2],
-        createdAt: serverTimestamp(),
-      };
-      delete sample3.id;
-
-      // Add to Firebase
-      const listingsCollection = collection(db, 'listings');
-      await addDoc(listingsCollection, sample1);
-      await addDoc(listingsCollection, sample2);
-      await addDoc(listingsCollection, sample3);
-
-      alert('Sample data created! Refresh the page to see it.');
-      console.log('Sample data created successfully');
-    } catch (error) {
-      console.error('Error creating sample data:', error);
-      alert('Error creating sample data. Check console for details.');
-    } finally {
-      setIsCreatingData(false);
-    }
+  const addFullSampleListings = async () => {
+    alert('This feature currently requires a proper Firebase configuration. Please set up Firebase first.');
   };
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
@@ -198,7 +180,7 @@ export default function Home() {
       </div>
 
       {!useMockFirebase && (
-        <div style={{ textAlign: 'center', margin: '20px 0' }}>
+        <div style={{ textAlign: 'center', margin: '20px 0', display: 'flex', justifyContent: 'center', gap: '10px' }}>
           <button 
             onClick={createSampleData} 
             disabled={isCreatingData}
@@ -212,7 +194,23 @@ export default function Home() {
               opacity: isCreatingData ? 0.7 : 1
             }}
           >
-            {isCreatingData ? 'Creating Sample Data...' : 'Create Sample Data in Firebase'}
+            {isCreatingData ? 'Creating Basic Data...' : 'Create Basic Sample Data'}
+          </button>
+
+          <button 
+            onClick={addFullSampleListings} 
+            disabled={isAddingSampleData}
+            style={{
+              background: '#3F51B5',
+              color: 'white',
+              padding: '10px 15px',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: isAddingSampleData ? 'not-allowed' : 'pointer',
+              opacity: isAddingSampleData ? 0.7 : 1
+            }}
+          >
+            {isAddingSampleData ? 'Adding Sample Listings...' : 'Add Full Sample Listings with Tags'}
           </button>
         </div>
       )}

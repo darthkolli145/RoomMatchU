@@ -464,3 +464,100 @@ input:focus, select:focus, textarea:focus {
   background-color: #45a049;
 }
 
+/* Compatibility score display */
+.compatibility-score {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  max-width: 75%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.match-details {
+  margin-top: 4px;
+  margin-bottom: 4px;
+  font-size: 0.7rem;
+  line-height: 1.2;
+  color: #4b5563;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+/* Listing tags */
+.listing-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.tag {
+  font-size: 0.7rem;
+  background-color: #f3f4f6;
+  color: #4b5563;
+  padding: 2px 6px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+/* Filter styles */
+.listing-filter {
+  background-color: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.filter-heading {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #4b5563;
+}
+
+.filter-group {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.filter-group h3 {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #4b5563;
+}
+
+/* Questionnaire priority selectors */
+.priority-selector {
+  display: flex;
+  align-items: center;
+  margin-top: 4px;
+  margin-bottom: 12px;
+}
+
+.priority-selector label {
+  flex: 1;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.priority-selector select {
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 4px 8px;
+  background-color: #f9fafb;
+  font-size: 0.875rem;
+}
+

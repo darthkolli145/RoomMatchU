@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Navbar() {
-  const { currentUser, signInWithGoogle, signOut } = useAuth();
+  const { currentUser, signIn, logOut } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   return (
@@ -43,13 +43,13 @@ export default function Navbar() {
                   <Link to="/profile">View Profile</Link>
                   <Link to="/settings">Settings</Link>
 
-                  <button onClick={signOut}>Sign Out</button>
+                  <button onClick={logOut}>Sign Out</button>
                 </div>
               )}
             </div>
           </>
         ) : (
-          <button className="sign-in-btn" onClick={signInWithGoogle}>
+          <button className="sign-in-btn" onClick={signIn}>
             Sign In
           </button>
         )}

@@ -1,67 +1,104 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { 
-  User, 
-  signInWithPopup, 
-  signOut as firebaseSignOut,
-  onAuthStateChanged 
-} from 'firebase/auth';
-import { auth, googleProvider } from '../firebase/config';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { auth, db, googleProvider } from '../firebase/config';
+import { User as FirebaseUser, signInWithPopup, signOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { User, UserQuestionnaire } from '../types';
 
-type AuthContextType = {
+interface AuthContextType {
   currentUser: User | null;
   loading: boolean;
-  signInWithGoogle: () => Promise<void>;
-  signOut: () => Promise<void>;
-};
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  signIn: () => Promise<void>;
+  logOut: () => Promise<void>;
 }
 
-type AuthProviderProps = {
-  children: ReactNode;
-};
+const AuthContext = createContext<AuthContextType>({
+  currentUser: null,
+  loading: true,
+  signIn: async () => {},
+  logOut: async () => {},
+});
 
-export function AuthProvider({ children }: AuthProviderProps) {
+export const useAuth = () => useContext(AuthContext);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Function to fetch user's questionnaire data
+  const fetchUserData = async (firebaseUser: FirebaseUser) => {
+    try {
+      const userDocRef = doc(db, 'users', firebaseUser.uid);
+      const userDoc = await getDoc(userDocRef);
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        
+        // Create full user object with the Firebase user and additional Firestore data
+        const fullUser: User = {
+          id: firebaseUser.uid,
+          displayName: firebaseUser.displayName || '',
+          email: firebaseUser.email || '',
+          photoURL: firebaseUser.photoURL || undefined,
+          questionnaire: userData.questionnaire as UserQuestionnaire || undefined
+        };
+        
+        setCurrentUser(fullUser);
+      } else {
+        // If no additional data exists, just use the Firebase user
+        setCurrentUser({
+          id: firebaseUser.uid,
+          displayName: firebaseUser.displayName || '',
+          email: firebaseUser.email || '',
+          photoURL: firebaseUser.photoURL || undefined
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      // Fallback to just Firebase user data if Firestore fetch fails
+      setCurrentUser({
+        id: firebaseUser.uid,
+        displayName: firebaseUser.displayName || '',
+        email: firebaseUser.email || '',
+        photoURL: firebaseUser.photoURL || undefined
+      });
+    }
+  };
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
+    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+      if (firebaseUser) {
+        await fetchUserData(firebaseUser);
+      } else {
+        setCurrentUser(null);
+      }
       setLoading(false);
     });
 
     return unsubscribe;
   }, []);
 
-  async function signInWithGoogle() {
+  const signIn = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      await fetchUserData(result.user);
     } catch (error) {
-      console.error('Error signing in with Google:', error);
+      console.error('Error signing in:', error);
     }
-  }
+  };
 
-  async function signOut() {
+  const logOut = async () => {
     try {
-      await firebaseSignOut(auth);
+      await signOut(auth);
     } catch (error) {
       console.error('Error signing out:', error);
     }
-  }
+  };
 
   const value = {
     currentUser,
     loading,
-    signInWithGoogle,
-    signOut
+    signIn,
+    logOut,
   };
 
   return (
@@ -69,4 +106,4 @@ export function AuthProvider({ children }: AuthProviderProps) {
       {!loading && children}
     </AuthContext.Provider>
   );
-} 
+}; 

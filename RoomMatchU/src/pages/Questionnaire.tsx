@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserQuestionnaire } from '../types'; // Adjust path if needed
+import { UserQuestionnaire, PriorityLevel, QuestionnaireCategory } from '../types'; // Adjust path if needed
 
 const initialForm: UserQuestionnaire = {
   lifestyle: [],
@@ -10,7 +10,6 @@ const initialForm: UserQuestionnaire = {
   sharing: [],
   Hobbies: [],
   fullname: [],
-  email: [],
   Major: [],
   yearlvl:'',
   Gender: '',
@@ -23,16 +22,46 @@ const initialForm: UserQuestionnaire = {
   okPets: '',
   prefGender: '',
   dealMust: [],
+  priorities: {},
 };
+
+// Helper function to create priority selector
+const PrioritySelector = ({ 
+  category, 
+  label, 
+  value, 
+  onChange 
+}: { 
+  category: QuestionnaireCategory, 
+  label: string, 
+  value: PriorityLevel | undefined, 
+  onChange: (category: QuestionnaireCategory, value: PriorityLevel) => void 
+}) => (
+  <div className="flex items-center mt-1 mb-3">
+    <label className="text-sm text-gray-600 flex-1">{label} priority:</label>
+    <select
+      value={value || ''}
+      onChange={(e) => onChange(category, e.target.value as PriorityLevel)}
+      className="border rounded p-1 text-sm bg-gray-50"
+    >
+      <option value="">Select priority</option>
+      <option value="Not Important">Not Important</option>
+      <option value="Somewhat Important">Somewhat Important</option>
+      <option value="Very Important">Very Important</option>
+      <option value="Deal Breaker">Deal Breaker</option>
+    </select>
+  </div>
+);
 
 const Questionnaire: React.FC = () => {
   const [formData, setFormData] = useState<UserQuestionnaire>(initialForm);
   const [submitted, setSubmitted] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, type } = e.target;
+    const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
 
-    if (type === 'checkbox') {
+    if (type === 'checkbox' && checked !== undefined) {
       setFormData((prev) => ({
         ...prev,
         [name]: checked
@@ -45,6 +74,16 @@ const Questionnaire: React.FC = () => {
         [name]: value,
       }));
     }
+  };
+
+  const handlePriorityChange = (category: QuestionnaireCategory, value: PriorityLevel) => {
+    setFormData((prev) => ({
+      ...prev,
+      priorities: {
+        ...prev.priorities,
+        [category]: value
+      }
+    }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -65,7 +104,7 @@ const Questionnaire: React.FC = () => {
       )}
 
     <h2 className="text-xl font-semibold text-indigo-600 border-b pb-1 mt-8 mb-4">
-    Display Info
+    Personal Information
     </h2>
     {/*Full Name */}
     <div>
@@ -82,24 +121,6 @@ const Questionnaire: React.FC = () => {
         rows={1}
         className="w-full border rounded p-2"
         placeholder="Sammy S. Slug"
-        />
-    </div>
-
-    {/* email */}
-    <div>
-        <label className="block font-medium mb-1 text-indigo-600">What is your UCSC email?: </label>
-        <textarea
-        name="email"
-        value={formData.email.join('\n')}
-        onChange={(e) =>
-            setFormData((prev) => ({
-            ...prev,
-            email: e.target.value.split('\n'),
-            }))
-        }
-        rows={1}
-        className="w-full border rounded p-2"
-        placeholder="samsslug@ucsc.edu"
         />
     </div>
 
@@ -134,7 +155,7 @@ const Questionnaire: React.FC = () => {
         <option value="">Select an option</option>
         <option>First Year</option>
         <option>Second Year</option>
-        <option>Thrid Year</option>
+        <option>Third Year</option>
         <option>Fourth Year</option>
         <option>Grad Student</option>
         </select>
@@ -177,6 +198,12 @@ const Questionnaire: React.FC = () => {
             <option>10pm - 12am</option>
             <option>After 12am</option>
           </select>
+          <PrioritySelector 
+            category="sleepSchedule" 
+            label="Sleep schedule" 
+            value={formData.priorities.sleepSchedule} 
+            onChange={handlePriorityChange} 
+          />
         </div>
 
         {/* Wake up Schedule */}
@@ -194,6 +221,12 @@ const Questionnaire: React.FC = () => {
             <option>7am - 9am</option>
             <option>After 9am</option>
           </select>
+          <PrioritySelector 
+            category="wakeupSchedule" 
+            label="Wake-up schedule" 
+            value={formData.priorities.wakeupSchedule} 
+            onChange={handlePriorityChange} 
+          />
         </div>
 
         {/* Cleanliness */}
@@ -211,6 +244,12 @@ const Questionnaire: React.FC = () => {
             <option>Moderately tidy</option>
             <option>Messy</option>
           </select>
+          <PrioritySelector 
+            category="cleanliness" 
+            label="Cleanliness" 
+            value={formData.priorities.cleanliness} 
+            onChange={handlePriorityChange} 
+          />
         </div>
        
         {/* roommateCleanliness */}
@@ -249,6 +288,12 @@ const Questionnaire: React.FC = () => {
             <option>Rarely</option>
             <option>Never</option>
           </select>
+          <PrioritySelector 
+            category="visitors" 
+            label="Guest policy" 
+            value={formData.priorities.visitors} 
+            onChange={handlePriorityChange} 
+          />
         </div>
 
         {/* Okay with Visitors? */}
@@ -303,6 +348,12 @@ const Questionnaire: React.FC = () => {
             <option>Library</option>
             <option>Other</option>
           </select>
+          <PrioritySelector 
+            category="studyHabits" 
+            label="Study habits" 
+            value={formData.priorities.studyHabits} 
+            onChange={handlePriorityChange} 
+          />
         </div>
 
         {/* Noise Level */}
@@ -320,6 +371,12 @@ const Questionnaire: React.FC = () => {
         <option>Background noise/music</option>
         <option>No preference</option>
         </select>
+        <PrioritySelector 
+          category="noiseLevel" 
+          label="Noise level" 
+          value={formData.priorities.noiseLevel} 
+          onChange={handlePriorityChange} 
+        />
         </div>
 
         <h2 className="text-xl font-semibold text-indigo-600 border-b pb-1 mt-8 mb-4">
@@ -340,6 +397,12 @@ const Questionnaire: React.FC = () => {
         <option>Yes</option>
         <option>No</option>
         </select>
+        <PrioritySelector 
+          category="pets" 
+          label="Pet preferences" 
+          value={formData.priorities.pets} 
+          onChange={handlePriorityChange} 
+        />
         </div>
 
         {/* okPets */}
@@ -380,6 +443,12 @@ const Questionnaire: React.FC = () => {
               </label>
             ))}
           </div>
+          <PrioritySelector 
+            category="lifestyle" 
+            label="Lifestyle compatibility" 
+            value={formData.priorities.lifestyle} 
+            onChange={handlePriorityChange} 
+          />
         </div>
 
         <h2 className="text-xl font-semibold text-indigo-600 border-b pb-1 mt-8 mb-4">

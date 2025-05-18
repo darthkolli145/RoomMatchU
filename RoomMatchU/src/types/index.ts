@@ -6,6 +6,18 @@ export type User = {
   questionnaire?: UserQuestionnaire;
 };
 
+export type PriorityLevel = 'Not Important' | 'Somewhat Important' | 'Very Important' | 'Deal Breaker';
+
+export type QuestionnaireCategory = 
+  | 'sleepSchedule'
+  | 'wakeupSchedule'
+  | 'cleanliness'
+  | 'noiseLevel'
+  | 'visitors'
+  | 'pets'
+  | 'studyHabits'
+  | 'lifestyle';
+
 export type UserQuestionnaire = {
   fullname: string[];
   lifestyle: string[];
@@ -17,7 +29,7 @@ export type UserQuestionnaire = {
   Gender: string;
   sharing: string[],
   Hobbies: string[];
-  email: string[];
+  email?: string[];
   Major: string[];
   wakeupSchedule: string;
   roommateCleanliness: string;
@@ -27,7 +39,18 @@ export type UserQuestionnaire = {
   pets: string;
   okPets: string;
   prefGender: string;
-  dealMust: string[]
+  dealMust: string[];
+  priorities: {
+    [key in QuestionnaireCategory]?: PriorityLevel;
+  };
+};
+
+export type CompatibilityScore = {
+  overall: number;
+  categoryScores: {
+    [key in QuestionnaireCategory]?: number;
+  };
+  matchDetails: string[];
 };
 
 export type ListingType = {
@@ -48,4 +71,10 @@ export type ListingType = {
   pets: boolean;
   onCampus: boolean;
   neighborhood: string;
+  tags: {
+    [key in QuestionnaireCategory]?: string | string[];
+  };
+  compatibilityScores?: {
+    [userId: string]: CompatibilityScore;
+  };
 }; 

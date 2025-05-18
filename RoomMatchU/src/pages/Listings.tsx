@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
-import { db, useMockFirebase } from '../firebase';
-import { ListingType } from '../types';
+import { ListingType, UserQuestionnaire, PriorityLevel } from '../types';
 import ListingCard from '../components/ListingCard';
-import FilterBar from '../components/FilterBar';
+import ListingFilter, { FilterOptions } from '../components/ListingFilter';
+import { filterListings, ListingWithScore, sortListingsByCompatibility } from '../utils/filterListings';
+import { sampleListings } from '../utils/sampleListings'; // Import the sample listings
+import { useMockFirebase } from '../firebase';
 
-// Fallback mock data if Firebase query fails
+// Fallback mock data if everything else fails
 const fallbackListings = [
   {
     id: 'listing-1',
@@ -24,7 +25,13 @@ const fallbackListings = [
     favoriteCount: 5,
     pets: true,
     onCampus: false,
-    neighborhood: 'westside'
+    neighborhood: 'westside',
+    tags: {
+      sleepSchedule: "10pm - 12am",
+      cleanliness: "Moderately tidy",
+      noiseLevel: "Background noise/music",
+      lifestyle: ["Cooks often"]
+    }
   },
   {
     id: 'listing-2',
@@ -43,7 +50,13 @@ const fallbackListings = [
     favoriteCount: 8,
     pets: true,
     onCampus: false,
-    neighborhood: 'seabright'
+    neighborhood: 'seabright',
+    tags: {
+      sleepSchedule: "After 12am",
+      cleanliness: "Very tidy",
+      noiseLevel: "Silent",
+      lifestyle: ["Stays up late", "Vegetarian"]
+    }
   },
   {
     id: 'listing-3',
@@ -62,64 +75,80 @@ const fallbackListings = [
     favoriteCount: 3,
     pets: false,
     onCampus: true,
-    neighborhood: 'campus'
+    neighborhood: 'campus',
+    tags: {
+      sleepSchedule: "Before 10pm",
+      cleanliness: "Moderately tidy",
+      noiseLevel: "Silent",
+      studyHabits: "Library",
+      lifestyle: ["Wakes up early"]
+    }
   }
 ];
 
-type FilterValues = {
-  onCampus: string;
-  houseType: string;
-  neighborhood: string;
-  priceMin: string;
-  priceMax: string;
-  rooms: string;
-  utilities: string;
-  rentPeriod: string;
-  pets: string;
+// Mock questionnaire for demonstration - updated for more diverse compatibility scores
+const mockQuestionnaire: UserQuestionnaire = {
+  fullname: ["Sample User"],
+  lifestyle: ["Stays up late", "Drinks", "Smokes"], // Different from most listings
+  cleanliness: "Very tidy", // Will be incompatible with messy listings
+  noiseLevel: "Silent", // Will be incompatible with noisy listings
+  sleepSchedule: "After 12am", // Late sleeper, incompatible with early sleepers
+  yearlvl: "Graduate",
+  visitors: "Rarely", // Will conflict with those who have visitors frequently
+  Gender: "Male", // Changed to increase diversity
+  sharing: ["Looking for roommates"],
+  Hobbies: ["Gaming", "Music"],
+  Major: ["Engineering"],
+  wakeupSchedule: "After 9am", // Late riser, incompatible with early risers
+  roommateCleanliness: "Very Important",
+  okvisitors: "No", // Doesn't want visitors, will conflict with frequent visitors
+  overnightGuests: "No", // Strong preference against overnight guests
+  studySpot: "Library",
+  pets: "No",
+  okPets: "No", // No pets allowed, will conflict with pet-friendly places
+  prefGender: "Male",
+  dealMust: ["Quiet environment", "No smoking inside"],
+  priorities: {
+    sleepSchedule: "Deal Breaker" as PriorityLevel, // Increased priority weight
+    cleanliness: "Very Important" as PriorityLevel,
+    noiseLevel: "Deal Breaker" as PriorityLevel, // Increased priority weight
+    visitors: "Very Important" as PriorityLevel, // Added new priority
+    pets: "Very Important" as PriorityLevel, // Added new priority
+    studyHabits: "Somewhat Important" as PriorityLevel // Added new priority
+  }
 };
 
 export default function Listings() {
   const [listings, setListings] = useState<ListingType[]>([]);
-  const [filteredListings, setFilteredListings] = useState<ListingType[]>([]);
+  const [filteredListings, setFilteredListings] = useState<ListingWithScore[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState<FilterOptions>({});
+  const [useQuestionnaire, setUseQuestionnaire] = useState<boolean>(false);
 
   useEffect(() => {
-    if (useMockFirebase) {
-      console.log('Using mock Firebase database for listings');
-    }
-    
     const fetchListings = async () => {
       try {
         console.log('Fetching listings...');
-        const listingsQuery = query(
-          collection(db, 'listings'),
-          orderBy('createdAt', 'desc')
-        );
         
-        const listingsSnapshot = await getDocs(listingsQuery);
-        console.log('Snapshot received, doc count:', listingsSnapshot.docs?.length || 0);
+        // Use sample listings which have complete compatibility data
+        console.log('Using sample listings data with compatibility tags');
+        const listingsData = sampleListings;
         
-        let listingsData = [];
-        
-        if (listingsSnapshot.docs?.length > 0) {
-          listingsData = listingsSnapshot.docs.map(doc => ({ 
-            id: doc.id, 
-            ...doc.data() 
-          } as ListingType));
-        } else {
-          console.log('No docs found, using fallback data');
-          listingsData = fallbackListings;
-        }
-        
+        console.log(`Total sample listings: ${listingsData.length}`);
         setListings(listingsData);
-        setFilteredListings(listingsData);
+        
+        // Apply initial filtering (without compatibility initially)
+        const { listingsWithScores } = filterListings(listingsData, {}, undefined);
+        setFilteredListings(listingsWithScores);
+        
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching listings:', error);
-        console.log('Using fallback listings data');
+        console.error('Error loading listings:', error);
+        // Use fallback as last resort
         setListings(fallbackListings);
-        setFilteredListings(fallbackListings);
+        const { listingsWithScores } = filterListings(fallbackListings, {}, undefined);
+        setFilteredListings(listingsWithScores);
         setLoading(false);
       }
     };
@@ -127,76 +156,67 @@ export default function Listings() {
     fetchListings();
   }, []);
 
-  const handleFilterChange = (filters: FilterValues) => {
-    let filtered = [...listings];
+  // Apply filters whenever filters or search term changes
+  useEffect(() => {
+    if (listings.length === 0) return;
     
-    // Filter by on/off campus
-    if (filters.onCampus) {
-      filtered = filtered.filter(listing => {
-        if (filters.onCampus === 'on') return listing.onCampus;
-        if (filters.onCampus === 'off') return !listing.onCampus;
-        return true;
+    // First filter by search term
+    let searchResults = listings;
+    if (searchTerm.trim()) {
+      searchResults = listings.filter(listing => 
+        listing.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        listing.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        listing.location.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    // Then apply compatibility filters
+    const { filteredListings: filtered, listingsWithScores } = filterListings(
+      searchResults, 
+      filters, 
+      useQuestionnaire ? mockQuestionnaire : undefined
+    );
+    
+    // Sort by compatibility score if questionnaire is enabled
+    let sortedListings = filtered;
+    if (useQuestionnaire) {
+      sortedListings = sortListingsByCompatibility(filtered);
+      
+      // Debug: Log compatibility scores of sorted listings
+      console.log('Compatibility scores of sorted listings:');
+      sortedListings.forEach(listing => {
+        console.log(`${listing.title} - Score: ${listing.compatibilityScore?.overall.toFixed(1)}%, Details: ${listing.compatibilityScore?.matchDetails.join(', ')}`);
       });
     }
     
-    // Filter by neighborhood
-    if (filters.neighborhood) {
-      filtered = filtered.filter(listing => 
-        listing.neighborhood.toLowerCase() === filters.neighborhood.toLowerCase()
-      );
-    }
-    
-    // Filter by price range
-    if (filters.priceMin) {
-      filtered = filtered.filter(listing => 
-        listing.price >= parseInt(filters.priceMin)
-      );
-    }
-    
-    if (filters.priceMax) {
-      filtered = filtered.filter(listing => 
-        listing.price <= parseInt(filters.priceMax)
-      );
-    }
-    
-    // Filter by number of rooms
-    if (filters.rooms) {
-      filtered = filtered.filter(listing => 
-        listing.bedrooms >= parseInt(filters.rooms)
-      );
-    }
-    
-    // Filter by pets allowed
-    if (filters.pets) {
-      filtered = filtered.filter(listing => {
-        if (filters.pets === 'yes') return listing.pets;
-        if (filters.pets === 'no') return !listing.pets;
-        return true;
-      });
-    }
-    
-    setFilteredListings(filtered);
+    setFilteredListings(sortedListings);
+  }, [listings, filters, searchTerm, useQuestionnaire]);
+
+  const handleFilterChange = (newFilters: FilterOptions) => {
+    setFilters(newFilters);
   };
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!searchTerm.trim()) {
-      setFilteredListings(listings);
-      return;
-    }
-    
-    const searchResults = listings.filter(listing => 
-      listing.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      listing.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      listing.location.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    
-    setFilteredListings(searchResults);
+    // The search term is already handled in the useEffect
   };
 
   const handleFavorite = (listingId: string) => {
-    console.log('Favorited listing:', listingId);
+    let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+
+    if (favorites.includes(listingId)) {
+      favorites = favorites.filter((id: string) => id !== listingId);
+    } else {
+      favorites.push(listingId);
+    }
+
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+    console.log('Updated favorites:', favorites);
     // In a real app, this would add/remove the listing from favorites in Firestore
+  };
+
+  const toggleQuestionnaire = () => {
+    setUseQuestionnaire(!useQuestionnaire);
   };
 
   if (loading) {
@@ -224,7 +244,24 @@ export default function Listings() {
       
       <div className="listings-content">
         <aside className="filters-sidebar">
-          <FilterBar onFilterChange={handleFilterChange} />
+          <div className="mb-4">
+            <button 
+              onClick={toggleQuestionnaire}
+              className={`w-full p-3 rounded ${useQuestionnaire ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800'}`}
+            >
+              {useQuestionnaire ? 'Using Compatibility Filter' : 'Enable Compatibility Filter'}
+            </button>
+            <p className="text-sm text-gray-600 mt-2">
+              {useQuestionnaire 
+                ? 'Listings are now sorted by compatibility' 
+                : 'Click to use sample questionnaire data to filter listings'}
+            </p>
+          </div>
+          
+          <ListingFilter 
+            onFilterChange={handleFilterChange} 
+            initialFilters={filters}
+          />
         </aside>
         
         <main className="listings-main">
@@ -234,13 +271,23 @@ export default function Listings() {
           
           <div className="listings-grid listings-page-grid">
             {filteredListings.length > 0 ? (
-              filteredListings.map(listing => (
-                <ListingCard 
-                  key={listing.id} 
-                  listing={listing}
-                  onFavorite={handleFavorite}
-                />
-              ))
+              (() => {
+                const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+
+                return filteredListings.map(listing => {
+                  const isFavorited = favorites.includes(listing.id);
+                  return (
+                    <ListingCard 
+                      key={listing.id} 
+                      listing={listing}
+                      isFavorited={isFavorited}
+                      onFavorite={handleFavorite}
+                      compatibilityScore={listing.compatibilityScore}
+                      showCompatibilityScore={useQuestionnaire}
+                    />
+                  );
+                });
+              })()
             ) : (
               <div className="no-listings">
                 <p>No listings found matching your criteria.</p>
@@ -248,7 +295,7 @@ export default function Listings() {
             )}
           </div>
           
-          {filteredListings.length > 0 && (
+          {filteredListings.length > 0 && filteredListings.length >= 12 && (
             <div className="load-more">
               <button>Load More</button>
             </div>

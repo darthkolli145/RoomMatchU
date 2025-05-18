@@ -1,46 +1,26 @@
-// Firebase configuration - JavaScript version
-// We're creating placeholder objects since we won't use real Firebase yet
-const GoogleAuthProvider = function() {
-  // Empty constructor
+// src/firebase/config.ts
+
+import { initializeApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider, onAuthStateChanged, User } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+
+// Firebase configuration using environment variables
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Create mock Firebase objects
-const auth = {
-  currentUser: null,
-  onAuthStateChanged: (callback) => {
-    callback(null);
-    return () => {}; // Unsubscribe function
-  },
-  signInWithPopup: async () => {
-    console.log('Placeholder Firebase not configured');
-    return { user: null };
-  },
-  signOut: async () => {
-    console.log('Placeholder Firebase not configured');
-    return true;
-  }
-};
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 
-const db = {
-  collection: () => ({
-    doc: () => ({
-      get: async () => ({
-        exists: false,
-        data: () => ({}),
-        id: ''
-      })
-    }),
-    where: () => ({
-      get: async () => ({ docs: [] })
-    }),
-    orderBy: () => ({
-      limit: () => ({
-        get: async () => ({ docs: [] })
-      })
-    })
-  })
-};
-
+// Firebase services
+const auth = getAuth(app);
+const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 
-export { auth, db, googleProvider }; 
+// Export services
+export { auth, db, googleProvider, onAuthStateChanged };
