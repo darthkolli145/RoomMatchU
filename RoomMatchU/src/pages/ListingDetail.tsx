@@ -3,13 +3,18 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ListingType } from '../types';
 import ImageGallery from '../components/ImageGallery';
 import { sampleListings } from '../utils/sampleListings';
+import { auth } from '../firebase/config';
+import { useAuth } from '../contexts/AuthContext';
+import { toggleFavorite } from '../firebase/favoritesService';
 
 export default function ListingDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { currentUser, favorites, refreshFavorites } = useAuth();
   const [listing, setListing] = useState<ListingType | null>(null);
   const [loading, setLoading] = useState(true);
-  const [favorite, setFavorite] = useState(false);
+  const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
+  const [showAuthMessage, setShowAuthMessage] = useState(false);
   
   useEffect(() => {
     const fetchListing = async () => {
@@ -20,10 +25,6 @@ export default function ListingDetail() {
         
         if (listingData) {
           setListing(listingData);
-          
-          // Check if this listing is favorited
-          const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-          setFavorite(favorites.includes(id));
         }
         
         setLoading(false);
@@ -36,27 +37,47 @@ export default function ListingDetail() {
     fetchListing();
   }, [id]);
   
-  const handleFavorite = () => {
-    const newFavoriteState = !favorite;
-    setFavorite(newFavoriteState);
-    
-    // Update localStorage
-    let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-    
-    if (newFavoriteState) {
-      if (!favorites.includes(id)) {
-        favorites.push(id);
-      }
-    } else {
-      favorites = favorites.filter((favId: string) => favId !== id);
+  const handleFavorite = async () => {
+    // Check if user is authenticated
+    if (!currentUser) {
+      setShowAuthMessage(true);
+      
+      // Hide the message after 5 seconds
+      setTimeout(() => {
+        setShowAuthMessage(false);
+      }, 5000);
+      
+      return; // Stop execution if user is not authenticated
     }
     
-    localStorage.setItem('favorites', JSON.stringify(favorites));
+    if (!listing || isFavoriteLoading) return;
+    
+    try {
+      setIsFavoriteLoading(true);
+      
+      // Toggle favorite status in Firebase
+      await toggleFavorite(currentUser.id, listing.id);
+      
+      // Refresh favorites in context
+      await refreshFavorites();
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    } finally {
+      setIsFavoriteLoading(false);
+    }
+  };
+  
+  const handleSignIn = () => {
+    // Redirect to login page
+    navigate('/login');
   };
   
   const goToFavorites = () => {
     navigate('/favorites');
   };
+  
+  // Check if this listing is in favorites
+  const isFavorited = id ? favorites.includes(id) : false;
   
   if (loading) {
     return <div className="loading">Loading listing details...</div>;
@@ -80,18 +101,25 @@ export default function ListingDetail() {
         <Link to="/listings" className="back-link">&larr; Back to Listings</Link>
         <div className="favorite-actions">
           <button 
-            className={`favorite-button ${favorite ? 'favorited' : ''}`}
+            className={`favorite-button ${isFavorited ? 'favorited' : ''}`}
             onClick={handleFavorite}
+            disabled={isFavoriteLoading}
           >
-            {favorite ? 'Remove from Favorites' : 'Add to Favorites'}
+            {isFavoriteLoading ? 'Processing...' : (isFavorited ? 'Remove from Favorites' : 'Add to Favorites')}
           </button>
-          {favorite && (
+          {currentUser && isFavorited && (
             <button 
               className="view-favorites-button"
               onClick={goToFavorites}
             >
               View Favorites
             </button>
+          )}
+          {showAuthMessage && (
+            <div className="auth-message-detail">
+              <p>Please sign in to save favorites</p>
+              <button onClick={handleSignIn}>Sign In</button>
+            </div>
           )}
         </div>
       </div>

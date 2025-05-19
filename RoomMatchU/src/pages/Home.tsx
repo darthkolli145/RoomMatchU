@@ -6,6 +6,7 @@ import ListingCard from '../components/ListingCard';
 import { Link, useNavigate } from 'react-router-dom';
 import { populateWithSampleListings } from '../utils/populateDatabase';
 import { sampleListings } from '../utils/sampleListings'; // Import the sample listings
+import { useAuth } from '../contexts/AuthContext';
 
 // Fallback mock data with required tags - only used if sample listings fail
 const fallbackListings: ListingType[] = [
@@ -89,24 +90,16 @@ const fallbackListings: ListingType[] = [
 
 export default function Home() {
   const navigate = useNavigate();
+  const { currentUser, favorites, refreshFavorites } = useAuth();
   const [newListings, setNewListings] = useState<ListingType[]>([]);
   const [roommateListings, setRoommateListings] = useState<ListingType[]>([]);
   const [matchedListings, setMatchedListings] = useState<ListingType[]>([]);
   const [loading, setLoading] = useState(true);
   const [populateStatus, setPopulateStatus] = useState('');
-  const [favorites, setFavorites] = useState<string[]>([]);
 
   useEffect(() => {
-    const fetchFavoritesFromStorage = () => {
-      const storedFavorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-      setFavorites(storedFavorites);
-    };
-    
     const fetchListings = async () => {
       try {
-        // Check for favorites first
-        fetchFavoritesFromStorage();
-        
         // Use sampleListings for now
         const listingsData = sampleListings;
         
@@ -143,29 +136,17 @@ export default function Home() {
     };
     
     fetchListings();
-    
-    // Set up an event listener to update favorites if they change
-    window.addEventListener('storage', fetchFavoritesFromStorage);
-    
-    return () => {
-      window.removeEventListener('storage', fetchFavoritesFromStorage);
-    };
   }, []);
 
-  const handleFavorite = (listingId: string) => {
-    let currentFavorites = [...favorites];
-    
-    if (currentFavorites.includes(listingId)) {
-      currentFavorites = currentFavorites.filter(id => id !== listingId);
-    } else {
-      currentFavorites.push(listingId);
+  const handleFavorite = async (listingId: string) => {
+    if (!currentUser) {
+      // Redirect to login if not logged in
+      navigate('/login');
+      return;
     }
     
-    setFavorites(currentFavorites);
-    
-    // Save to localStorage and dispatch storage event for cross-component communication
-    localStorage.setItem('favorites', JSON.stringify(currentFavorites));
-    window.dispatchEvent(new Event('storage'));
+    // Refresh favorites after toggling
+    await refreshFavorites();
   };
   
   const handlePopulateDatabase = async () => {
@@ -208,7 +189,7 @@ export default function Home() {
           )}
         </div>
         
-        {favorites.length > 0 && (
+        {currentUser && favorites.length > 0 && (
           <div className="favorites-banner">
             <p>You have {favorites.length} favorite {favorites.length === 1 ? 'listing' : 'listings'}</p>
             <button 
@@ -264,26 +245,28 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="listings-section">
-          <div className="section-header">
-            <h2>Based on Questionnaire</h2>
-            <Link to="/matches" className="see-more-link">See More</Link>
-          </div>
-          <div className="listings-grid home-grid">
-            {matchedListings.length > 0 ? (
-              matchedListings.map(listing => (
-                <ListingCard 
-                  key={listing.id} 
-                  listing={listing}
-                  onFavorite={handleFavorite}
-                  isFavorited={favorites.includes(listing.id)}
-                />
-              ))
-            ) : (
-              <div className="no-listings">No matched listings found</div>
-            )}
-          </div>
-        </section>
+        {currentUser ? (
+          <section className="listings-section">
+            <div className="section-header">
+              <h2>Based on Questionnaire</h2>
+              <Link to="/matches" className="see-more-link">See More</Link>
+            </div>
+            <div className="listings-grid home-grid">
+              {matchedListings.length > 0 ? (
+                matchedListings.map(listing => (
+                  <ListingCard 
+                    key={listing.id} 
+                    listing={listing}
+                    onFavorite={handleFavorite}
+                    isFavorited={favorites.includes(listing.id)}
+                  />
+                ))
+              ) : (
+                <div className="no-listings">No matched listings found</div>
+              )}
+            </div>
+          </section>
+        ) : null}
       </div>
     </div>
   );

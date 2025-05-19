@@ -3,43 +3,62 @@ import { useState, useEffect } from 'react';
 import { ListingType } from '../types';
 import ListingCard from '../components/ListingCard';
 import { sampleListings } from '../utils/sampleListings';
+import { useAuth } from '../contexts/AuthContext';
+import { Link } from 'react-router-dom';
 
 export default function Favorites() {
-  const [favorites, setFavorites] = useState<string[]>([]);
+  const { currentUser, favorites, refreshFavorites } = useAuth();
   const [favoritedListings, setFavoritedListings] = useState<ListingType[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Load favorites whenever the auth state or favorites change
   useEffect(() => {
-    // Get favorites from localStorage
-    const storedFavorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-    setFavorites(storedFavorites);
+    const loadFavorites = async () => {
+      // Only load favorites if user is logged in
+      if (currentUser) {
+        // In a real app, you would fetch the listings from Firestore
+        // For now, filter from sample listings
+        const favListings = sampleListings.filter(listing => 
+          favorites.includes(listing.id)
+        );
+        
+        setFavoritedListings(favListings);
+      } else {
+        // Clear listings if not logged in
+        setFavoritedListings([]);
+      }
+      
+      setLoading(false);
+    };
     
-    // In a real app, you would fetch the listings from Firestore
-    // For now, filter from sample listings
-    const favListings = sampleListings.filter(listing => 
-      storedFavorites.includes(listing.id)
-    );
-    
-    setFavoritedListings(favListings);
-    setLoading(false);
-  }, []);
+    // Load favorites immediately
+    loadFavorites();
+  }, [currentUser, favorites]);
 
-  const handleFavorite = (id: string) => {
-    // Remove from favorites
-    const updatedFavorites = favorites.filter(favId => favId !== id);
-    setFavorites(updatedFavorites);
-    
-    // Update localStorage
-    localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
-    
-    // Update displayed listings
-    setFavoritedListings(prevListings => 
-      prevListings.filter(listing => listing.id !== id)
-    );
+  const handleFavorite = async (id: string) => {
+    // After removing the favorite, refresh favorites
+    await refreshFavorites();
   };
 
   if (loading) {
     return <div className="loading">Loading favorites...</div>;
+  }
+  
+  // If user is not logged in, show sign-in message
+  if (!currentUser) {
+    return (
+      <div className="listings-page">
+        <div className="listings-header">
+          <h1>Your Favorites</h1>
+        </div>
+        
+        <div className="sign-in-required">
+          <h2>Sign in to view your favorites</h2>
+          <p>You need to be signed in to save and view your favorite listings.</p>
+          <Link to="/login" className="sign-in-link">Sign In</Link>
+        </div>
+      </div>
+    );
   }
 
   return (

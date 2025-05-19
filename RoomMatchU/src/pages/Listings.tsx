@@ -6,6 +6,7 @@ import { filterListings, ListingWithScore, sortListingsByCompatibility } from '.
 import { sampleListings } from '../utils/sampleListings'; // Import the sample listings
 import { useMockFirebase } from '../firebase';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 // Fallback mock data if everything else fails
 const fallbackListings = [
@@ -121,13 +122,13 @@ const mockQuestionnaire: UserQuestionnaire = {
 
 export default function Listings() {
   const navigate = useNavigate();
+  const { currentUser, favorites, refreshFavorites } = useAuth();
   const [listings, setListings] = useState<ListingType[]>([]);
   const [filteredListings, setFilteredListings] = useState<ListingWithScore[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<FilterOptions>({});
   const [useQuestionnaire, setUseQuestionnaire] = useState<boolean>(false);
-  const [favorites, setFavorites] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -140,10 +141,6 @@ export default function Listings() {
         
         console.log(`Total sample listings: ${listingsData.length}`);
         setListings(listingsData);
-        
-        // Get favorites from localStorage
-        const storedFavorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-        setFavorites(storedFavorites);
         
         // Apply initial filtering (without compatibility initially)
         const { listingsWithScores } = filterListings(listingsData, {}, undefined);
@@ -202,17 +199,16 @@ export default function Listings() {
     // The search term is already handled in the useEffect
   };
 
-  const handleFavorite = (listingId: string) => {
-    let currentFavorites = [...favorites];
-    
-    if (currentFavorites.includes(listingId)) {
-      currentFavorites = currentFavorites.filter(id => id !== listingId);
-    } else {
-      currentFavorites.push(listingId);
+  const handleFavorite = async (listingId: string) => {
+    if (!currentUser) {
+      // Redirect to login if not logged in
+      navigate('/login');
+      return;
     }
     
-    setFavorites(currentFavorites);
-    localStorage.setItem('favorites', JSON.stringify(currentFavorites));
+    // Favorites are now managed in Firebase through ListingCard component
+    // After toggle, refresh the favorites
+    await refreshFavorites();
   };
 
   const toggleQuestionnaire = () => {
@@ -267,7 +263,7 @@ export default function Listings() {
             initialFilters={filters}
           />
           
-          {favorites.length > 0 && (
+          {currentUser && favorites.length > 0 && (
             <div className="favorites-shortcut mt-4">
               <button 
                 onClick={goToFavorites}
