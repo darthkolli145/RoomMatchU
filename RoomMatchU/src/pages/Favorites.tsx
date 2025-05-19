@@ -1,12 +1,8 @@
 // pages/Favorites.tsx
-import { useEffect, useState } from 'react';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
-import { db, useMockFirebase } from '../firebase';
+import { useState, useEffect } from 'react';
 import { ListingType } from '../types';
 import ListingCard from '../components/ListingCard';
-
-// Use same mock data as fallback
-const fallbackListings = [/* same fallbackListings array here */];
+import { sampleListings } from '../utils/sampleListings';
 
 export default function Favorites() {
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -14,56 +10,44 @@ export default function Favorites() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Retrieve favorite IDs from localStorage
-    const stored = localStorage.getItem('favorites');
-    const favoriteIds = stored ? JSON.parse(stored) : [];
-    setFavorites(favoriteIds);
-
-    const fetchListings = async () => {
-      try {
-        const listingsQuery = query(collection(db, 'listings'), orderBy('createdAt', 'desc'));
-        const snapshot = await getDocs(listingsQuery);
-
-        let listingsData: ListingType[] = [];
-
-        if (snapshot.docs.length > 0) {
-          listingsData = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          } as ListingType));
-        } else {
-          listingsData = fallbackListings;
-        }
-
-        const filtered = listingsData.filter(listing => favoriteIds.includes(listing.id));
-        setFavoritedListings(filtered);
-      } catch (error) {
-        console.error('Error loading favorites, using fallback data:', error);
-        const filtered = fallbackListings.filter(listing => favoriteIds.includes(listing.id));
-        setFavoritedListings(filtered);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchListings();
+    // Get favorites from localStorage
+    const storedFavorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    setFavorites(storedFavorites);
+    
+    // In a real app, you would fetch the listings from Firestore
+    // For now, filter from sample listings
+    const favListings = sampleListings.filter(listing => 
+      storedFavorites.includes(listing.id)
+    );
+    
+    setFavoritedListings(favListings);
+    setLoading(false);
   }, []);
 
   const handleFavorite = (id: string) => {
-    // optional: allow unfavorite from this page
-    const updated = favorites.filter(favId => favId !== id);
-    setFavorites(updated);
-    localStorage.setItem('favorites', JSON.stringify(updated));
-    setFavoritedListings(favoritedListings.filter(listing => listing.id !== id));
+    // Remove from favorites
+    const updatedFavorites = favorites.filter(favId => favId !== id);
+    setFavorites(updatedFavorites);
+    
+    // Update localStorage
+    localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+    
+    // Update displayed listings
+    setFavoritedListings(prevListings => 
+      prevListings.filter(listing => listing.id !== id)
+    );
   };
 
-  if (loading) return <div className="loading">Loading...</div>;
+  if (loading) {
+    return <div className="loading">Loading favorites...</div>;
+  }
 
   return (
     <div className="listings-page">
       <div className="listings-header">
         <h1>Your Favorites</h1>
       </div>
+      
       <main className="listings-main">
         {favoritedListings.length > 0 ? (
           <div className="listings-grid listings-page-grid">
@@ -73,11 +57,13 @@ export default function Favorites() {
                 listing={listing}
                 isFavorited={true}
                 onFavorite={handleFavorite}
-                />
+              />
             ))}
           </div>
         ) : (
-          <p>No favorited listings yet.</p>
+          <div className="no-listings">
+            <p>You haven't added any listings to your favorites yet.</p>
+          </div>
         )}
       </main>
     </div>

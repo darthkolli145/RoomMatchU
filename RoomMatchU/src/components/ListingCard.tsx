@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ListingType, CompatibilityScore } from '../types';
 
@@ -19,10 +19,34 @@ export default function ListingCard({
 }: ListingCardProps) {
   const [favorite, setFavorite] = useState(isFavorited);
   
+  // Update local state if the isFavorited prop changes
+  useEffect(() => {
+    setFavorite(isFavorited);
+  }, [isFavorited]);
+  
   const handleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setFavorite(!favorite);
+    
+    // Toggle favorite state locally
+    const newFavoriteState = !favorite;
+    setFavorite(newFavoriteState);
+    
+    // Update localStorage directly
+    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    if (newFavoriteState) {
+      if (!favorites.includes(listing.id)) {
+        favorites.push(listing.id);
+      }
+    } else {
+      const index = favorites.indexOf(listing.id);
+      if (index !== -1) {
+        favorites.splice(index, 1);
+      }
+    }
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+    
+    // Call the parent handler if provided
     if (onFavorite) {
       onFavorite(listing.id);
     }

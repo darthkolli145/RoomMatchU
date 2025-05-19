@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ListingType } from '../types';
 import ImageGallery from '../components/ImageGallery';
 import { sampleListings } from '../utils/sampleListings';
 
 export default function ListingDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [listing, setListing] = useState<ListingType | null>(null);
   const [loading, setLoading] = useState(true);
   const [favorite, setFavorite] = useState(false);
@@ -53,6 +54,10 @@ export default function ListingDetail() {
     localStorage.setItem('favorites', JSON.stringify(favorites));
   };
   
+  const goToFavorites = () => {
+    navigate('/favorites');
+  };
+  
   if (loading) {
     return <div className="loading">Loading listing details...</div>;
   }
@@ -73,12 +78,22 @@ export default function ListingDetail() {
     <div className="listing-detail-page">
       <div className="listing-detail-header">
         <Link to="/listings" className="back-link">&larr; Back to Listings</Link>
-        <button 
-          className={`favorite-button ${favorite ? 'favorited' : ''}`}
-          onClick={handleFavorite}
-        >
-          {favorite ? 'Remove from Favorites' : 'Add to Favorites'}
-        </button>
+        <div className="favorite-actions">
+          <button 
+            className={`favorite-button ${favorite ? 'favorited' : ''}`}
+            onClick={handleFavorite}
+          >
+            {favorite ? 'Remove from Favorites' : 'Add to Favorites'}
+          </button>
+          {favorite && (
+            <button 
+              className="view-favorites-button"
+              onClick={goToFavorites}
+            >
+              View Favorites
+            </button>
+          )}
+        </div>
       </div>
       
       <h1 className="listing-title">{listing.title}</h1>
