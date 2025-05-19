@@ -63,6 +63,7 @@ export type ListingType = {
   bathrooms: number;
   availableDate: string;
   imageURLs: string[];
+  thumbnailURL?: string;
   amenities: string[];
   utilities: string[];
   ownerId: string;

@@ -14,7 +14,13 @@ export const sampleListings: ListingType[] = [
     bedrooms: 2,
     bathrooms: 1,
     availableDate: '2023-09-01',
-    imageURLs: ['https://via.placeholder.com/800x600?text=Downtown+Apartment'],
+    imageURLs: [
+      'https://via.placeholder.com/800x600?text=Downtown+Apartment',
+      'https://via.placeholder.com/800x600?text=Kitchen',
+      'https://via.placeholder.com/800x600?text=Bedroom',
+      'https://via.placeholder.com/800x600?text=Bathroom'
+    ],
+    thumbnailURL: 'https://via.placeholder.com/800x600?text=Downtown+Apartment',
     amenities: ['parking', 'laundry', 'dishwasher', 'balcony'],
     utilities: ['water', 'garbage', 'internet'],
     ownerId: 'user-1',
@@ -42,7 +48,12 @@ export const sampleListings: ListingType[] = [
     bedrooms: 1,
     bathrooms: 1,
     availableDate: '2023-08-15',
-    imageURLs: ['https://via.placeholder.com/800x600?text=Westside+Studio'],
+    imageURLs: [
+      'https://via.placeholder.com/800x600?text=Westside+Studio',
+      'https://via.placeholder.com/800x600?text=Studio+Kitchen',
+      'https://via.placeholder.com/800x600?text=Bath'
+    ],
+    thumbnailURL: 'https://via.placeholder.com/800x600?text=Westside+Studio',
     amenities: ['parking', 'furnished', 'patio'],
     utilities: ['all utilities included'],
     ownerId: 'user-2',
@@ -70,7 +81,12 @@ export const sampleListings: ListingType[] = [
     bedrooms: 1,
     bathrooms: 1,
     availableDate: '2023-09-15',
-    imageURLs: ['https://via.placeholder.com/800x600?text=Campus+Housing'],
+    imageURLs: [
+      'https://via.placeholder.com/800x600?text=Campus+Housing',
+      'https://via.placeholder.com/800x600?text=Dorm+Room',
+      'https://via.placeholder.com/800x600?text=Common+Area'
+    ],
+    thumbnailURL: 'https://via.placeholder.com/800x600?text=Campus+Housing',
     amenities: ['furnished', 'meal plan available', 'campus shuttles'],
     utilities: ['all utilities included'],
     ownerId: 'user-3',
@@ -98,7 +114,13 @@ export const sampleListings: ListingType[] = [
     bedrooms: 3,
     bathrooms: 2,
     availableDate: '2023-08-01',
-    imageURLs: ['https://via.placeholder.com/800x600?text=Seabright+House'],
+    imageURLs: [
+      'https://via.placeholder.com/800x600?text=Seabright+House',
+      'https://via.placeholder.com/800x600?text=Backyard',
+      'https://via.placeholder.com/800x600?text=Living+Room',
+      'https://via.placeholder.com/800x600?text=Kitchen+View'
+    ],
+    thumbnailURL: 'https://via.placeholder.com/800x600?text=Seabright+House',
     amenities: ['parking', 'laundry', 'backyard', 'garage'],
     utilities: ['water', 'garbage'],
     ownerId: 'user-4',
@@ -126,7 +148,12 @@ export const sampleListings: ListingType[] = [
     bedrooms: 1,
     bathrooms: 1,
     availableDate: '2023-07-20',
-    imageURLs: ['https://via.placeholder.com/800x600?text=Eastside+Room'],
+    imageURLs: [
+      'https://via.placeholder.com/800x600?text=Eastside+Room',
+      'https://via.placeholder.com/800x600?text=Garden+View',
+      'https://via.placeholder.com/800x600?text=Study+Area'
+    ],
+    thumbnailURL: 'https://via.placeholder.com/800x600?text=Eastside+Room',
     amenities: ['parking', 'laundry', 'furnished', 'garden access'],
     utilities: ['water', 'garbage', 'internet'],
     ownerId: 'user-5',

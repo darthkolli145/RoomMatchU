@@ -54,12 +54,24 @@ export default function ListingCard({
     return 'Poor Match';
   };
 
+  // Select the image to display - use thumbnailURL if available, otherwise first image or placeholder
+  const getDisplayImage = () => {
+    if (listing.thumbnailURL) {
+      return listing.thumbnailURL;
+    } else if (listing.imageURLs && listing.imageURLs.length > 0) {
+      return listing.imageURLs[0];
+    }
+    return null;
+  };
+
+  const displayImage = getDisplayImage();
+
   return (
     <div className="listing-card">
       <Link to={`/listing/${listing.id}`} className="listing-link">
         <div className="listing-image">
-          {listing.imageURLs && listing.imageURLs.length > 0 ? (
-            <img src={listing.imageURLs[0]} alt={listing.title} />
+          {displayImage ? (
+            <img src={displayImage} alt={listing.title} />
           ) : (
             <div className="placeholder-image">No Image</div>
           )}
