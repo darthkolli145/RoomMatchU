@@ -1387,3 +1387,39 @@ input:focus, select:focus, textarea:focus {
   margin-bottom: 5px;
 }
 
+/* Questionnaire Prompt */
+.questionnaire-prompt {
+  background-color: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  margin: 15px 0;
+}
+
+.questionnaire-prompt h3 {
+  color: #0369a1;
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+}
+
+.questionnaire-prompt p {
+  color: #475569;
+  margin-bottom: 15px;
+}
+
+.questionnaire-btn {
+  display: inline-block;
+  background-color: #0ea5e9;
+  color: white;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.questionnaire-btn:hover {
+  background-color: #0284c7;
+}
+

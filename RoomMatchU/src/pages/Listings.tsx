@@ -5,7 +5,7 @@ import ListingFilter, { FilterOptions } from '../components/ListingFilter';
 import { filterListings, ListingWithScore, sortListingsByCompatibility } from '../utils/filterListings';
 import { sampleListings } from '../utils/sampleListings'; // Import the sample listings
 import { useMockFirebase } from '../firebase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 // Fallback mock data if everything else fails
@@ -122,6 +122,7 @@ const mockQuestionnaire: UserQuestionnaire = {
 
 export default function Listings() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentUser, favorites, refreshFavorites } = useAuth();
   const [listings, setListings] = useState<ListingType[]>([]);
   const [filteredListings, setFilteredListings] = useState<ListingWithScore[]>([]);
@@ -129,6 +130,15 @@ export default function Listings() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<FilterOptions>({});
   const [useQuestionnaire, setUseQuestionnaire] = useState<boolean>(false);
+
+  // Extract search query from URL on component mount
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const searchParam = queryParams.get('search');
+    if (searchParam) {
+      setSearchTerm(searchParam);
+    }
+  }, [location.search]);
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -196,7 +206,20 @@ export default function Listings() {
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // The search term is already handled in the useEffect
+    // Update URL with search query without page reload
+    const searchParams = new URLSearchParams(location.search);
+    if (searchTerm.trim()) {
+      searchParams.set('search', searchTerm);
+    } else {
+      searchParams.delete('search');
+    }
+    
+    navigate({
+      pathname: location.pathname,
+      search: searchParams.toString()
+    }, { replace: true });
+    
+    // The search term filtering is handled in the useEffect
   };
 
   const handleFavorite = async (listingId: string) => {

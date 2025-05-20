@@ -96,6 +96,7 @@ export default function Home() {
   const [matchedListings, setMatchedListings] = useState<ListingType[]>([]);
   const [loading, setLoading] = useState(true);
   const [populateStatus, setPopulateStatus] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -165,6 +166,14 @@ export default function Home() {
     navigate('/favorites');
   };
 
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      // Navigate to listings page with search query parameter
+      navigate(`/listings?search=${encodeURIComponent(searchTerm.trim())}`);
+    }
+  };
+
   if (loading) {
     return <div className="loading">Loading...</div>;
   }
@@ -175,8 +184,13 @@ export default function Home() {
         <h1>Find Your Perfect Match</h1>
         <p>Connect with roommates or find listings that match your lifestyle</p>
         <div className="search-section">
-          <form>
-            <input type="text" placeholder="Search for listings by location or amenities" />
+          <form onSubmit={handleSearch}>
+            <input 
+              type="text" 
+              placeholder="Search for listings by location or amenities" 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
             <button type="submit" className="search-icon">
               <span className="material-icon">search</span>
             </button>
@@ -245,7 +259,7 @@ export default function Home() {
           </div>
         </section>
 
-        {currentUser ? (
+        {currentUser && currentUser.questionnaire ? (
           <section className="listings-section">
             <div className="section-header">
               <h2>Based on Questionnaire</h2>
@@ -264,6 +278,19 @@ export default function Home() {
               ) : (
                 <div className="no-listings">No matched listings found</div>
               )}
+            </div>
+          </section>
+        ) : currentUser ? (
+          <section className="listings-section">
+            <div className="section-header">
+              <h2>Personalized Recommendations</h2>
+            </div>
+            <div className="questionnaire-prompt">
+              <h3>Complete Your Questionnaire</h3>
+              <p>Fill out our quick questionnaire to get personalized listing recommendations that match your lifestyle and preferences.</p>
+              <Link to="/questionnaire" className="questionnaire-btn">
+                Take Questionnaire
+              </Link>
             </div>
           </section>
         ) : null}
