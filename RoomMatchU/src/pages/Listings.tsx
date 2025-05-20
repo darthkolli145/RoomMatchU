@@ -5,6 +5,8 @@ import ListingFilter, { FilterOptions } from '../components/ListingFilter';
 import { filterListings, ListingWithScore, sortListingsByCompatibility } from '../utils/filterListings';
 import { sampleListings } from '../utils/sampleListings'; // Import the sample listings
 import { useMockFirebase } from '../firebase';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 // Fallback mock data if everything else fails
 const fallbackListings = [
@@ -119,12 +121,24 @@ const mockQuestionnaire: UserQuestionnaire = {
 };
 
 export default function Listings() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { currentUser, favorites, refreshFavorites } = useAuth();
   const [listings, setListings] = useState<ListingType[]>([]);
   const [filteredListings, setFilteredListings] = useState<ListingWithScore[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<FilterOptions>({});
   const [useQuestionnaire, setUseQuestionnaire] = useState<boolean>(false);
+
+  // Extract search query from URL on component mount
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const searchParam = queryParams.get('search');
+    if (searchParam) {
+      setSearchTerm(searchParam);
+    }
+  }, [location.search]);
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -181,12 +195,6 @@ export default function Listings() {
     let sortedListings = filtered;
     if (useQuestionnaire) {
       sortedListings = sortListingsByCompatibility(filtered);
-      
-      // Debug: Log compatibility scores of sorted listings
-      console.log('Compatibility scores of sorted listings:');
-      sortedListings.forEach(listing => {
-        console.log(`${listing.title} - Score: ${listing.compatibilityScore?.overall.toFixed(1)}%, Details: ${listing.compatibilityScore?.matchDetails.join(', ')}`);
-      });
     }
     
     setFilteredListings(sortedListings);
@@ -198,25 +206,40 @@ export default function Listings() {
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // The search term is already handled in the useEffect
+    // Update URL with search query without page reload
+    const searchParams = new URLSearchParams(location.search);
+    if (searchTerm.trim()) {
+      searchParams.set('search', searchTerm);
+    } else {
+      searchParams.delete('search');
+    }
+    
+    navigate({
+      pathname: location.pathname,
+      search: searchParams.toString()
+    }, { replace: true });
+    
+    // The search term filtering is handled in the useEffect
   };
 
-  const handleFavorite = (listingId: string) => {
-    let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-
-    if (favorites.includes(listingId)) {
-      favorites = favorites.filter((id: string) => id !== listingId);
-    } else {
-      favorites.push(listingId);
+  const handleFavorite = async (listingId: string) => {
+    if (!currentUser) {
+      // Redirect to login if not logged in
+      navigate('/login');
+      return;
     }
-
-    localStorage.setItem('favorites', JSON.stringify(favorites));
-    console.log('Updated favorites:', favorites);
-    // In a real app, this would add/remove the listing from favorites in Firestore
+    
+    // Favorites are now managed in Firebase through ListingCard component
+    // After toggle, refresh the favorites
+    await refreshFavorites();
   };
 
   const toggleQuestionnaire = () => {
     setUseQuestionnaire(!useQuestionnaire);
+  };
+  
+  const goToFavorites = () => {
+    navigate('/favorites');
   };
 
   if (loading) {
@@ -262,6 +285,17 @@ export default function Listings() {
             onFilterChange={handleFilterChange} 
             initialFilters={filters}
           />
+          
+          {currentUser && favorites.length > 0 && (
+            <div className="favorites-shortcut mt-4">
+              <button 
+                onClick={goToFavorites}
+                className="w-full p-3 rounded bg-rose-100 text-rose-600 hover:bg-rose-200"
+              >
+                View Your Favorites ({favorites.length})
+              </button>
+            </div>
+          )}
         </aside>
         
         <main className="listings-main">
@@ -271,23 +305,19 @@ export default function Listings() {
           
           <div className="listings-grid listings-page-grid">
             {filteredListings.length > 0 ? (
-              (() => {
-                const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-
-                return filteredListings.map(listing => {
-                  const isFavorited = favorites.includes(listing.id);
-                  return (
-                    <ListingCard 
-                      key={listing.id} 
-                      listing={listing}
-                      isFavorited={isFavorited}
-                      onFavorite={handleFavorite}
-                      compatibilityScore={listing.compatibilityScore}
-                      showCompatibilityScore={useQuestionnaire}
-                    />
-                  );
-                });
-              })()
+              filteredListings.map(listing => {
+                const isFavorited = favorites.includes(listing.id);
+                return (
+                  <ListingCard 
+                    key={listing.id} 
+                    listing={listing}
+                    isFavorited={isFavorited}
+                    onFavorite={handleFavorite}
+                    compatibilityScore={listing.compatibilityScore}
+                    showCompatibilityScore={useQuestionnaire}
+                  />
+                );
+              })
             ) : (
               <div className="no-listings">
                 <p>No listings found matching your criteria.</p>

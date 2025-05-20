@@ -50,25 +50,13 @@ export function filterListings(
       filters.minCompatibility && 
       filters.minCompatibility > 0 &&
       listing.compatibilityScore && 
-      listing.compatibilityScore.overall < filters.minCompatibility
+      listing.compatibilityScore.score < filters.minCompatibility
     ) {
       return false;
     }
     
-    // Priority categories
-    if (
-      filters.priorityCategories && 
-      filters.priorityCategories.length > 0 && 
-      listing.compatibilityScore
-    ) {
-      // Check if all selected priority categories have a score of at least 50
-      const hasAllPriorityMatches = filters.priorityCategories.every(category => {
-        const score = listing.compatibilityScore?.categoryScores[category];
-        return score !== undefined && score >= 50;
-      });
-      
-      if (!hasAllPriorityMatches) return false;
-    }
+    // Priority categories - removed since categoryScores is no longer available
+    // We could replace this with a check on matches/conflicts in the future
     
     return true;
   });
@@ -86,8 +74,8 @@ export function sortListingsByCompatibility(
   listings: ListingWithScore[]
 ): ListingWithScore[] {
   return [...listings].sort((a, b) => {
-    const scoreA = a.compatibilityScore?.overall || 0;
-    const scoreB = b.compatibilityScore?.overall || 0;
+    const scoreA = a.compatibilityScore?.score || 0;
+    const scoreB = b.compatibilityScore?.score || 0;
     return scoreB - scoreA;
   });
 } 

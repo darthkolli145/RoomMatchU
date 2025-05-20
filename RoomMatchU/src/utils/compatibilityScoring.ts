@@ -17,7 +17,8 @@ export function calculateCompatibility(
   listing: ListingType
 ): CompatibilityScore {
   const categoryScores: { [key in QuestionnaireCategory]?: number } = {};
-  const matchDetails: string[] = [];
+  const matches: string[] = [];
+  const conflicts: string[] = [];
   let totalScore = 0;
   let totalWeight = 0;
 
@@ -40,7 +41,9 @@ export function calculateCompatibility(
     totalWeight += weight;
     
     if (score > 70) {
-      matchDetails.push('Compatible sleep schedules');
+      matches.push('Compatible sleep schedules');
+    } else if (score < 40) {
+      conflicts.push('Different sleep schedules');
     }
   }
 
@@ -57,7 +60,9 @@ export function calculateCompatibility(
     totalWeight += weight;
     
     if (score > 70) {
-      matchDetails.push('Compatible wake-up times');
+      matches.push('Compatible wake-up times');
+    } else if (score < 40) {
+      conflicts.push('Different wake-up times');
     }
   }
 
@@ -74,7 +79,9 @@ export function calculateCompatibility(
     totalWeight += weight;
     
     if (score > 70) {
-      matchDetails.push('Compatible cleanliness preferences');
+      matches.push('Compatible cleanliness preferences');
+    } else if (score < 40) {
+      conflicts.push('Different cleanliness preferences');
     }
   }
 
@@ -91,7 +98,9 @@ export function calculateCompatibility(
     totalWeight += weight;
     
     if (score > 70) {
-      matchDetails.push('Compatible noise level preferences');
+      matches.push('Compatible noise level preferences');
+    } else if (score < 40) {
+      conflicts.push('Different noise level preferences');
     }
   }
 
@@ -108,7 +117,9 @@ export function calculateCompatibility(
     totalWeight += weight;
     
     if (score > 70) {
-      matchDetails.push('Compatible visitor preferences');
+      matches.push('Compatible visitor preferences');
+    } else if (score < 40) {
+      conflicts.push('Different visitor preferences');
     }
   }
 
@@ -126,7 +137,9 @@ export function calculateCompatibility(
     totalWeight += weight;
     
     if (score > 70) {
-      matchDetails.push('Compatible pet preferences');
+      matches.push('Compatible pet preferences');
+    } else if (score < 40) {
+      conflicts.push('Different pet preferences');
     }
   }
 
@@ -147,7 +160,9 @@ export function calculateCompatibility(
     totalWeight += weight;
     
     if (score > 70) {
-      matchDetails.push('Compatible lifestyle habits');
+      matches.push('Compatible lifestyle habits');
+    } else if (score < 40) {
+      conflicts.push('Different lifestyle habits');
     }
   }
 
@@ -164,7 +179,9 @@ export function calculateCompatibility(
     totalWeight += weight;
     
     if (score > 70) {
-      matchDetails.push('Compatible study habits');
+      matches.push('Compatible study habits');
+    } else if (score < 40) {
+      conflicts.push('Different study habits');
     }
   }
   
@@ -186,14 +203,14 @@ export function calculateCompatibility(
     if (score !== undefined && score < 30) {
       // Cap the score at a lower value for deal breaker violations
       finalScore = Math.min(finalScore, 40);
-      matchDetails.push(`Deal breaker: ${category} is not compatible`);
+      conflicts.push(`Deal breaker: ${category} is not compatible`);
     }
   }
 
   return {
-    overall: finalScore,
-    categoryScores,
-    matchDetails
+    score: Math.round(finalScore),
+    matches,
+    conflicts
   };
 }
 

@@ -3,9 +3,10 @@ import { collection, getDocs, query, orderBy, limit, addDoc, serverTimestamp } f
 import { db, useMockFirebase } from '../firebase';
 import { ListingType } from '../types';
 import ListingCard from '../components/ListingCard';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { populateWithSampleListings } from '../utils/populateDatabase';
 import { sampleListings } from '../utils/sampleListings'; // Import the sample listings
+import { useAuth } from '../contexts/AuthContext';
 
 // Fallback mock data with required tags - only used if sample listings fail
 const fallbackListings: ListingType[] = [
@@ -88,80 +89,89 @@ const fallbackListings: ListingType[] = [
 ];
 
 export default function Home() {
+  const navigate = useNavigate();
+  const { currentUser, favorites, refreshFavorites } = useAuth();
   const [newListings, setNewListings] = useState<ListingType[]>([]);
   const [roommateListings, setRoommateListings] = useState<ListingType[]>([]);
   const [matchedListings, setMatchedListings] = useState<ListingType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isCreatingData, setIsCreatingData] = useState(false);
-  const [isAddingSampleData, setIsAddingSampleData] = useState(false);
+  const [populateStatus, setPopulateStatus] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    if (useMockFirebase) {
-      console.log('Using mock Firebase database');
-    } else {
-      console.log('Using real Firebase database');
-    }
-    
     const fetchListings = async () => {
       try {
-        console.log('Fetching listings for home page...');
+        // Use sampleListings for now
+        const listingsData = sampleListings;
         
-        // Use sample listings directly to show more variety
-        const allListings = sampleListings;
-        console.log(`Total sample listings available: ${allListings.length}`);
+        // Organize listings into different sections
+        if (listingsData.length) {
+          // Sort by createdAt for "New Listings"
+          const sortedByDate = [...listingsData].sort((a, b) => {
+            return new Date(b.createdAt.toDate()).getTime() - new Date(a.createdAt.toDate()).getTime();
+          });
+          
+          const newListings = sortedByDate.slice(0, 4);
+          setNewListings(newListings);
+          
+          // For "Looking for Roommates" section - just a different slice for now
+          const roommates = sortedByDate.slice(4, 8);
+          setRoommateListings(roommates);
+          
+          // For "Based on Questionnaire" section
+          const matched = [...listingsData]
+            .sort(() => 0.5 - Math.random()) // Simple random shuffle
+            .slice(0, 4);
+          setMatchedListings(matched);
+        }
         
-        // Get latest 6 listings for "New Listings" section
-        const latest = [...allListings].sort((a, b) => {
-          const dateA = a.createdAt?.toDate?.() || new Date();
-          const dateB = b.createdAt?.toDate?.() || new Date();
-          return dateB.getTime() - dateA.getTime();
-        }).slice(0, 6);
-        
-        // Get first 6 listings for "Looking for Roommates" section
-        // Since we don't have that specific tag in our sample data, we're using different listings
-        const roommateListingsData = allListings
-          .filter((_, index) => index % 2 === 0) // Just selecting every other listing for variety
-          .slice(0, 6);
-        
-        // Get 6 different listings for "Based on Questionnaire" section
-        const matchListingsData = allListings
-          .filter((_, index) => index % 3 === 0) // Just selecting every 3rd listing for variety
-          .slice(0, 6);
-        
-        setNewListings(latest);
-        setRoommateListings(roommateListingsData);
-        setMatchedListings(matchListingsData);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching listings:', error);
-        console.log('Using fallback listings data');
+        console.error('Error loading listings:', error);
+        // Use fallback as last resort
         setNewListings(fallbackListings);
         setRoommateListings(fallbackListings);
         setMatchedListings(fallbackListings);
         setLoading(false);
       }
     };
-
+    
     fetchListings();
   }, []);
 
-  const createSampleData = async () => {
-    alert('This feature is not available in the current configuration. Use the Add Full Sample Listings button instead.');
+  const handleFavorite = async (listingId: string) => {
+    if (!currentUser) {
+      // Redirect to login if not logged in
+      navigate('/login');
+      return;
+    }
+    
+    // Refresh favorites after toggling
+    await refreshFavorites();
   };
-
-  const addFullSampleListings = async () => {
-    alert('This feature currently requires a proper Firebase configuration. Please set up Firebase first.');
+  
+  const handlePopulateDatabase = async () => {
+    setPopulateStatus('Adding sample listings to Firebase...');
+    
+    try {
+      const addedIds = await populateWithSampleListings();
+      setPopulateStatus(`Successfully added ${addedIds.length} listings to Firebase.`);
+    } catch (error) {
+      console.error('Error populating database:', error);
+      setPopulateStatus('Error adding listings. See console for details.');
+    }
+  };
+  
+  const goToFavorites = () => {
+    navigate('/favorites');
   };
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // In a real app, this would redirect to search results
-    console.log('Search submitted');
-  };
-
-  const handleFavorite = (listingId: string) => {
-    console.log('Favorited listing:', listingId);
-    // In a real app, this would add/remove the listing from favorites in Firestore
+    if (searchTerm.trim()) {
+      // Navigate to listings page with search query parameter
+      navigate(`/listings?search=${encodeURIComponent(searchTerm.trim())}`);
+    }
   };
 
   if (loading) {
@@ -170,50 +180,41 @@ export default function Home() {
 
   return (
     <div className="home-page">
-      <div className="search-section">
-        <form onSubmit={handleSearch}>
-          <input type="text" placeholder="Search for locations, roommates, or listings" />
-          <button type="submit" className="search-icon">
-            <span className="material-icon">search</span>
-          </button>
-        </form>
-      </div>
-
-      {!useMockFirebase && (
-        <div style={{ textAlign: 'center', margin: '20px 0', display: 'flex', justifyContent: 'center', gap: '10px' }}>
-          <button 
-            onClick={createSampleData} 
-            disabled={isCreatingData}
-            style={{
-              background: '#4CAF50',
-              color: 'white',
-              padding: '10px 15px',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: isCreatingData ? 'not-allowed' : 'pointer',
-              opacity: isCreatingData ? 0.7 : 1
-            }}
-          >
-            {isCreatingData ? 'Creating Basic Data...' : 'Create Basic Sample Data'}
-          </button>
-
-          <button 
-            onClick={addFullSampleListings} 
-            disabled={isAddingSampleData}
-            style={{
-              background: '#3F51B5',
-              color: 'white',
-              padding: '10px 15px',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: isAddingSampleData ? 'not-allowed' : 'pointer',
-              opacity: isAddingSampleData ? 0.7 : 1
-            }}
-          >
-            {isAddingSampleData ? 'Adding Sample Listings...' : 'Add Full Sample Listings with Tags'}
-          </button>
+      <div className="hero-section">
+        <h1>Find Your Perfect Match</h1>
+        <p>Connect with roommates or find listings that match your lifestyle</p>
+        <div className="search-section">
+          <form onSubmit={handleSearch}>
+            <input 
+              type="text" 
+              placeholder="Search for listings by location or amenities" 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <button type="submit" className="search-icon">
+              <span className="material-icon">search</span>
+            </button>
+          </form>
+          
+          {useMockFirebase && populateStatus && (
+            <div className="mt-4 text-center text-sm text-gray-600">
+              <p>{populateStatus}</p>
+            </div>
+          )}
         </div>
-      )}
+        
+        {currentUser && favorites.length > 0 && (
+          <div className="favorites-banner">
+            <p>You have {favorites.length} favorite {favorites.length === 1 ? 'listing' : 'listings'}</p>
+            <button 
+              className="view-favorites-btn"
+              onClick={goToFavorites}
+            >
+              View Favorites
+            </button>
+          </div>
+        )}
+      </div>
 
       <div className="sections-container">
         <section className="listings-section">
@@ -228,6 +229,7 @@ export default function Home() {
                   key={listing.id} 
                   listing={listing}
                   onFavorite={handleFavorite}
+                  isFavorited={favorites.includes(listing.id)}
                 />
               ))
             ) : (
@@ -248,6 +250,7 @@ export default function Home() {
                   key={listing.id} 
                   listing={listing}
                   onFavorite={handleFavorite}
+                  isFavorited={favorites.includes(listing.id)}
                 />
               ))
             ) : (
@@ -256,25 +259,41 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="listings-section">
-          <div className="section-header">
-            <h2>Based on Questionnaire</h2>
-            <Link to="/matches" className="see-more-link">See More</Link>
-          </div>
-          <div className="listings-grid home-grid">
-            {matchedListings.length > 0 ? (
-              matchedListings.map(listing => (
-                <ListingCard 
-                  key={listing.id} 
-                  listing={listing}
-                  onFavorite={handleFavorite}
-                />
-              ))
-            ) : (
-              <div className="no-listings">No matched listings found</div>
-            )}
-          </div>
-        </section>
+        {currentUser && currentUser.questionnaire ? (
+          <section className="listings-section">
+            <div className="section-header">
+              <h2>Based on Questionnaire</h2>
+              <Link to="/matches" className="see-more-link">See More</Link>
+            </div>
+            <div className="listings-grid home-grid">
+              {matchedListings.length > 0 ? (
+                matchedListings.map(listing => (
+                  <ListingCard 
+                    key={listing.id} 
+                    listing={listing}
+                    onFavorite={handleFavorite}
+                    isFavorited={favorites.includes(listing.id)}
+                  />
+                ))
+              ) : (
+                <div className="no-listings">No matched listings found</div>
+              )}
+            </div>
+          </section>
+        ) : currentUser ? (
+          <section className="listings-section">
+            <div className="section-header">
+              <h2>Personalized Recommendations</h2>
+            </div>
+            <div className="questionnaire-prompt">
+              <h3>Complete Your Questionnaire</h3>
+              <p>Fill out our quick questionnaire to get personalized listing recommendations that match your lifestyle and preferences.</p>
+              <Link to="/questionnaire" className="questionnaire-btn">
+                Take Questionnaire
+              </Link>
+            </div>
+          </section>
+        ) : null}
       </div>
     </div>
   );

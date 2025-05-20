@@ -1,10 +1,27 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Navbar() {
-  const { currentUser, signIn, logOut } = useAuth();
+  const { currentUser, signOutUser } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSignIn = () => {
+    navigate('/login');
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOutUser();
+      // Close user menu
+      setShowUserMenu(false);
+      // Navigate to home page
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   return (
     <nav className="navbar">
@@ -12,7 +29,7 @@ export default function Navbar() {
         <Link to="/" className="navbar-brand">RoomMatchU</Link>
       </div>
       <div className="navbar-right">
-              {currentUser ? (
+        {currentUser ? (
           <>
             <Link to="/post-listing" className="icon-btn">
               <span className="material-icon">add</span>
@@ -43,13 +60,13 @@ export default function Navbar() {
                   <Link to="/profile">View Profile</Link>
                   <Link to="/settings">Settings</Link>
 
-                  <button onClick={logOut}>Sign Out</button>
+                  <button onClick={handleSignOut}>Sign Out</button>
                 </div>
               )}
             </div>
           </>
         ) : (
-          <button className="sign-in-btn" onClick={signIn}>
+          <button className="sign-in-btn" onClick={handleSignIn}>
             Sign In
           </button>
         )}

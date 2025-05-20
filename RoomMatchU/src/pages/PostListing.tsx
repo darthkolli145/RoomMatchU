@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, ChangeEvent } from 'react';
 import { postListing, ListingFormData } from '../firebase/firebaseHelpers';
 import { QuestionnaireCategory } from '../types';
 
@@ -21,7 +21,13 @@ export default function PostListing() {
     visitors: '',
     lifestyle: [],
     studyHabits: '',
+    images: [],
+    thumbnailIndex: 0,
   });
+  
+  const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -45,11 +51,75 @@ export default function PostListing() {
       }
     });
   };
+  
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    
+    if (files && files.length > 0) {
+      const newImages = Array.from(files);
+      const newPreviewUrls: string[] = [];
+      
+      // Generate preview URLs for the uploaded images
+      newImages.forEach(image => {
+        const url = URL.createObjectURL(image);
+        newPreviewUrls.push(url);
+      });
+      
+      setFormData(prev => ({
+        ...prev,
+        images: [...(prev.images || []), ...newImages]
+      }));
+      
+      setImagePreviewUrls(prev => [...prev, ...newPreviewUrls]);
+    }
+  };
+  
+  const handleRemoveImage = (index: number) => {
+    setFormData(prev => {
+      const newImages = [...(prev.images || [])];
+      newImages.splice(index, 1);
+      
+      // Update thumbnail index if needed
+      let newThumbnailIndex = prev.thumbnailIndex;
+      
+      if (typeof newThumbnailIndex === 'number') {
+        if (newThumbnailIndex === index) {
+          // If removing the current thumbnail, default to first image
+          newThumbnailIndex = newImages.length > 0 ? 0 : undefined;
+        } else if (newThumbnailIndex > index) {
+          // If removing an image before the thumbnail, adjust the index
+          newThumbnailIndex -= 1;
+        }
+      }
+      
+      return {
+        ...prev,
+        images: newImages,
+        thumbnailIndex: newThumbnailIndex
+      };
+    });
+    
+    // Revoke the URL to prevent memory leaks
+    URL.revokeObjectURL(imagePreviewUrls[index]);
+    
+    const newPreviewUrls = [...imagePreviewUrls];
+    newPreviewUrls.splice(index, 1);
+    setImagePreviewUrls(newPreviewUrls);
+  };
+  
+  const handleSetThumbnail = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      thumbnailIndex: index
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
+      setIsSubmitting(true);
+      
       // Prepare the tags from individual fields
       const listingWithTags: ListingFormData = {
         ...formData,
@@ -67,9 +137,37 @@ export default function PostListing() {
       const listingId = await postListing(listingWithTags);
       alert(`Listing submitted! ID: ${listingId}`);
       console.log('Successfully posted:', listingId);
+      
+      // Clean up all object URLs to prevent memory leaks
+      imagePreviewUrls.forEach(url => URL.revokeObjectURL(url));
+      
+      // Reset form
+      setFormData({
+        title: '',
+        bio: '',
+        neighborhood: '',
+        beds: '',
+        baths: '',
+        availableDate: '',
+        price: '',
+        onCampus: false,
+        pets: false,
+        sleepSchedule: '',
+        wakeupSchedule: '',
+        cleanliness: '',
+        noiseLevel: '',
+        visitors: '',
+        lifestyle: [],
+        studyHabits: '',
+        images: [],
+        thumbnailIndex: 0,
+      });
+      setImagePreviewUrls([]);
     } catch (error) {
       console.error('Failed to submit listing:', error);
       alert('Failed to submit listing. Check console for details.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -146,6 +244,62 @@ export default function PostListing() {
           />
           Pet Friendly
         </label>
+        
+        <h2 className="text-xl font-semibold text-indigo-600 border-b pb-1 mt-8 mb-4">
+          Images
+        </h2>
+        
+        <div className="image-upload-section">
+          <div className="image-upload-container">
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleImageChange}
+              className="hidden"
+              ref={fileInputRef}
+            />
+            <button 
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="upload-btn"
+            >
+              Upload Images
+            </button>
+            <p className="text-sm text-gray-600 mt-2">
+              Upload images of your listing. The first image will be the default thumbnail.
+            </p>
+          </div>
+          
+          {imagePreviewUrls.length > 0 && (
+            <div className="image-preview-container">
+              <h3 className="mb-2 font-medium">Preview</h3>
+              <div className="image-grid">
+                {imagePreviewUrls.map((url, index) => (
+                  <div key={index} className={`image-item ${formData.thumbnailIndex === index ? 'thumbnail' : ''}`}>
+                    <img src={url} alt={`Preview ${index + 1}`} />
+                    <div className="image-actions">
+                      <button
+                        type="button"
+                        onClick={() => handleSetThumbnail(index)}
+                        disabled={formData.thumbnailIndex === index}
+                        className={formData.thumbnailIndex === index ? 'active' : ''}
+                      >
+                        {formData.thumbnailIndex === index ? 'Thumbnail' : 'Set as Thumbnail'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(index)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
         
         <h2 className="text-xl font-semibold text-indigo-600 border-b pb-1 mt-8 mb-4">
           Compatibility Information
@@ -244,7 +398,9 @@ export default function PostListing() {
           </div>
         </div>
 
-        <button type="submit" className="mt-6">Submit Listing</button>
+        <button type="submit" className="mt-6" disabled={isSubmitting}>
+          {isSubmitting ? 'Submitting...' : 'Submit Listing'}
+        </button>
       </form>
     </div>
   );

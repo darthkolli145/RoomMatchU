@@ -45,13 +45,11 @@ export type UserQuestionnaire = {
   };
 };
 
-export type CompatibilityScore = {
-  overall: number;
-  categoryScores: {
-    [key in QuestionnaireCategory]?: number;
-  };
-  matchDetails: string[];
-};
+export interface CompatibilityScore {
+  score: number;
+  matches: string[];
+  conflicts: string[];
+}
 
 export type ListingType = {
   id: string;
@@ -63,6 +61,7 @@ export type ListingType = {
   bathrooms: number;
   availableDate: string;
   imageURLs: string[];
+  thumbnailURL?: string;
   amenities: string[];
   utilities: string[];
   ownerId: string;

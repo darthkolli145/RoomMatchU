@@ -1,124 +1,134 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ListingType, CompatibilityScore } from '../types';
+import { ListingType } from '../types';
+import { useAuth } from '../contexts/AuthContext';
+import { toggleFavorite } from '../firebase/favoritesService';
 
-type ListingCardProps = {
+interface ListingCardProps {
   listing: ListingType;
-  onFavorite?: (listingId: string) => void;
+  onFavorite?: (id: string) => void;
   isFavorited?: boolean;
-  compatibilityScore?: CompatibilityScore;
+  compatibilityScore?: {
+    score: number;
+    matches: string[];
+    conflicts: string[];
+  };
   showCompatibilityScore?: boolean;
-};
+}
 
-export default function ListingCard({ 
-  listing, 
-  onFavorite, 
+export default function ListingCard({
+  listing,
+  onFavorite,
   isFavorited = false,
   compatibilityScore,
-  showCompatibilityScore = false,
+  showCompatibilityScore = false
 }: ListingCardProps) {
-  const [favorite, setFavorite] = useState(isFavorited);
-  
-  const handleFavorite = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setFavorite(!favorite);
-    if (onFavorite) {
-      onFavorite(listing.id);
+  const { currentUser, favorites, refreshFavorites } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [showAuthMessage, setShowAuthMessage] = useState(false);
+
+  const handleFavorite = async (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent navigation to the listing detail
+    
+    if (isLoading) return; // Prevent multiple clicks
+    
+    if (!currentUser) {
+      setShowAuthMessage(true);
+      setTimeout(() => {
+        setShowAuthMessage(false);
+      }, 3000);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      
+      // Toggle favorite in Firebase
+      const newIsFavorited = await toggleFavorite(currentUser.id, listing.id);
+      
+      // Refresh the favorites in the auth context
+      await refreshFavorites();
+      
+      // Call the parent component's callback if provided
+      if (onFavorite) {
+        onFavorite(listing.id);
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Helper to generate color for compatibility score
-  const getScoreColor = (score: number) => {
-    if (score >= 90) return 'bg-green-600 text-white';
-    if (score >= 80) return 'bg-green-500 text-white';
-    if (score >= 70) return 'bg-green-400';
-    if (score >= 60) return 'bg-yellow-500';
-    if (score >= 50) return 'bg-yellow-400';
-    if (score >= 40) return 'bg-orange-400';
-    if (score >= 30) return 'bg-orange-500 text-white';
-    if (score >= 20) return 'bg-red-400 text-white';
-    return 'bg-red-500 text-white';
-  };
-
-  // Helper to generate descriptive text for score
-  const getScoreDescription = (score: number) => {
-    if (score >= 90) return 'Perfect Match';
-    if (score >= 80) return 'Excellent Match';
-    if (score >= 70) return 'Great Match';
-    if (score >= 60) return 'Good Match';
-    if (score >= 50) return 'Fair Match';
-    if (score >= 40) return 'Basic Match';
-    if (score >= 30) return 'Partial Match';
-    if (score >= 20) return 'Low Match';
-    return 'Poor Match';
-  };
+  // Check if listing is favorited using the context's favorites array
+  const isFavorite = currentUser ? favorites.includes(listing.id) : false;
 
   return (
     <div className="listing-card">
       <Link to={`/listing/${listing.id}`} className="listing-link">
         <div className="listing-image">
           {listing.imageURLs && listing.imageURLs.length > 0 ? (
-            <img src={listing.imageURLs[0]} alt={listing.title} />
+            <img src={listing.thumbnailURL || listing.imageURLs[0]} alt={listing.title} />
           ) : (
-            <div className="placeholder-image">No Image</div>
+            <div className="placeholder-image">No image available</div>
           )}
+          
           <button 
-            className={`favorite-btn ${favorite ? 'favorited' : ''}`}
+            className={`favorite-btn ${isFavorite ? 'favorited' : ''}`}
             onClick={handleFavorite}
           >
             <span className="material-icon">
-              {favorite ? 'favorite' : 'favorite_border'}
+              {isLoading ? 'sync' : (isFavorite ? 'favorite' : 'favorite_border')}
             </span>
           </button>
-          <div className="listing-price">${listing.price}</div>
           
-          {/* Compatibility score chip */}
+          {showAuthMessage && (
+            <div className="auth-message">
+              <p>Please sign in to save favorites</p>
+              <Link to="/login">Sign In</Link>
+            </div>
+          )}
+          
+          <div className="listing-price">${listing.price}/mo</div>
+          
           {showCompatibilityScore && compatibilityScore && (
             <div 
-              className={`compatibility-score ${getScoreColor(compatibilityScore.overall)}`}
-              title={compatibilityScore.matchDetails.join('\n')}
+              className="compatibility-score" 
+              style={{ 
+                backgroundColor: compatibilityScore.score >= 80 ? '#4ade80' : 
+                               compatibilityScore.score >= 60 ? '#facc15' : 
+                               compatibilityScore.score >= 40 ? '#fb923c' : '#ef4444',
+                color: compatibilityScore.score >= 60 ? '#000' : '#fff'
+              }}
             >
-              {compatibilityScore.overall.toFixed(1)}% {getScoreDescription(compatibilityScore.overall)}
+              {compatibilityScore.score}% Match
             </div>
           )}
         </div>
+        
         <div className="listing-details">
           <h3 className="listing-title">{listing.title}</h3>
           <p className="listing-location">{listing.location}</p>
           <p className="listing-info">
-            {listing.bedrooms} BD | {listing.bathrooms} BA | Available {new Date(listing.availableDate).toLocaleDateString()}
+            {listing.bedrooms} BD · {listing.bathrooms} BA · Available: {new Date(listing.availableDate).toLocaleDateString()}
           </p>
           
-          {/* Match details if available */}
-          {showCompatibilityScore && compatibilityScore && compatibilityScore.matchDetails.length > 0 && (
-            <div className="match-details text-xs text-gray-600 mt-1">
-              <span className="font-semibold">Matches:</span> {compatibilityScore.matchDetails.slice(0, 2).join(', ')}
-              {compatibilityScore.matchDetails.length > 2 && '...'}
+          {compatibilityScore && compatibilityScore.matches.length > 0 && (
+            <div className="match-details">
+              {compatibilityScore.matches[0]}
             </div>
           )}
           
-          {/* Show tags if available */}
-          {listing.tags && Object.keys(listing.tags).length > 0 && (
+          {listing.tags && (
             <div className="listing-tags">
-              {Object.entries(listing.tags).map(([category, value]) => {
-                if (Array.isArray(value) && value.length > 0) {
-                  return (
-                    <span key={category} className="tag">
-                      {value[0]}
-                    </span>
-                  );
-                } else if (typeof value === 'string' && value) {
-                  return (
-                    <span key={category} className="tag">
-                      {value}
-                    </span>
-                  );
-                }
-                return null;
-              }).filter(Boolean).slice(0, 3)}
-              {Object.keys(listing.tags).length > 3 && (
-                <span className="tag">+{Object.keys(listing.tags).length - 3} more</span>
+              {listing.tags.noiseLevel && (
+                <span className="tag">{listing.tags.noiseLevel}</span>
+              )}
+              {listing.tags.cleanliness && (
+                <span className="tag">{listing.tags.cleanliness}</span>
+              )}
+              {listing.tags.lifestyle && Array.isArray(listing.tags.lifestyle) && listing.tags.lifestyle.length > 0 && (
+                <span className="tag">{listing.tags.lifestyle[0]}</span>
               )}
             </div>
           )}
