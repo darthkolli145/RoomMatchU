@@ -248,23 +248,6 @@ export default function Listings() {
 
   return (
     <div className="listings-page">
-      <div className="listings-header">
-        <h1>Listings</h1>
-        <div className="search-section">
-          <form onSubmit={handleSearch}>
-            <input 
-              type="text" 
-              placeholder="Search listings" 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <button type="submit" className="search-icon">
-              <span className="material-icon">search</span>
-            </button>
-          </form>
-        </div>
-      </div>
-      
       <div className="listings-content">
         <aside className="filters-sidebar">
           <div className="mb-4">
@@ -299,6 +282,22 @@ export default function Listings() {
         </aside>
         
         <main className="listings-main">
+          <div className="listings-header">
+            <h1>Listings</h1>
+            <div className="search-section">
+              <form onSubmit={handleSearch}>
+                <input 
+                  type="text" 
+                  placeholder="Search listings" 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <button type="submit" className="search-icon">
+                  <span className="material-icon">search</span>
+                </button>
+              </form>
+            </div>
+          </div>
           <div className="listings-count">
             <p>{filteredListings.length} listings found</p>
           </div>

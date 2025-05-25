@@ -10,6 +10,7 @@ import Questionnaire from './pages/Questionnaire';
 import Login from './pages/Login';
 import Favorites from './pages/Favorites';
 import DebugPage from './pages/DebugPage';
+import Profile from './pages/Profile';
 import { AuthProvider } from './contexts/AuthContext';
 import FirebaseDebugger from './components/FirebaseDebugger';
 import './reset.css';
@@ -44,7 +45,8 @@ function App() {
               <Route path="/listings" element={<Listings />} />
               <Route path="/listing/:id" element={<ListingDetail />} />
               <Route path="/post-listing" element={<PostListing />} />
-              <Route path="/questionnaire" element={<Questionnaire />} /> 
+              <Route path="/questionnaire" element={<Questionnaire />} />
+              <Route path="/profile" element={<Profile/>} /> 
               <Route path="/login" element={<Login />} />
               <Route path="/favorites" element={<Favorites />} />
               <Route path="/debug" element={<DebugPage />} />

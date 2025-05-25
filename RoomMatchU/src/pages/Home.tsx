@@ -181,7 +181,7 @@ export default function Home() {
   return (
     <div className="home-page">
       <div className="hero-section">
-        <h1>Find Your Perfect Match</h1>
+        <h1>Find Your Perfect Match!</h1>
         <p>Connect with roommates or find listings that match your lifestyle</p>
         <div className="search-section">
           <form onSubmit={handleSearch}>
@@ -234,27 +234,6 @@ export default function Home() {
               ))
             ) : (
               <div className="no-listings">No listings found</div>
-            )}
-          </div>
-        </section>
-
-        <section className="listings-section">
-          <div className="section-header">
-            <h2>Looking for Roommates?</h2>
-            <Link to="/roommates" className="see-more-link">See More</Link>
-          </div>
-          <div className="listings-grid home-grid">
-            {roommateListings.length > 0 ? (
-              roommateListings.map(listing => (
-                <ListingCard 
-                  key={listing.id} 
-                  listing={listing}
-                  onFavorite={handleFavorite}
-                  isFavorited={favorites.includes(listing.id)}
-                />
-              ))
-            ) : (
-              <div className="no-listings">No roommate listings found</div>
             )}
           </div>
         </section>
