@@ -1,6 +1,6 @@
 import { useState, useRef, ChangeEvent } from 'react';
 import { postListing, ListingFormData } from '../firebase/firebaseHelpers';
-import { QuestionnaireCategory } from '../types';
+import { QuestionnaireCategory } from '../types/index';
 
 export default function PostListing() {
   const [formData, setFormData] = useState<ListingFormData>({
@@ -119,19 +119,39 @@ export default function PostListing() {
     
     try {
       setIsSubmitting(true);
+
+      const {
+        sleepSchedule, wakeupSchedule, cleanliness, noiseLevel,
+        visitors, studyHabits, lifestyle, ...baseData
+      } = formData;
+
+      // Replace actual image upload with placeholder
+      const placeholderImage = `https://placehold.co/800x600?text=${encodeURIComponent(formData.title || 'Listing')}`;
+      const placeholderImages = [placeholderImage];   
       
       // Prepare the tags from individual fields
       const listingWithTags: ListingFormData = {
-        ...formData,
+        ...baseData,
         tags: {
-          sleepSchedule: formData.sleepSchedule,
-          wakeupSchedule: formData.wakeupSchedule,
-          cleanliness: formData.cleanliness,
-          noiseLevel: formData.noiseLevel,
-          visitors: formData.visitors,
-          studyHabits: formData.studyHabits,
-          lifestyle: formData.lifestyle,
-        }
+          sleepSchedule,
+          wakeupSchedule,
+          cleanliness,
+          noiseLevel,
+          visitors,
+          studyHabits,
+          lifestyle
+        // ...formData,
+        // tags: {
+        //   sleepSchedule: formData.sleepSchedule,
+        //   wakeupSchedule: formData.wakeupSchedule,
+        //   cleanliness: formData.cleanliness,
+        //   noiseLevel: formData.noiseLevel,
+        //   visitors: formData.visitors,
+        //   studyHabits: formData.studyHabits,
+        //   lifestyle: formData.lifestyle,
+        },
+        imageURLs: placeholderImages,
+        thumbnailURL: placeholderImage
       };
       
       const listingId = await postListing(listingWithTags);

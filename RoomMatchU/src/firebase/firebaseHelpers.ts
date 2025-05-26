@@ -11,8 +11,8 @@ import {
 } from "firebase/firestore";
 import { db, auth, storage } from "./config";
 import { User } from "firebase/auth";
-import { QuestionnaireCategory } from "../types";
-import { UserQuestionnaire } from "../types";
+import { QuestionnaireCategory } from "../types/index";
+import { UserQuestionnaire } from "../types/index";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import imageCompression from "browser-image-compression";
 
@@ -42,29 +42,34 @@ export interface ListingFormData {
   // Images
   images?: File[];
   thumbnailIndex?: number;
+
+  imageURLs?: string[];
+  thumbnailURL?: string;
 }
 
 // Final structure of a listing stored in Firestore
 export interface Listing {
   id: string;
   title: string;
-  bio: string;
-  neighborhood: string;
-  beds: number;
-  baths: number;
-  availableDate: Date;
   price: number;
-  posterUID: string;
-  createdAt: Timestamp; // Firestore timestamp object
-  onCampus: boolean;
+  location: string;
+  description: string;
+  bedrooms: number;
+  bathrooms: number;
+  availableDate: string;
+  imageURLs: string[];
+  thumbnailURL?: string;
+  amenities: string[];
+  utilities: string[];
+  ownerId: string;
+  createdAt: Timestamp;
+  favoriteCount: number;
   pets: boolean;
-  // Tags for compatibility
-  tags?: {
+  onCampus: boolean;
+  neighborhood: string;
+  tags: {
     [key in QuestionnaireCategory]?: string | string[];
   };
-  // Images
-  imageURLs?: string[];
-  thumbnailURL?: string;
 }
 
 // Compress an image before uploading
@@ -118,25 +123,42 @@ export const postListing = async (formData: ListingFormData): Promise<string> =>
   }
 
   // Upload images if any
-  let imageURLs: string[] = [];
-  let thumbnailURL: string | undefined;
-  
-  if (formData.images && formData.images.length > 0) {
+  let imageURLs: string[] = formData.imageURLs || [];
+  let thumbnailURL: string | undefined = formData.thumbnailURL;
+
+  if (!imageURLs.length && formData.images && formData.images.length > 0) {
     const uploadPromises = formData.images.map((image, index) => {
       const path = `listings/${user.uid}/${Date.now()}_${index}_${image.name}`;
       return uploadImage(image, path);
     });
-    
+
     imageURLs = await Promise.all(uploadPromises);
-    
-    // Set the thumbnail URL
+
     if (typeof formData.thumbnailIndex === 'number' && imageURLs[formData.thumbnailIndex]) {
       thumbnailURL = imageURLs[formData.thumbnailIndex];
     } else if (imageURLs.length > 0) {
-      // Default to first image if no thumbnail specified
       thumbnailURL = imageURLs[0];
     }
   }
+  // let imageURLs: string[] = [];
+  // let thumbnailURL: string | undefined;
+  
+  // if (formData.images && formData.images.length > 0) {
+  //   const uploadPromises = formData.images.map((image, index) => {
+  //     const path = `listings/${user.uid}/${Date.now()}_${index}_${image.name}`;
+  //     return uploadImage(image, path);
+  //   });
+    
+  //   imageURLs = await Promise.all(uploadPromises);
+    
+  //   // Set the thumbnail URL
+  //   if (typeof formData.thumbnailIndex === 'number' && imageURLs[formData.thumbnailIndex]) {
+  //     thumbnailURL = imageURLs[formData.thumbnailIndex];
+  //   } else if (imageURLs.length > 0) {
+  //     // Default to first image if no thumbnail specified
+  //     thumbnailURL = imageURLs[0];
+  //   }
+  // }
 
   const listingData = {
     title: formData.title,
@@ -165,24 +187,28 @@ export const fetchListings = async (): Promise<Listing[]> => {
     const snapshot = await getDocs(collection(db, "listings"));
     return snapshot.docs.map(doc => {
       const data = doc.data();
-
       return {
         id: doc.id,
         title: data.title,
-        bio: data.bio,
-        neighborhood: data.neighborhood,
-        beds: data.beds,
-        baths: data.baths,
-        availableDate: data.availableDate.toDate?.() ?? new Date(), // ensure Date object
         price: data.price,
-        posterUID: data.posterUID,
-        createdAt: data.createdAt,
-        onCampus: data.onCampus || false,
-        pets: data.pets || false,
-        tags: data.tags || {},
+        location: data.location || '',
+        description: data.description || '',
+        bedrooms: data.bedrooms || 0,
+        bathrooms: data.bathrooms || 0,
+        availableDate: data.availableDate,
         imageURLs: data.imageURLs || [],
         thumbnailURL: data.thumbnailURL,
-      } as Listing;
+        amenities: data.amenities || [],
+        utilities: data.utilities || [],
+        ownerId: data.posterUID,
+        createdAt: data.createdAt,
+        favoriteCount: data.favoriteCount || 0,
+        pets: data.pets,
+        onCampus: data.onCampus,
+        neighborhood: data.neighborhood,
+        tags: data.tags || {},
+        compatibilityScores: data.compatibilityScores || {}
+      };
     });
   } catch (error) {
     console.error("Error fetching listings:", error);

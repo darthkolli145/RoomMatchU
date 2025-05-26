@@ -1,89 +1,70 @@
+// pages/home
 import { useState, useEffect } from 'react';
 import { collection, getDocs, query, orderBy, limit, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, useMockFirebase } from '../firebase';
-import { ListingType } from '../types';
+import { ListingType } from '../types/index';
 import ListingCard from '../components/ListingCard';
 import { Link, useNavigate } from 'react-router-dom';
 import { populateWithSampleListings } from '../utils/populateDatabase';
-import { sampleListings } from '../utils/sampleListings'; // Import the sample listings
+// import { sampleListings } from '../utils/sampleListings'; // Import the sample listings
 import { useAuth } from '../contexts/AuthContext';
+import { fetchListings } from '../firebase/firebaseHelpers';
+import { Listing } from '../firebase/firebaseHelpers';
+import { Timestamp } from 'firebase/firestore';
+
 
 // Fallback mock data with required tags - only used if sample listings fail
-const fallbackListings: ListingType[] = [
+const fallbackListings: Listing[] = [
   {
     id: 'listing-1',
     title: 'Beautiful 2 Bedroom in Westside',
-    price: 1200,
-    location: 'Westside, Santa Cruz',
     description: 'Spacious apartment with view',
+    location: 'Westside, Santa Cruz',
+    price: 1200,
+    neighborhood: 'westside',
     bedrooms: 2,
     bathrooms: 1,
     availableDate: '2025-06-01',
     imageURLs: ['https://via.placeholder.com/300?text=Apartment'],
+    thumbnailURL: 'https://via.placeholder.com/300?text=Apartment',
     amenities: ['parking', 'laundry'],
     utilities: ['water', 'garbage'],
     ownerId: 'user-1',
-    createdAt: { toDate: () => new Date() },
+    createdAt: Timestamp.fromDate(new Date()),
     favoriteCount: 5,
     pets: true,
     onCampus: false,
-    neighborhood: 'westside',
     tags: {
-      sleepSchedule: "10pm - 12am",
+      sleepSchedule: "10pm – 12am",
       cleanliness: "Moderately tidy",
       noiseLevel: "Background noise/music",
       lifestyle: ["Cooks often"]
     }
   },
   {
-    id: 'listing-2',
-    title: '3 Bedroom House in Seabright',
-    price: 2200,
-    location: 'Seabright, Santa Cruz',
-    description: 'Charming house near the beach',
-    bedrooms: 3,
-    bathrooms: 2,
-    availableDate: '2025-05-15',
-    imageURLs: ['https://via.placeholder.com/300?text=House'],
-    amenities: ['parking', 'laundry', 'backyard'],
+    id: 'listing-1',
+    title: 'Beautiful 2 Bedroom in Westside',
+    description: 'Spacious apartment with view',
+    location: 'Westside, Santa Cruz',
+    price: 1200,
+    neighborhood: 'westside',
+    bedrooms: 2,
+    bathrooms: 1,
+    availableDate: '2025-06-01',
+    imageURLs: ['https://via.placeholder.com/300?text=Apartment'],
+    thumbnailURL: 'https://via.placeholder.com/300?text=Apartment',
+    amenities: ['parking', 'laundry'],
     utilities: ['water', 'garbage'],
-    ownerId: 'user-2',
-    createdAt: { toDate: () => new Date(Date.now() - 86400000) },
-    favoriteCount: 8,
+    ownerId: 'user-1',
+    createdAt: Timestamp.fromDate(new Date()),
+    favoriteCount: 5,
     pets: true,
     onCampus: false,
-    neighborhood: 'seabright',
     tags: {
-      sleepSchedule: "After 12am",
-      cleanliness: "Very tidy",
-      noiseLevel: "Silent",
-      lifestyle: ["Stays up late", "Vegetarian"]
-    }
-  },
-  {
-    id: 'listing-3',
-    title: 'Room in 4-person apartment on campus',
-    price: 900,
-    location: 'UC Santa Cruz',
-    description: 'Room available in student housing',
-    bedrooms: 1,
-    bathrooms: 1,
-    availableDate: '2025-06-15',
-    imageURLs: ['https://via.placeholder.com/300?text=Dorm'],
-    amenities: ['furnished', 'kitchen'],
-    utilities: ['all'],
-    ownerId: 'user-3',
-    createdAt: { toDate: () => new Date(Date.now() - 172800000) },
-    favoriteCount: 3,
-    pets: false,
-    onCampus: true,
-    neighborhood: 'campus',
-    tags: {
-      sleepSchedule: "Before 10pm",
+      sleepSchedule: "10pm – 12am",
       cleanliness: "Moderately tidy",
-      noiseLevel: "Silent",
-      studyHabits: "Library",
-      lifestyle: ["Wakes up early"]
+      noiseLevel: "Background noise/music",
+      lifestyle: ["Cooks often"]
     }
   }
 ];
@@ -91,52 +72,40 @@ const fallbackListings: ListingType[] = [
 export default function Home() {
   const navigate = useNavigate();
   const { currentUser, favorites, refreshFavorites } = useAuth();
-  const [newListings, setNewListings] = useState<ListingType[]>([]);
-  const [roommateListings, setRoommateListings] = useState<ListingType[]>([]);
-  const [matchedListings, setMatchedListings] = useState<ListingType[]>([]);
+  const [newListings, setNewListings] = useState<Listing[]>([]);
+  const [roommateListings, setRoommateListings] = useState<Listing[]>([]);
+  const [matchedListings, setMatchedListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [populateStatus, setPopulateStatus] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    const fetchListings = async () => {
+    const fetchAndSetListings = async () => {
       try {
-        // Use sampleListings for now
-        const listingsData = sampleListings;
-        
-        // Organize listings into different sections
+        const listingsData = await fetchListings();
+  
         if (listingsData.length) {
-          // Sort by createdAt for "New Listings"
+          // Sort by createdAt
           const sortedByDate = [...listingsData].sort((a, b) => {
             return new Date(b.createdAt.toDate()).getTime() - new Date(a.createdAt.toDate()).getTime();
           });
-          
-          const newListings = sortedByDate.slice(0, 4);
-          setNewListings(newListings);
-          
-          // For "Looking for Roommates" section - just a different slice for now
-          const roommates = sortedByDate.slice(4, 8);
-          setRoommateListings(roommates);
-          
-          // For "Based on Questionnaire" section
-          const matched = [...listingsData]
-            .sort(() => 0.5 - Math.random()) // Simple random shuffle
-            .slice(0, 4);
-          setMatchedListings(matched);
+  
+          setNewListings(sortedByDate.slice(0, 4));
+          setRoommateListings(sortedByDate.slice(4, 8));
+          setMatchedListings([...listingsData].sort(() => 0.5 - Math.random()).slice(0, 4));
         }
-        
+  
         setLoading(false);
       } catch (error) {
         console.error('Error loading listings:', error);
-        // Use fallback as last resort
         setNewListings(fallbackListings);
         setRoommateListings(fallbackListings);
         setMatchedListings(fallbackListings);
         setLoading(false);
       }
     };
-    
-    fetchListings();
+  
+    fetchAndSetListings();
   }, []);
 
   const handleFavorite = async (listingId: string) => {

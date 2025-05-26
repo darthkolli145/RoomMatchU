@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ListingType } from '../types';
+import { ListingType } from '../types/index';
 import { useAuth } from '../contexts/AuthContext';
 import { toggleFavorite } from '../firebase/favoritesService';
+import { Listing } from '../firebase/firebaseHelpers';
+
 
 interface ListingCardProps {
-  listing: ListingType;
+  listing: Listing;
   onFavorite?: (id: string) => void;
   isFavorited?: boolean;
   compatibilityScore?: {

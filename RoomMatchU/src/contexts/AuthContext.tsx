@@ -2,7 +2,7 @@ import React, { createContext, useState, useContext, useEffect, ReactNode } from
 import { auth, db, googleProvider } from '../firebase/config';
 import { User as FirebaseUser, signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { User, UserQuestionnaire } from '../types';
+import { User, UserQuestionnaire } from '../types/index';
 import { getUserFavorites } from '../firebase/favoritesService';
 
 interface AuthContextType {

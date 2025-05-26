@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ListingType } from '../types';
+import { ListingType } from '../types/index';
 import ImageGallery from '../components/ImageGallery';
 import { sampleListings } from '../utils/sampleListings';
 import { auth } from '../firebase/config';

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { QuestionnaireCategory } from '../types';
+import { QuestionnaireCategory } from '../types/index';
 
 type FilterProps = {
   onFilterChange: (filters: FilterOptions) => void;

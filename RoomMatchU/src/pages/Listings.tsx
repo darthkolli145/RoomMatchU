@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ListingType, UserQuestionnaire, PriorityLevel } from '../types';
+import { ListingType, UserQuestionnaire, PriorityLevel } from '../types/index';
 import ListingCard from '../components/ListingCard';
 import ListingFilter, { FilterOptions } from '../components/ListingFilter';
 import { filterListings, ListingWithScore, sortListingsByCompatibility } from '../utils/filterListings';
@@ -7,6 +7,8 @@ import { sampleListings } from '../utils/sampleListings'; // Import the sample l
 import { useMockFirebase } from '../firebase';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { fetchListings } from '../firebase/firebaseHelpers';
+
 
 // Fallback mock data if everything else fails
 const fallbackListings = [
@@ -141,33 +143,27 @@ export default function Listings() {
   }, [location.search]);
 
   useEffect(() => {
-    const fetchListings = async () => {
+    const fetchListingsData = async () => {
       try {
-        console.log('Fetching listings...');
-        
-        // Use sample listings which have complete compatibility data
-        console.log('Using sample listings data with compatibility tags');
-        const listingsData = sampleListings;
-        
-        console.log(`Total sample listings: ${listingsData.length}`);
+        console.log('Fetching listings from Firestore...');
+        const listingsData = await fetchListings();
+  
+        console.log(`Fetched ${listingsData.length} listings`);
         setListings(listingsData);
-        
-        // Apply initial filtering (without compatibility initially)
+  
         const { listingsWithScores } = filterListings(listingsData, {}, undefined);
         setFilteredListings(listingsWithScores);
-        
         setLoading(false);
       } catch (error) {
         console.error('Error loading listings:', error);
-        // Use fallback as last resort
         setListings(fallbackListings);
         const { listingsWithScores } = filterListings(fallbackListings, {}, undefined);
         setFilteredListings(listingsWithScores);
         setLoading(false);
       }
     };
-
-    fetchListings();
+  
+    fetchListingsData();
   }, []);
 
   // Apply filters whenever filters or search term changes
