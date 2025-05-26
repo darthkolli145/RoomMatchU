@@ -15,6 +15,7 @@ import { QuestionnaireCategory } from "../types/index";
 import { UserQuestionnaire } from "../types/index";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import imageCompression from "browser-image-compression";
+import { getDoc, doc, deleteDoc } from "firebase/firestore";
 
 // Input from the PostListing form
 export interface ListingFormData {
@@ -230,6 +231,35 @@ export const postQuestionnaire = async (questionnaireData: UserQuestionnaire): P
 
   return docRef.id;
 };
+
+export const deleteListing = async (listingId: string) => {
+  const user = auth.currentUser;
+  if (!user) throw new Error("User not authenticated");
+
+  // Fetch the listing document first to verify ownership (optional but recommended)
+  const listingRef = doc(db, "listings", listingId);
+
+  try {
+    const listingSnap = await getDoc(listingRef);  // Use `getDoc` instead of `get()`
+
+    if (!listingSnap.exists()) {
+      throw new Error("Listing does not exist");
+    }
+
+    const listingData = listingSnap.data();
+    if (listingData?.posterUID !== user.uid) {
+      throw new Error("User not authorized to delete this listing");
+    }
+
+    // Proceed to delete
+    await deleteDoc(listingRef);
+    console.log(`Listing ${listingId} deleted successfully.`);
+  } catch (error) {
+    console.error("Error in deleteListing function:", error);
+    throw error; // Re-throw to allow calling function to handle the error
+  }
+};
+
 
 export const addFavorite = async (listingId: string) => {
   const user = auth.currentUser;

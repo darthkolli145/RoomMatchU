@@ -193,7 +193,7 @@ export default function PostListing() {
 
   return (
     <div className="post-listing-page">
-      <h1>Post A Listing</h1>
+      <h1>Post Your Own Listing!</h1>
       
       <form onSubmit={handleSubmit} className="post-listing-form">
         <h2 className="text-xl font-semibold text-indigo-600 border-b pb-1 mt-8 mb-4">

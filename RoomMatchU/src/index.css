@@ -1,13 +1,13 @@
 :root {
-  --primary-color: #4CAF50;
+  --primary-color: #b4e1f4;
   --primary-dark: #388E3C;
   --primary-light: #C8E6C9;
   --accent-color: #FF5722;
-  --text-color: #212121;
+  --text-color: #235975;
   --text-secondary: #757575;
-  --border-color: #BDBDBD;
-  --background-color: #F5F5F5;
-  --card-color: #FFFFFF;
+  --border-color: #235975;
+  --background-color: #F0E5C5;
+  --card-color: #fff2f0;
   --error-color: #D32F2F;
   --success-color: #388E3C;
 }
@@ -47,6 +47,8 @@ input, select, textarea {
   border-radius: 4px;
   padding: 8px 12px;
   outline: none;
+  background-color: var(--card-color);
+  color: var(--text-color);
 }
 
 input:focus, select:focus, textarea:focus {
@@ -73,16 +75,18 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 20px;
+  padding: 15px 100px;
   background-color: var(--primary-color);
   color: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 3px dashed #a3dbf3;
 }
 
 .navbar-left .navbar-brand {
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: bold;
-  color: white;
+  color: #ffe790;
+  -webkit-text-stroke: 1px #c29800;
 }
 
 .navbar-right {
@@ -92,7 +96,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .icon-btn {
-  color: white;
+  color: var(--text-color);
   font-size: 1.2rem;
   display: flex;
   align-items: center;
@@ -103,7 +107,8 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: white;
+  font-weight: bold;
+  color: var(--text-color);
 }
 
 .profile-btn img {
@@ -132,7 +137,7 @@ input:focus, select:focus, textarea:focus {
   position: absolute;
   top: 100%;
   right: 0;
-  background-color: white;
+  background-color: var(--card-color);
   border-radius: 4px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   padding: 10px 0;
@@ -161,9 +166,6 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* Home Page */
-.search-section {
-  margin: 20px 0;
-}
 
 .search-section form {
   display: flex;
@@ -177,7 +179,9 @@ input:focus, select:focus, textarea:focus {
   padding: 12px 15px;
   border-radius: 25px;
   font-size: 1rem;
-  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  background-color: var(--card-color);
+  border: 2px solid #8C0116;
 }
 
 .search-icon {
@@ -185,7 +189,7 @@ input:focus, select:focus, textarea:focus {
   right: 15px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--text-secondary);
+  color: var(--text-color);
 }
 
 .sections-container {
@@ -214,20 +218,17 @@ input:focus, select:focus, textarea:focus {
   }
 }
 
-.listings-section {
-  margin: 40px 0;
-}
-
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  color: #8C0116;
 }
 
 .see-more-link {
-  color: var(--primary-color);
-  font-weight: 500;
+  color: #8C0116;
+  font-weight: 600;
 }
 
 .listings-grid {
@@ -247,6 +248,7 @@ input:focus, select:focus, textarea:focus {
 .listing-card {
   background-color: var(--card-color);
   border-radius: 10px;
+  border: 1px solid var(--text-color);
   overflow: hidden;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s, box-shadow 0.2s;
@@ -332,6 +334,7 @@ input:focus, select:focus, textarea:focus {
 
 .listings-header {
   margin-bottom: 30px;
+  color: #8C0116;
 }
 
 .listings-content {
@@ -346,6 +349,7 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 20px;
   height: fit-content;
+  border: 1px solid #8C0116;
 }
 
 .filter-bar h3 {
@@ -410,17 +414,18 @@ input:focus, select:focus, textarea:focus {
 
 /* Post Listing Page Styles */
 .post-listing-page {
-  max-width: 600px;
+  max-width: 900px;
   margin: 50px auto;
   padding: 20px;
-  background-color: #f8f9fa; /* light background for the form section */
+  background-color: var(--card-color); /* light background for the form section */
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .post-listing-page h1 {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 10px;
+  color: #8C0116;
 }
 
 .post-listing-form {
@@ -433,14 +438,14 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   flex-direction: column;
   font-weight: bold;
-  color: #333;
+  color: var(--text-color);
 }
 
 .post-listing-form input,
 .post-listing-form textarea,
 .post-listing-form select {
   padding: 10px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--text-color);
   border-radius: 4px;
   font-size: 1rem;
 }
@@ -455,6 +460,7 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   flex-direction: column;
   gap: 15px;
+  color: var(--text-color);
 }
 
 .image-upload-container {
@@ -465,17 +471,20 @@ input:focus, select:focus, textarea:focus {
 }
 
 .upload-btn {
-  background-color: #6366f1;
-  color: white;
+  background-color: #ffe790;
+  color: #235975;
   padding: 10px 20px;
   border-radius: 4px;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
+  border: 3px solid #235975;
+
 }
 
 .upload-btn:hover {
-  background-color: #4f46e5;
+  background-color: #235975;
+  color: #ffe790;
 }
 
 .image-grid {
@@ -493,7 +502,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .image-item.thumbnail {
-  border: 3px solid #4f46e5;
+  border: 3px solid #235975;
 }
 
 .image-item img {
@@ -524,7 +533,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .image-actions button.active {
-  background-color: #4f46e5;
+  background-color: #235975;
   color: white;
   cursor: default;
 }
@@ -540,18 +549,21 @@ input:focus, select:focus, textarea:focus {
 
 /* Submit button styles */
 .post-listing-form button[type="submit"] {
-  background-color: #6366f1;
-  color: white;
+  background-color: #ffe790;
+  color: #235975;
   padding: 12px;
   border-radius: 4px;
   font-weight: bold;
   cursor: pointer;
   transition: background-color 0.2s;
   margin-top: 20px;
+  border: 3px solid #235975;
+
 }
 
 .post-listing-form button[type="submit"]:hover:not(:disabled) {
-  background-color: #4f46e5;
+  background-color: #235975;
+  color: #ffe790;
 }
 
 .post-listing-form button[type="submit"]:disabled {
@@ -608,10 +620,9 @@ input:focus, select:focus, textarea:focus {
 
 /* Filter styles */
 .listing-filter {
-  background-color: white;
+  background-color: var(--card-color);
   border-radius: 8px;
   padding: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .filter-heading {
@@ -634,7 +645,34 @@ input:focus, select:focus, textarea:focus {
   color: #4b5563;
 }
 
-/* Questionnaire priority selectors */
+/* Questionnaire & priority selectors */
+.questionnaire-page{
+  color: #8C0116;
+}
+.questionnaire-page button{
+  display: inline-block;
+  background-color: #235975;
+  color: white;
+  font-weight: 500;
+  margin: 15px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.questionnaire-page button[type="submit"] {
+  display: inline-block;
+  background-color: #235975;
+  color: white;
+  font-weight: 500;
+  margin: 15px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
 .priority-selector {
   display: flex;
   align-items: center;
@@ -654,6 +692,18 @@ input:focus, select:focus, textarea:focus {
   padding: 4px 8px;
   background-color: #f9fafb;
   font-size: 0.875rem;
+}
+
+.profile button{
+  display: inline-block;
+  background-color: #235975;
+  color: white;
+  font-weight: 500;
+  margin: 15px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background-color 0.2s;
 }
 
 /* Image Gallery Styles */
@@ -723,6 +773,9 @@ input:focus, select:focus, textarea:focus {
   max-width: 1200px;
   margin: 40px auto;
   padding: 0 20px;
+  color: #8C0116;
+  background-color: var(--card-color);
+  border-radius: 8px;
 }
 
 .listing-detail-header {
@@ -733,20 +786,22 @@ input:focus, select:focus, textarea:focus {
 }
 
 .back-link {
-  color: var(--primary-color);
+  color: var(--text-color);
   font-weight: 500;
   text-decoration: none;
+  margin-top: 20px;
 }
 
 .favorite-button {
-  background-color: #e2e8f0;
-  color: #64748b;
+  background-color: #8C0116;
+  color: #ffe790;
   padding: 8px 16px;
   border-radius: 6px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
   border: none;
+  margin-top: 20px;
 }
 
 .favorite-button.favorited {
@@ -759,15 +814,13 @@ input:focus, select:focus, textarea:focus {
 }
 
 .listing-title {
-  font-size: 2rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  margin-bottom: 8px;
 }
 
 .listing-location {
-  font-size: 1.2rem;
+  font-size: 1rem;
   color: #64748b;
-  margin-bottom: 16px;
 }
 
 .listing-price-banner {
@@ -812,6 +865,7 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  margin-right: 20px;
 }
 
 .detail-group {
@@ -993,7 +1047,7 @@ input:focus, select:focus, textarea:focus {
 .hero-section {
   text-align: center;
   padding: 40px 20px;
-  background-color: #f8fafc;
+  background-color: #F0E5C5;
   border-radius: 8px;
   margin-bottom: 30px;
 }
@@ -1002,12 +1056,12 @@ input:focus, select:focus, textarea:focus {
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 10px;
-  color: #1e293b;
+  color: #8C0116;
 }
 
 .hero-section p {
   font-size: 1.2rem;
-  color: #64748b;
+  color: #8C0116;
   margin-bottom: 20px;
 }
 
@@ -1404,14 +1458,14 @@ input:focus, select:focus, textarea:focus {
 }
 
 .questionnaire-prompt p {
-  color: #475569;
+  color: #0369a1;
   margin-bottom: 15px;
 }
 
 .questionnaire-btn {
   display: inline-block;
-  background-color: #0ea5e9;
-  color: white;
+  background-color: var(--primary-color);
+  color: var(--text-color);
   font-weight: 500;
   padding: 8px 16px;
   border-radius: 6px;
@@ -1420,6 +1474,8 @@ input:focus, select:focus, textarea:focus {
 }
 
 .questionnaire-btn:hover {
-  background-color: #0284c7;
+  background-color: #8fddff;
+  color: var(--text-color);
 }
+
 

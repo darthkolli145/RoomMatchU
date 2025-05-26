@@ -8,6 +8,7 @@ import Questionnaire from './pages/Questionnaire';
 import Favorites from './pages/Favorites';
 import ListingDetail from './pages/ListingDetail';
 import Login from './pages/Login';
+import Profile from './pages/Profile';
 import './App.css';
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
               <Route path="/questionnaire" element={<Questionnaire />} />
               <Route path="/favorites" element={<Favorites />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/profile" element={<Profile/>} /> 
               {/* Add more routes as you build additional pages */}
             </Routes>
           </main>

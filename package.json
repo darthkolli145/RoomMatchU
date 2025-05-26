@@ -7,5 +7,13 @@
     "dev": "cd RoomMatchU && npx vite",
     "build": "cd RoomMatchU && npm run build",
     "preview": "cd RoomMatchU && npm run preview"
+  },
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.1.7",
+    "autoprefixer": "^10.4.21",
+    "browser-image-compression": "^2.0.2",
+    "framer-motion": "^12.12.1",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.1.7"
   }
-} 
+}
