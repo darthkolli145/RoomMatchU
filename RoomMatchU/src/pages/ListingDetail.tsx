@@ -6,6 +6,7 @@ import { sampleListings } from '../utils/sampleListings';
 import { auth } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import { toggleFavorite } from '../firebase/favoritesService';
+import { fetchListings } from '../firebase/firebaseHelpers';
 
 export default function ListingDetail() {
   const { id } = useParams<{ id: string }>();
@@ -19,14 +20,13 @@ export default function ListingDetail() {
   useEffect(() => {
     const fetchListing = async () => {
       try {
-        // In a real app, this would fetch from Firebase
-        // For now, we'll use our sample data
-        const listingData = sampleListings.find(item => item.id === id);
-        
+        const listingsData = await fetchListings();
+        const listingData = listingsData.find(item => item.id === id);
+
         if (listingData) {
           setListing(listingData);
         }
-        
+
         setLoading(false);
       } catch (error) {
         console.error('Error fetching listing:', error);

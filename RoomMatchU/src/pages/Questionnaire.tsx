@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserQuestionnaire, PriorityLevel, QuestionnaireCategory } from '../types';
+import { UserQuestionnaire, PriorityLevel, QuestionnaireCategory } from '../types/index';
 
 const initialForm: UserQuestionnaire = {
   lifestyle: [],
