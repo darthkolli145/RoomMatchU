@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserQuestionnaire, PriorityLevel, QuestionnaireCategory } from '../types'; // Adjust path if needed
+import { UserQuestionnaire, PriorityLevel, QuestionnaireCategory } from '../types/index'; // Adjust path if needed
 
 const initialForm: UserQuestionnaire = {
   lifestyle: [],
@@ -538,4 +538,3 @@ const Questionnaire: React.FC = () => {
 };
 
 export default Questionnaire;
-

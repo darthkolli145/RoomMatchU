@@ -1,6 +1,6 @@
 // pages/Favorites.tsx
 import { useState, useEffect } from 'react';
-import { ListingType } from '../types';
+import { ListingType } from '../types/index';
 import ListingCard from '../components/ListingCard';
 import { sampleListings } from '../utils/sampleListings';
 import { useAuth } from '../contexts/AuthContext';
