@@ -250,11 +250,15 @@ useEffect(() => {
       
       <div className="contact-info">
         <h2>Contact Information</h2>
-        {ownerEmail ? (
+            {currentUser ? (
+        ownerEmail ? (
           <p>Contact: {ownerEmail}</p>
         ) : (
           <p>Contact email not available.</p>
-        )}
+        )
+      ) : (
+        <p>Please sign in to view contact details.</p>
+      )}
       </div>
     </div>
   );
