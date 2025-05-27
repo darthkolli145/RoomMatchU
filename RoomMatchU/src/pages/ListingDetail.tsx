@@ -6,7 +6,7 @@ import { sampleListings } from '../utils/sampleListings';
 import { auth } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import { toggleFavorite } from '../firebase/favoritesService';
-import { fetchListings } from '../firebase/firebaseHelpers';
+import { fetchListings, fetchUserEmail } from '../firebase/firebaseHelpers';
 
 export default function ListingDetail() {
   const { id } = useParams<{ id: string }>();
@@ -16,6 +16,7 @@ export default function ListingDetail() {
   const [loading, setLoading] = useState(true);
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
   const [showAuthMessage, setShowAuthMessage] = useState(false);
+  const [posterEmail, setPosterEmail] = useState<string | null>(null);
   
   useEffect(() => {
     const fetchListing = async () => {
@@ -25,6 +26,10 @@ export default function ListingDetail() {
 
         if (listingData) {
           setListing(listingData);
+
+          // Fetch email of the user who posted the listing
+        const email = await fetchUserEmail(listingData.ownerId);
+        setPosterEmail(email);
         }
 
         setLoading(false);
@@ -36,6 +41,18 @@ export default function ListingDetail() {
     
     fetchListing();
   }, [id]);
+
+  const [ownerEmail, setOwnerEmail] = useState<string | null>(null);
+
+useEffect(() => {
+  const getEmail = async () => {
+    if (listing?.ownerId) {
+      const email = await fetchUserEmail(listing.ownerId);
+      setOwnerEmail(email);
+    }
+  };
+  getEmail();
+}, [listing]);
   
   const handleFavorite = async () => {
     // Check if user is authenticated
@@ -233,7 +250,11 @@ export default function ListingDetail() {
       
       <div className="contact-info">
         <h2>Contact Information</h2>
-        <p>This would display the contact information of the poster in a real app.</p>
+        {ownerEmail ? (
+          <p>Contact: {ownerEmail}</p>
+        ) : (
+          <p>Contact email not available.</p>
+        )}
       </div>
     </div>
   );

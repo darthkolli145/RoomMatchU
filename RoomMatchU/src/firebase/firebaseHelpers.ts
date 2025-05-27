@@ -17,6 +17,18 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import imageCompression from "browser-image-compression";
 import { getDoc, doc, deleteDoc } from "firebase/firestore";
 
+export const fetchUserEmail = async (uid: string): Promise<string | null> => {
+  try {
+    const userDoc = await getDoc(doc(db, "users", uid));
+    if (userDoc.exists()) {
+      return userDoc.data().email || null;
+    }
+  } catch (error) {
+    console.error("Error fetching user email:", error);
+  }
+  return null;
+};
+
 // Input from the PostListing form
 export interface ListingFormData {
   title: string;

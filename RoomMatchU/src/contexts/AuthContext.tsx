@@ -4,6 +4,23 @@ import { User as FirebaseUser, signInWithPopup, signOut, onAuthStateChanged } fr
 import { doc, getDoc } from 'firebase/firestore';
 import { User, UserQuestionnaire } from '../types/index';
 import { getUserFavorites } from '../firebase/favoritesService';
+import { setDoc } from 'firebase/firestore';
+
+const createUserDocumentIfNotExists = async (firebaseUser: FirebaseUser) => {
+  const userDocRef = doc(db, 'users', firebaseUser.uid);
+  const userDoc = await getDoc(userDocRef);
+
+  if (!userDoc.exists()) {
+    await setDoc(userDocRef, {
+      email: firebaseUser.email,
+      displayName: firebaseUser.displayName || '',
+      photoURL: firebaseUser.photoURL || '',
+      createdAt: new Date()
+    });
+    console.log('User document created for:', firebaseUser.email);
+  }
+};
+
 
 interface AuthContextType {
   currentUser: User | null;
@@ -33,6 +50,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Function to fetch user's questionnaire data
   const fetchUserData = async (firebaseUser: FirebaseUser) => {
     try {
+      // Make sure user's email is stored in Firestore
+      await createUserDocumentIfNotExists(firebaseUser);
+      
       const userDocRef = doc(db, 'users', firebaseUser.uid);
       const userDoc = await getDoc(userDocRef);
       
