@@ -3,11 +3,11 @@
   --primary-dark: #388E3C;
   --primary-light: #C8E6C9;
   --accent-color: #FF5722;
-  --text-color: #235975;
-  --text-secondary: #757575;
+  --text-color: #fde9b5;
+  --text-secondary: #fde9b5;
   --border-color: #235975;
-  --background-color: #F0E5C5;
-  --card-color: #fff2f0;
+  --background-color: #fde9b5;
+  --card-color: #9b3220;
   --error-color: #D32F2F;
   --success-color: #388E3C;
 }
@@ -43,16 +43,16 @@ button {
 
 input, select, textarea {
   font-family: inherit;
-  border: 1px solid var(--border-color);
+  border: 1px solid #db090c;
   border-radius: 4px;
   padding: 8px 12px;
   outline: none;
-  background-color: var(--card-color);
-  color: var(--text-color);
+  background-color: var(--text-color);
+  color: #db090c;
 }
 
 input:focus, select:focus, textarea:focus {
-  border-color: var(--primary-color);
+  border-color: var(--card-color);
 }
 
 /* App Layout */
@@ -76,16 +76,16 @@ input:focus, select:focus, textarea:focus {
   justify-content: space-between;
   align-items: center;
   padding: 15px 100px;
-  background-color: var(--primary-color);
+  background-color: #c1dde7;
   color: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border: 3px dashed #a3dbf3;
+  border: 3px dashed #c1dde7;
 }
 
 .navbar-left .navbar-brand {
   font-size: 2rem;
   font-weight: bold;
-  color: #ffe790;
+  color: #fde9b5;
   -webkit-text-stroke: 1px #c29800;
 }
 
@@ -96,7 +96,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .icon-btn {
-  color: var(--text-color);
+  color: white;
   font-size: 1.2rem;
   display: flex;
   align-items: center;
@@ -108,7 +108,7 @@ input:focus, select:focus, textarea:focus {
   align-items: center;
   gap: 8px;
   font-weight: bold;
-  color: var(--text-color);
+  color: white;
 }
 
 .profile-btn img {
@@ -137,7 +137,7 @@ input:focus, select:focus, textarea:focus {
   position: absolute;
   top: 100%;
   right: 0;
-  background-color: var(--card-color);
+  background-color: #c1dde7;
   border-radius: 4px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   padding: 10px 0;
@@ -148,13 +148,14 @@ input:focus, select:focus, textarea:focus {
 .user-menu a, .user-menu button {
   display: block;
   padding: 8px 15px;
-  color: var(--text-color);
+  color: white;
   width: 100%;
   text-align: left;
 }
 
 .user-menu a:hover, .user-menu button:hover {
-  background-color: var(--primary-light);
+  background-color: white;
+  color: #c1dde7;
 }
 
 .sign-in-btn {
@@ -179,9 +180,9 @@ input:focus, select:focus, textarea:focus {
   padding: 12px 15px;
   border-radius: 25px;
   font-size: 1rem;
-  color: var(--text-color);
-  background-color: var(--card-color);
-  border: 2px solid #8C0116;
+  color: #db090c;
+  background-color: #fff9e8;
+  border: 2px solid #db090c;
 }
 
 .search-icon {
@@ -189,7 +190,7 @@ input:focus, select:focus, textarea:focus {
   right: 15px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--text-color);
+  color: #db090c;
 }
 
 .sections-container {
@@ -204,7 +205,7 @@ input:focus, select:focus, textarea:focus {
 .sections-container .listings-section {
   flex: 1 1 0;                   /* Grow and shrink evenly */
   min-width: 300px;             /* Prevents them from shrinking too small */
-  background-color: var(--card-color);
+  background-color: #fff9e8;
   border-radius: 8px;
   padding: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -223,11 +224,11 @@ input:focus, select:focus, textarea:focus {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  color: #8C0116;
+  color: #6dacdf;
 }
 
 .see-more-link {
-  color: #8C0116;
+  color: #6dacdf;
   font-weight: 600;
 }
 
@@ -246,7 +247,7 @@ input:focus, select:focus, textarea:focus {
 
 /* Listing Card */
 .listing-card {
-  background-color: var(--card-color);
+  background-color: #9b3220;
   border-radius: 10px;
   border: 1px solid var(--text-color);
   overflow: hidden;
@@ -288,7 +289,7 @@ input:focus, select:focus, textarea:focus {
   position: absolute;
   top: 10px;
   right: 10px;
-  background-color: rgba(255, 255, 255, 0.8);
+  background-color: #fff9e8;
   color: var(--text-secondary);
   border-radius: 50%;
   width: 36px;
@@ -334,7 +335,7 @@ input:focus, select:focus, textarea:focus {
 
 .listings-header {
   margin-bottom: 30px;
-  color: #8C0116;
+  color: #be1818;
 }
 
 .listings-content {
@@ -344,12 +345,17 @@ input:focus, select:focus, textarea:focus {
 }
 
 .filters-sidebar {
-  background-color: var(--card-color);
+  background-color: #fff9e8;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 20px;
   height: fit-content;
-  border: 1px solid #8C0116;
+  border: 1px solid #db090c;
+  color: #6dacdf;
+}
+
+.filters-sidebar button{
+  color: #6dacdf;
 }
 
 .filter-bar h3 {
@@ -366,8 +372,10 @@ input:focus, select:focus, textarea:focus {
   font-weight: 500;
 }
 
-.filter-group select, .filter-group input {
+.filter-group select, .filter-group input{
   width: 100%;
+  background-color: var(--background-color);
+  border: 1px solid #db090c;
 }
 
 .price-inputs {
@@ -384,9 +392,9 @@ input:focus, select:focus, textarea:focus {
 .no-listings {
   padding: 30px;
   text-align: center;
-  background-color: var(--card-color);
+  background-color: var(--background-color);
   border-radius: 8px;
-  color: var(--text-secondary);
+  color: #be1818;
 }
 
 .load-more {
@@ -417,15 +425,16 @@ input:focus, select:focus, textarea:focus {
   max-width: 900px;
   margin: 50px auto;
   padding: 20px;
-  background-color: var(--card-color); /* light background for the form section */
+  background-color: #fff9e8; /* light background for the form section */
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  color: #6dacdf;
 }
 
 .post-listing-page h1 {
   text-align: center;
   margin-bottom: 10px;
-  color: #8C0116;
+  color: #c1dde7;
 }
 
 .post-listing-form {
@@ -438,16 +447,17 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   flex-direction: column;
   font-weight: bold;
-  color: var(--text-color);
 }
 
 .post-listing-form input,
 .post-listing-form textarea,
 .post-listing-form select {
   padding: 10px;
-  border: 1px solid var(--text-color);
+  border: 1px solid;
   border-radius: 4px;
   font-size: 1rem;
+  background-color: var(--background-color);
+  color: #be1818;
 }
 
 .post-listing-form textarea {
@@ -468,23 +478,25 @@ input:focus, select:focus, textarea:focus {
   padding: 20px;
   text-align: center;
   border-radius: 4px;
+  color: #6dacdf;
 }
 
 .upload-btn {
-  background-color: #ffe790;
-  color: #235975;
+  background-color: var(--background-color);
+  color: #be1818;
   padding: 10px 20px;
   border-radius: 4px;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
-  border: 3px solid #235975;
+  border: 1px solid;
 
 }
 
 .upload-btn:hover {
-  background-color: #235975;
-  color: #ffe790;
+  background-color: #be1818;
+  color: var(--background-color);
+  border: 1px solid #be1818;
 }
 
 .image-grid {
@@ -548,26 +560,30 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* Submit button styles */
+
 .post-listing-form button[type="submit"] {
-  background-color: #ffe790;
-  color: #235975;
+  background-color: var(--background-color);
+  color: #be1818;
   padding: 12px;
   border-radius: 4px;
   font-weight: bold;
   cursor: pointer;
   transition: background-color 0.2s;
   margin-top: 20px;
-  border: 3px solid #235975;
+  border: 3px solid;
 
 }
 
 .post-listing-form button[type="submit"]:hover:not(:disabled) {
-  background-color: #235975;
-  color: #ffe790;
+  background-color: #be1818;
+  color: var(--background-color);
+  border: 3px solid #be1818;
 }
 
 .post-listing-form button[type="submit"]:disabled {
-  background-color: #a5a6f6;
+  background-color: var(--card-color);
+  color: var(--background-color);
+  border: 3px solid var(--card-color);
   cursor: not-allowed;
 }
 
@@ -611,8 +627,8 @@ input:focus, select:focus, textarea:focus {
 
 .tag {
   font-size: 0.7rem;
-  background-color: #f3f4f6;
-  color: #4b5563;
+  background-color: #fff9e8;
+  color: #db090c;
   padding: 2px 6px;
   border-radius: 10px;
   white-space: nowrap;
@@ -620,38 +636,53 @@ input:focus, select:focus, textarea:focus {
 
 /* Filter styles */
 .listing-filter {
-  background-color: var(--card-color);
+  background-color: #fff9e8;
   border-radius: 8px;
   padding: 16px;
+}
+
+.listing-filter input, select, textarea{
+    background-color: var(--background-color);
+    border: 1px solid #db090c;
+    color: #be1818;
 }
 
 .filter-heading {
   font-size: 1.2rem;
   font-weight: 600;
   margin-bottom: 16px;
-  color: #4b5563;
+  color: #6dacdf;
 }
 
 .filter-group {
   margin-bottom: 16px;
   padding-bottom: 16px;
   border-bottom: 1px solid #e5e7eb;
+  color: #6dacdf;
 }
 
 .filter-group h3 {
   font-size: 1rem;
   font-weight: 500;
   margin-bottom: 8px;
-  color: #4b5563;
+  color: #6dacdf;
 }
 
 /* Questionnaire & priority selectors */
 .questionnaire-page{
-  color: #8C0116;
+  color: #be1818;
 }
+
+.questionnaire-page input, select, textarea {
+  border: 1px solid #fff9e8;
+  background-color: #fff9e8;
+  color: #be1818;
+  margin-bottom: 5px;
+}
+
 .questionnaire-page button{
   display: inline-block;
-  background-color: #235975;
+  background-color: #c1dde7;
   color: white;
   font-weight: 500;
   margin: 15px;
@@ -663,7 +694,7 @@ input:focus, select:focus, textarea:focus {
 
 .questionnaire-page button[type="submit"] {
   display: inline-block;
-  background-color: #235975;
+  background-color: #c1dde7;
   color: white;
   font-weight: 500;
   margin: 15px;
@@ -693,10 +724,13 @@ input:focus, select:focus, textarea:focus {
   background-color: #f9fafb;
   font-size: 0.875rem;
 }
+.profile{
+  color: #be1818;
+}
 
 .profile button{
   display: inline-block;
-  background-color: #235975;
+  background-color: #6dacdf;
   color: white;
   font-weight: 500;
   margin: 15px;
@@ -773,8 +807,8 @@ input:focus, select:focus, textarea:focus {
   max-width: 1200px;
   margin: 40px auto;
   padding: 0 20px;
-  color: #8C0116;
-  background-color: var(--card-color);
+  color: #be1818;
+  background-color: #fff9e8;
   border-radius: 8px;
 }
 
@@ -786,14 +820,14 @@ input:focus, select:focus, textarea:focus {
 }
 
 .back-link {
-  color: var(--text-color);
+  color: #6dacdf;
   font-weight: 500;
   text-decoration: none;
   margin-top: 20px;
 }
 
 .favorite-button {
-  background-color: #8C0116;
+  background-color: #be1818;
   color: #ffe790;
   padding: 8px 16px;
   border-radius: 6px;
@@ -820,7 +854,7 @@ input:focus, select:focus, textarea:focus {
 
 .listing-location {
   font-size: 1rem;
-  color: #64748b;
+  color: var(--text-color);
 }
 
 .listing-price-banner {
@@ -1047,7 +1081,7 @@ input:focus, select:focus, textarea:focus {
 .hero-section {
   text-align: center;
   padding: 40px 20px;
-  background-color: #F0E5C5;
+  background-color: #fde9b5;
   border-radius: 8px;
   margin-bottom: 30px;
 }
@@ -1056,12 +1090,12 @@ input:focus, select:focus, textarea:focus {
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 10px;
-  color: #8C0116;
+  color: #be1818;
 }
 
 .hero-section p {
   font-size: 1.2rem;
-  color: #8C0116;
+  color: #be1818;
   margin-bottom: 20px;
 }
 
@@ -1151,7 +1185,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .login-container {
-  background-color: white;
+  background-color: #fff9e8;
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   padding: 40px;
@@ -1161,13 +1195,13 @@ input:focus, select:focus, textarea:focus {
 }
 
 .login-container h1 {
-  color: #1e293b;
+  color: #c1dde7;
   font-size: 1.8rem;
   margin-bottom: 16px;
 }
 
 .login-description {
-  color: #64748b;
+  color: #6dacdf;
   margin-bottom: 32px;
 }
 
@@ -1181,8 +1215,8 @@ input:focus, select:focus, textarea:focus {
 }
 
 .google-signin-btn {
-  background-color: #4285f4;
-  color: white;
+  background-color: var(--background-color);
+  color: var(--card-color);
   padding: 12px 24px;
   border-radius: 4px;
   font-weight: 500;
@@ -1198,17 +1232,19 @@ input:focus, select:focus, textarea:focus {
 }
 
 .google-signin-btn:hover {
-  background-color: #357ae8;
+  background-color: var(--card-color);
+  color: var(--background-color);
 }
 
 .google-signin-btn:disabled {
-  background-color: #a0c3ff;
+  background-color: var(--card-color);
+  color: var(--background-color);
   cursor: not-allowed;
 }
 
 .login-footer {
   margin-top: 32px;
-  color: #94a3b8;
+  color: #6dacdf;
   font-size: 0.8rem;
 }
 
@@ -1443,7 +1479,7 @@ input:focus, select:focus, textarea:focus {
 
 /* Questionnaire Prompt */
 .questionnaire-prompt {
-  background-color: #f0f9ff;
+  background-color: #9b3220;
   border: 1px solid #bae6fd;
   border-radius: 8px;
   padding: 20px;
@@ -1452,20 +1488,20 @@ input:focus, select:focus, textarea:focus {
 }
 
 .questionnaire-prompt h3 {
-  color: #0369a1;
+  color: var(--text-color);
   font-size: 1.2rem;
   margin-bottom: 8px;
 }
 
 .questionnaire-prompt p {
-  color: #0369a1;
+  color: var(--text-color);
   margin-bottom: 15px;
 }
 
 .questionnaire-btn {
   display: inline-block;
-  background-color: var(--primary-color);
-  color: var(--text-color);
+  background-color: #fff9e8;
+  color: #9b3220;
   font-weight: 500;
   padding: 8px 16px;
   border-radius: 6px;
