@@ -1,3 +1,3 @@
 # RoomMatchU
 Roommate group finding
-Find roommates
+Find roommates near you
