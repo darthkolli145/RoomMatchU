@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserQuestionnaire, PriorityLevel, QuestionnaireCategory } from '../types/index';
+import { postQuestionnaire } from '../firebase/firebaseHelpers';
 
 const initialForm: UserQuestionnaire = {
   lifestyle: [],
@@ -103,11 +104,19 @@ const Questionnaire: React.FC = () => {
   const handleNext = () => setStep((prev) => Math.min(prev + 1, steps.length - 1));
   const handleBack = () => setStep((prev) => Math.max(prev - 1, 0));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form Submitted:', formData);
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
+  
+    try {
+      await postQuestionnaire(formData);
+      console.log('Questionnaire submitted:', formData);
+      setSubmitted(true);
+      setFormData(initialForm); // reset form after submission
+      setTimeout(() => setSubmitted(false), 3000);
+    } catch (error) {
+      console.error('Error submitting questionnaire:', error);
+      alert('There was an error submitting your form. Please try again.');
+    }
   };
 
   const variants = {

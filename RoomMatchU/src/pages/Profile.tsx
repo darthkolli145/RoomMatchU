@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
-import { sampleListings } from '../utils/sampleListings'; // Adjust the path if needed
-// import { deleteListing } from '../firebase/firebaseHelpers';
-
-// Simulated current user ID (matches ownerId in sampleListings)
-const currentUserId = 'user-1';
+import React, { useState, useEffect } from 'react';
+import { getAuth } from 'firebase/auth';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../firebase/config'; // adjust the path to match your project
+import { deleteListing } from '../firebase/firebaseHelpers';
 
 export default function Profile() {
   const [editMode, setEditMode] = useState(false);
+  const [listings, setListings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Dummy user info
   const user = {
@@ -26,25 +27,55 @@ export default function Profile() {
     lifestyle: ['Cooks often', 'Vegetarian'],
   };
 
-  // Filter only listings that belong to the mock user
-  const [listings, setListings] = useState(
-    sampleListings.filter((l) => l.ownerId === currentUserId)
-  );
+  // Fetch listings from Firestore where posterUID matches current user
+  useEffect(() => {
+    const fetchUserListings = async () => {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+
+      if (!currentUser) {
+        console.log('No authenticated user');
+        return;
+      }
+
+      try {
+        const q = query(
+          collection(db, 'listings'),
+          where('posterUID', '==', currentUser.uid)
+        );
+        const snapshot = await getDocs(q);
+        const fetchedListings = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setListings(fetchedListings);
+      } catch (err) {
+        console.error('Error fetching user listings:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserListings();
+  }, []);
 
   const handleArchive = (id: string) => {
     console.log(`[ARCHIVE] Listing ID: ${id}`);
-    // Backend logic can be added here
+    // Future: connect archive logic
   };
 
-  const handleDelete = (id: string) => {
-    console.log(`[DELETE] Listing ID: ${id}`);
-    // Backend logic can be added here
-    // TODO: Hook up real delete when backend is ready
-  // await deleteListing(id);
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteListing(id);
+      console.log(`Successfully deleted listing ${id}`);
+      setListings(prev => prev.filter(listing => listing.id !== id));
+    } catch (err) {
+      console.error('Error deleting listing:', err);
+    }
   };
 
   return (
-    <div className="profile">
+    <div className="profile p-6 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-4 text-center text-[#2c3e50]">Your Profile</h1>
 
       {/* Edit toggle */}
@@ -91,7 +122,9 @@ export default function Profile() {
       {/* Listings */}
       <section>
         <h2 className="text-xl font-semibold text-[#2c3e50] mb-2">Your Listings</h2>
-        {listings.length === 0 ? (
+        {loading ? (
+          <p>Loading...</p>
+        ) : listings.length === 0 ? (
           <p>You have no listings yet.</p>
         ) : (
           <div className="space-y-4">

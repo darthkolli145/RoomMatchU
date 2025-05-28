@@ -17,6 +17,8 @@ export default function ListingDetail() {
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
   const [showAuthMessage, setShowAuthMessage] = useState(false);
   const [posterEmail, setPosterEmail] = useState<string | null>(null);
+  const [posterData, setPosterData] = useState<UserQuestionnaire | null>(null);
+
   
   useEffect(() => {
     const fetchListing = async () => {
@@ -29,6 +31,32 @@ export default function ListingDetail() {
 
           // Fetch email of the user who posted the listing
         const email = await fetchUserEmail(listingData.ownerId);
+        const mockPosterData: UserQuestionnaire = {
+        fullname: ['Jane', 'Doe'],
+        Major: ['Computer Science'],
+        yearlvl: 'Third Year',
+        Hobbies: ['Hiking', 'Painting'],
+        dealMust: ['Clean kitchen', 'No loud music past 10pm'],
+        sharing: ['I love early morning walks and baking. Looking for a chill roommate!'],
+        lifestyle: [],
+        cleanliness: '',
+        noiseLevel: '',
+        sleepSchedule: '',
+        visitors: '',
+        Gender: '',
+        wakeupSchedule: '',
+        roommateCleanliness: '',
+        okvisitors: '',
+        overnightGuests: '',
+        studySpot: '',
+        pets: '',
+        okPets: '',
+        prefGender: '',
+        priorities: {},
+      };
+
+      setPosterData(mockPosterData);
+
         setPosterEmail(email);
         }
 
@@ -142,7 +170,6 @@ useEffect(() => {
       </div>
       
       <h1 className="listing-title">{listing.title}</h1>
-      <p className="listing-location">{listing.location}</p>
       
       <div className="listing-price-banner">
         <span className="price">${listing.price}</span>
@@ -152,6 +179,11 @@ useEffect(() => {
       <div className="listing-main-content">
         <div className="listing-images">
           <ImageGallery images={listing.imageURLs} />
+
+          <div className="description">
+            <h2>Description</h2>
+            <p className="listing-description">{listing.description}</p>
+        </div>
         </div>
         
         <div className="listing-details">
@@ -167,7 +199,7 @@ useEffect(() => {
                 <span className="feature-value">{listing.bathrooms}</span>
               </div>
               <div className="feature">
-                <span className="feature-label">Available From</span>
+                <span className="feature-label">Available Starting</span>
                 <span className="feature-value">{new Date(listing.availableDate).toLocaleDateString()}</span>
               </div>
               <div className="feature">
@@ -183,11 +215,6 @@ useEffect(() => {
                 <span className="feature-value">{listing.pets ? 'Yes' : 'No'}</span>
               </div>
             </div>
-          </div>
-          
-          <div className="detail-group">
-            <h2>Description</h2>
-            <p className="listing-description">{listing.description}</p>
           </div>
           
           <div className="detail-group">
@@ -221,6 +248,9 @@ useEffect(() => {
                            category === 'wakeupSchedule' ? 'Wake-up Schedule' : 
                            category === 'noiseLevel' ? 'Noise Level' :
                            category === 'studyHabits' ? 'Study Habits' :
+                           category === 'visitors' ? 'Visitors' :
+                           category === 'cleanliness' ? 'Cleanliness' :
+                           category === 'lifestyle' ? 'Lifestyle' :
                            category}
                         </span>
                         <span className="tag-value">{value.join(', ')}</span>
@@ -234,6 +264,9 @@ useEffect(() => {
                            category === 'wakeupSchedule' ? 'Wake-up Schedule' : 
                            category === 'noiseLevel' ? 'Noise Level' :
                            category === 'studyHabits' ? 'Study Habits' :
+                           category === 'visitors' ? 'Visitors' :
+                           category === 'cleanliness' ? 'Cleanliness' :
+                           category === 'lifestyle' ? 'Lifestyle' :
                            category}
                         </span>
                         <span className="tag-value">{value}</span>
@@ -249,16 +282,46 @@ useEffect(() => {
       </div>
       
       <div className="contact-info">
-        <h2>Contact Information</h2>
-            {currentUser ? (
-        ownerEmail ? (
-          <p>Contact: {ownerEmail}</p>
+        <h2>About the Poster</h2>
+
+        {currentUser ? (
+          posterData ? (
+            <div className="property-features">
+              <div className="feature">
+                <span className="feature-label">Name</span>
+                <span className="feature-value">{posterData.fullname?.join(' ') || 'N/A'}</span>
+              </div>
+              <div className="feature">
+                <span className="feature-label">Major</span>
+                <span className="feature-value">{posterData.Major?.join(', ') || 'N/A'}</span>
+              </div>
+              <div className="feature">
+                <span className="feature-label">Year</span>
+                <span className="feature-value">{posterData.yearlvl || 'N/A'}</span>
+              </div>
+              <div className="feature">
+                <span className="feature-label">Hobbies</span>
+                <span className="feature-value">{posterData.Hobbies?.join(', ') || 'N/A'}</span>
+              </div>
+              <div className="feature">
+                <span className="feature-label">Dealbreakers / Must-Haves</span>
+                <span className="feature-value">{posterData.dealMust?.join(', ') || 'N/A'}</span>
+              </div>
+              <div className="feature">
+                <span className="feature-label">About Them</span>
+                <span className="feature-value">{posterData.sharing?.join(' ') || 'N/A'}</span>
+              </div>
+              <div className="feature">
+                <span className="feature-label">Contact</span>
+                <span className="feature-value">{ownerEmail || 'Not available'}</span>
+              </div>
+            </div>
+          ) : (
+            <p>Poster information not available.</p>
+          )
         ) : (
-          <p>Contact email not available.</p>
-        )
-      ) : (
-        <p>Please sign in to view contact details.</p>
-      )}
+          <p>Please sign in to view the poster's information.</p>
+        )}
       </div>
     </div>
   );

@@ -205,7 +205,7 @@ export const fetchListings = async (): Promise<Listing[]> => {
         title: data.title,
         price: data.price,
         location: data.location || '',
-        description: data.description || '',
+        description: data.bio || '',
         bedrooms: data.bedrooms || 0,
         bathrooms: data.bathrooms || 0,
         availableDate: data.availableDate,

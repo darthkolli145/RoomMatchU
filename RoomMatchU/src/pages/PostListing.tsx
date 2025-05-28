@@ -214,12 +214,12 @@ export default function PostListing() {
           Neighborhood:
           <select name="neighborhood" value={formData.neighborhood} onChange={handleChange} required>
             <option value="">Select neighborhood</option>
-            <option value="campus">On Campus</option>
-            <option value="downtown">Downtown</option>
-            <option value="westside">Westside</option>
-            <option value="eastside">Eastside</option>
-            <option value="seabright">Seabright</option>
-            <option value="capitola">Capitola</option>
+            <option value="Campus">On Campus</option>
+            <option value="Downtown">Downtown</option>
+            <option value="Westside">Westside</option>
+            <option value="Eastside">Eastside</option>
+            <option value="Seabright">Seabright</option>
+            <option value="Capitola">Capitola</option>
           </select>
         </label>
         

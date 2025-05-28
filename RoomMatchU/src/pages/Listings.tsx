@@ -251,13 +251,8 @@ export default function Listings() {
               onClick={toggleQuestionnaire}
               className={`w-full p-3 rounded ${useQuestionnaire ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800'}`}
             >
-              {useQuestionnaire ? 'Using Compatibility Filter' : 'Enable Compatibility Filter'}
+              {useQuestionnaire ? 'Using Sample Compatibility Filter' : 'Enable Sample Compatibility Filter'}
             </button>
-            <p className="text-sm text-gray-600 mt-2">
-              {useQuestionnaire 
-                ? 'Listings are now sorted by compatibility' 
-                : 'Click to use sample questionnaire data to filter listings'}
-            </p>
           </div>
           
           <ListingFilter 
