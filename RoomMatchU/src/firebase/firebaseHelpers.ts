@@ -15,7 +15,7 @@ import { QuestionnaireCategory } from "../types/index";
 import { UserQuestionnaire } from "../types/index";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import imageCompression from "browser-image-compression";
-import { getDoc, doc, deleteDoc } from "firebase/firestore";
+import { getDoc } from "firebase/firestore";
 
 export const fetchUserEmail = async (uid: string): Promise<string | null> => {
   try {
@@ -34,6 +34,9 @@ export interface ListingFormData {
   title: string;
   bio: string;
   neighborhood: string;
+  address: string;
+  lat?: number;
+  lng?: number;
   beds: string;
   baths: string;
   availableDate: string;
@@ -80,6 +83,9 @@ export interface Listing {
   pets: boolean;
   onCampus: boolean;
   neighborhood: string;
+  address: string;
+  lat?: number;
+  lng?: number;
   tags: {
     [key in QuestionnaireCategory]?: string | string[];
   };
@@ -177,6 +183,9 @@ export const postListing = async (formData: ListingFormData): Promise<string> =>
     title: formData.title,
     bio: formData.bio,
     neighborhood: formData.neighborhood,
+    address: formData.address,
+    ...(formData.lat !== undefined && { lat: formData.lat }),
+    ...(formData.lng !== undefined && { lng: formData.lng }),
     beds: Number(formData.beds),
     baths: Number(formData.baths),
     price: Number(formData.price),
@@ -187,7 +196,7 @@ export const postListing = async (formData: ListingFormData): Promise<string> =>
     pets: formData.pets || false,
     tags: formData.tags || {},
     imageURLs: imageURLs,
-    thumbnailURL: thumbnailURL,
+    ...(thumbnailURL !== undefined && { thumbnailURL }),
   };
 
   const docRef = await addDoc(collection(db, "listings"), listingData);
@@ -219,6 +228,9 @@ export const fetchListings = async (): Promise<Listing[]> => {
         pets: data.pets,
         onCampus: data.onCampus,
         neighborhood: data.neighborhood,
+        address: data.address,
+        lat: data.lat,
+        long: data.lng,
         tags: data.tags || {},
         compatibilityScores: data.compatibilityScores || {}
       };
