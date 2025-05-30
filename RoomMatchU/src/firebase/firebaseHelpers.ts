@@ -15,7 +15,7 @@ import { QuestionnaireCategory } from "../types/index";
 import { UserQuestionnaire } from "../types/index";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import imageCompression from "browser-image-compression";
-import { getDoc, doc, deleteDoc } from "firebase/firestore";
+import { getDoc} from "firebase/firestore";
 
 export const fetchUserEmail = async (uid: string): Promise<string | null> => {
   try {
@@ -206,8 +206,8 @@ export const fetchListings = async (): Promise<Listing[]> => {
         price: data.price,
         location: data.location || '',
         description: data.bio || '',
-        bedrooms: data.bedrooms || 0,
-        bathrooms: data.bathrooms || 0,
+        bedrooms: data.beds || 0,
+        bathrooms: data.baths || 0,
         availableDate: data.availableDate,
         imageURLs: data.imageURLs || [],
         thumbnailURL: data.thumbnailURL,
