@@ -1,12 +1,17 @@
+// postlisting.tsx
 import { useState, useRef, ChangeEvent } from 'react';
 import { postListing, ListingFormData } from '../firebase/firebaseHelpers';
 import { QuestionnaireCategory } from '../types/index';
+import { uploadImageToCloudinary } from '../utils/cloudinaryUpload';
+import imageCompression from 'browser-image-compression';
+
 
 export default function PostListing() {
   const [formData, setFormData] = useState<ListingFormData>({
     title: '',
     bio: '',
     neighborhood: '',
+    address: '',
     beds: '',
     baths: '',
     availableDate: '',
@@ -114,6 +119,22 @@ export default function PostListing() {
     }));
   };
 
+  const compressImage = async (file: File): Promise<File> => {
+    const options = {
+      maxSizeMB: 0.3,           // this gives ~300-400KB per image
+      maxWidthOrHeight: 1200,   // resize if bigger
+      useWebWorker: true
+    };
+  
+    try {
+      const compressedFile = await imageCompression(file, options);
+      return compressedFile;
+    } catch (error) {
+      console.error("Image compression failed:", error);
+      return file;  // fallback to original if compression fails
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -123,11 +144,25 @@ export default function PostListing() {
       const {
         sleepSchedule, wakeupSchedule, cleanliness, noiseLevel,
         visitors, studyHabits, lifestyle, ...baseData
-      } = formData;
+      } = formData; 
 
-      // Replace actual image upload with placeholder
-      const placeholderImage = `https://placehold.co/800x600?text=${encodeURIComponent(formData.title || 'Listing')}`;
-      const placeholderImages = [placeholderImage];   
+      // Upload images to Cloudinary
+      let uploadedImageURLs: string[] = [];
+      if (formData.images && formData.images.length > 0) {
+        uploadedImageURLs = await Promise.all(
+          formData.images.map(async (file) => {
+            const compressedFile = await compressImage(file);
+            return uploadImageToCloudinary(compressedFile);
+          })
+        );
+      } else {
+        // Use correct placeholder URL if no images uploaded
+        const placeholderImage = `https://placehold.co/800x600?text=${encodeURIComponent(formData.title || 'Listing')}`;
+        uploadedImageURLs = [placeholderImage];
+      }
+
+      // Determine thumbnail URL
+      let thumbnailURL: string | undefined = uploadedImageURLs[formData.thumbnailIndex ?? 0] || uploadedImageURLs[0];
       
       // Prepare the tags from individual fields
       const listingWithTags: ListingFormData = {
@@ -150,8 +185,8 @@ export default function PostListing() {
         //   studyHabits: formData.studyHabits,
         //   lifestyle: formData.lifestyle,
         },
-        imageURLs: placeholderImages,
-        thumbnailURL: placeholderImage
+        imageURLs: uploadedImageURLs,
+        thumbnailURL: thumbnailURL
       };
       
       const listingId = await postListing(listingWithTags);
@@ -166,6 +201,7 @@ export default function PostListing() {
         title: '',
         bio: '',
         neighborhood: '',
+        address: '',
         beds: '',
         baths: '',
         availableDate: '',
@@ -203,6 +239,18 @@ export default function PostListing() {
         <label>
           Title:
           <input type="text" name="title" value={formData.title} onChange={handleChange} required />
+        </label>
+
+        <label>
+          Address:
+          <input
+            type="text"
+            name="address"
+            value={formData.address}
+            onChange={handleChange}
+            placeholder="123 Main St, Santa Cruz, CA"
+            required
+          />
         </label>
 
         <label>

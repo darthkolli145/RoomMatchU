@@ -7,6 +7,7 @@ import { auth } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import { toggleFavorite } from '../firebase/favoritesService';
 import { fetchListings, fetchUserEmail } from '../firebase/firebaseHelpers';
+import { UserQuestionnaire } from '../types/index';
 
 export default function ListingDetail() {
   const { id } = useParams<{ id: string }>();
