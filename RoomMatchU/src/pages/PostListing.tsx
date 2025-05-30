@@ -1,6 +1,8 @@
+// postlisting.tsx
 import { useState, useRef, ChangeEvent } from 'react';
 import { postListing, ListingFormData } from '../firebase/firebaseHelpers';
 import { QuestionnaireCategory } from '../types/index';
+import { uploadImageToCloudinary } from '../utils/cloudinaryUpload';
 
 export default function PostListing() {
   const [formData, setFormData] = useState<ListingFormData>({
@@ -126,8 +128,19 @@ export default function PostListing() {
       } = formData;
 
       // Replace actual image upload with placeholder
-      const placeholderImage = `https://placehold.co/800x600?text=${encodeURIComponent(formData.title || 'Listing')}`;
-      const placeholderImages = [placeholderImage];   
+      // const placeholderImage = `https://placehold.co/800x600?text=${encodeURIComponent(formData.title || 'Listing')}`;
+      // const placeholderImages = [placeholderImage];  
+
+      // Upload images to Cloudinary
+      let uploadedImageURLs: string[] = [];
+      if (formData.images && formData.images.length > 0) {
+        uploadedImageURLs = await Promise.all(
+          formData.images.map((file) => uploadImageToCloudinary(file))
+        );
+      }
+
+      // Determine thumbnail URL
+      let thumbnailURL: string | undefined = uploadedImageURLs[formData.thumbnailIndex ?? 0] || uploadedImageURLs[0];
       
       // Prepare the tags from individual fields
       const listingWithTags: ListingFormData = {
@@ -150,8 +163,8 @@ export default function PostListing() {
         //   studyHabits: formData.studyHabits,
         //   lifestyle: formData.lifestyle,
         },
-        imageURLs: placeholderImages,
-        thumbnailURL: placeholderImage
+        imageURLs: uploadedImageURLs,
+        thumbnailURL: thumbnailURL
       };
       
       const listingId = await postListing(listingWithTags);
