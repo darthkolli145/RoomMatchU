@@ -1,6 +1,8 @@
 import { ListingType, CompatibilityScore, UserQuestionnaire, QuestionnaireCategory } from "../types";
 import { FilterOptions } from "../components/ListingFilter";
 import { calculateCompatibility } from "./compatibilityScoring";
+import { referenceCoords } from "./constants";
+
 
 // Define a type that extends ListingType to include the calculated compatibility score
 export type ListingWithScore = ListingType & { 
@@ -28,6 +30,22 @@ export function filterListings(
     return listing as ListingWithScore;
   });
   
+  function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 3958.8; // Earth's radius in miles
+    const toRad = (deg: number) => (deg * Math.PI) / 180;
+  
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+  
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  
+    return R * c;
+  }
+
   // Apply filters
   const filteredListings = listingsWithScores.filter(listing => {
     // Price filters
@@ -41,6 +59,20 @@ export function filterListings(
     // Location
     if (filters.onCampus !== undefined && listing.onCampus !== filters.onCampus) return false;
     if (filters.neighborhood && listing.neighborhood !== filters.neighborhood) return false;
+
+    if (
+      filters.maxDistance &&
+      listing.lat !== undefined &&
+      listing.lng !== undefined
+    ) {
+      const distance = haversineDistance(
+        referenceCoords.lat,
+        referenceCoords.lng,
+        listing.lat,
+        listing.lng
+      );
+      if (distance > filters.maxDistance) return false;
+    }
     
     // Pets
     if (filters.pets !== undefined && listing.pets !== filters.pets) return false;

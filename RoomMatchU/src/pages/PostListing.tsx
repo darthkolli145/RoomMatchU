@@ -11,6 +11,7 @@ export default function PostListing() {
     title: '',
     bio: '',
     neighborhood: '',
+    address: '',
     beds: '',
     baths: '',
     availableDate: '',
@@ -200,6 +201,7 @@ export default function PostListing() {
         title: '',
         bio: '',
         neighborhood: '',
+        address: '',
         beds: '',
         baths: '',
         availableDate: '',
@@ -237,6 +239,18 @@ export default function PostListing() {
         <label>
           Title:
           <input type="text" name="title" value={formData.title} onChange={handleChange} required />
+        </label>
+
+        <label>
+          Address:
+          <input
+            type="text"
+            name="address"
+            value={formData.address}
+            onChange={handleChange}
+            placeholder="123 Main St, Santa Cruz, CA"
+            required
+          />
         </label>
 
         <label>
