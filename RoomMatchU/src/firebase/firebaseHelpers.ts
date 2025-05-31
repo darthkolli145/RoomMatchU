@@ -39,7 +39,7 @@ export interface ListingFormData {
   lng?: number;
   beds: string;
   baths: string;
-  availableDate: string;
+  availableDate: Date;
   price: string;
   onCampus: boolean;
   pets: boolean;
@@ -72,7 +72,7 @@ export interface Listing {
   description: string;
   bedrooms: number;
   bathrooms: number;
-  availableDate: string;
+  availableDate: Date;
   imageURLs: string[];
   thumbnailURL?: string;
   amenities: string[];
@@ -113,7 +113,10 @@ export const postListing = async (formData: ListingFormData): Promise<string> =>
     beds: Number(formData.beds),
     baths: Number(formData.baths),
     price: Number(formData.price),
-    availableDate: new Date(formData.availableDate),
+    availableDate:
+      formData.availableDate instanceof Timestamp
+        ? formData.availableDate.toDate()
+        : new Date(formData.availableDate),
     posterUID: user.uid,
     createdAt: serverTimestamp(),
     onCampus: formData.onCampus || false,
@@ -139,10 +142,12 @@ export const fetchListings = async (): Promise<Listing[]> => {
         price: data.price,
         location: data.location || '',
         description: data.bio || '',
-        bedrooms: data.bedrooms || 0,
-        bathrooms: data.bathrooms || 0,
-        availableDate: data.availableDate,
-        imageURLs: data.imageURLs || [],
+        bedrooms: data.beds || 0,
+        bathrooms: data.baths || 0,
+        availableDate: data.availableDate?.toDate
+        ? data.availableDate.toDate()
+        : new Date(data.availableDate),
+              imageURLs: data.imageURLs || [],
         thumbnailURL: data.thumbnailURL,
         amenities: data.amenities || [],
         utilities: data.utilities || [],
