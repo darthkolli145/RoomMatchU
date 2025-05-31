@@ -5,6 +5,7 @@ import ListingCard from '../components/ListingCard';
 import { sampleListings } from '../utils/sampleListings';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
+import { fetchListings } from '../firebase/firebaseHelpers';
 
 export default function Favorites() {
   const { currentUser, favorites, refreshFavorites } = useAuth();
@@ -18,9 +19,10 @@ export default function Favorites() {
       if (currentUser) {
         // In a real app, you would fetch the listings from Firestore
         // For now, filter from sample listings
-        const favListings = sampleListings.filter(listing => 
-          favorites.includes(listing.id)
-        );
+        const allListings = await fetchListings(); // from firebaseHelpers.ts
+        const favListings = allListings.filter(listing =>
+        favorites.includes(listing.id)
+      );
         
         setFavoritedListings(favListings);
       } else {

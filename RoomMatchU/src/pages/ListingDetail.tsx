@@ -2,12 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ListingType } from '../types/index';
 import ImageGallery from '../components/ImageGallery';
-import { sampleListings } from '../utils/sampleListings';
-import { auth } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import { toggleFavorite } from '../firebase/favoritesService';
-import { fetchListings, fetchUserEmail } from '../firebase/firebaseHelpers';
-import { UserQuestionnaire } from '../types/index';
+import { fetchListings, fetchUserEmail, fetchQuestionnaireByUserId} from '../firebase/firebaseHelpers';
 
 export default function ListingDetail() {
   const { id } = useParams<{ id: string }>();
@@ -30,35 +27,15 @@ export default function ListingDetail() {
         if (listingData) {
           setListing(listingData);
 
-          // Fetch email of the user who posted the listing
-        const email = await fetchUserEmail(listingData.ownerId);
-        const mockPosterData: UserQuestionnaire = {
-        fullname: ['Jane', 'Doe'],
-        Major: ['Computer Science'],
-        yearlvl: 'Third Year',
-        Hobbies: ['Hiking', 'Painting'],
-        dealMust: ['Clean kitchen', 'No loud music past 10pm'],
-        sharing: ['I love early morning walks and baking. Looking for a chill roommate!'],
-        lifestyle: [],
-        cleanliness: '',
-        noiseLevel: '',
-        sleepSchedule: '',
-        visitors: '',
-        Gender: '',
-        wakeupSchedule: '',
-        roommateCleanliness: '',
-        okvisitors: '',
-        overnightGuests: '',
-        studySpot: '',
-        pets: '',
-        okPets: '',
-        prefGender: '',
-        priorities: {},
-      };
+          // 🔥 Get poster email
+          const email = await fetchUserEmail(listingData.ownerId);
+          setPosterEmail(email);
 
-      setPosterData(mockPosterData);
-
-        setPosterEmail(email);
+          // 🔥 Get poster questionnaire
+          const questionnaire = await fetchQuestionnaireByUserId(listingData.ownerId);
+          console.log("QUESTIONNAIRE DATA:", questionnaire); // ⬅️ Add this
+          setPosterData(questionnaire);
+          // ✅ Set actual data
         }
 
         setLoading(false);
@@ -67,7 +44,7 @@ export default function ListingDetail() {
         setLoading(false);
       }
     };
-    
+
     fetchListing();
   }, [id]);
 
@@ -290,7 +267,9 @@ useEffect(() => {
             <div className="property-features">
               <div className="feature">
                 <span className="feature-label">Name</span>
-                <span className="feature-value">{posterData.fullname?.join(' ') || 'N/A'}</span>
+                <span className="feature-value">
+                  {posterData.fullname?.length > 0 ? posterData.fullname.join(" ") : "Not provided"}
+                </span>
               </div>
               <div className="feature">
                 <span className="feature-label">Major</span>
