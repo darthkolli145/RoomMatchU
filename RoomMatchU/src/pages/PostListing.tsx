@@ -242,7 +242,7 @@ export default function PostListing() {
         </label>
 
         <label>
-          Address:
+          Address (For Distance-Based Filter):
           <input
             type="text"
             name="address"
