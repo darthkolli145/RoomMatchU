@@ -1,3 +1,4 @@
+// Listings.tsx
 import { useState, useEffect } from 'react';
 import { ListingType, UserQuestionnaire, PriorityLevel } from '../types/index';
 import ListingCard from '../components/ListingCard';
@@ -7,7 +8,7 @@ import { sampleListings } from '../utils/sampleListings'; // Import the sample l
 import { useMockFirebase } from '../firebase';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { fetchListings } from '../firebase/firebaseHelpers';
+import { fetchListings, fetchQuestionnaireByUserId } from '../firebase/firebaseHelpers';
 
 
 // Fallback mock data if everything else fails
@@ -132,7 +133,19 @@ export default function Listings() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<FilterOptions>({});
   const [useQuestionnaire, setUseQuestionnaire] = useState<boolean>(false);
+  const [userQuestionnaire, setUserQuestionnaire] = useState<UserQuestionnaire | null>(null);
 
+
+  useEffect(() => {
+    const fetchQuestionnaire = async () => {
+      if (currentUser) {
+        const response = await fetchQuestionnaireByUserId(currentUser.id);
+        setUserQuestionnaire(response);
+      }
+    };
+    fetchQuestionnaire();
+  }, [currentUser]);
+  
   // Extract search query from URL on component mount
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
