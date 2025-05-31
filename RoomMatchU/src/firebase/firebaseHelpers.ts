@@ -15,7 +15,7 @@ import { QuestionnaireCategory } from "../types/index";
 import { UserQuestionnaire } from "../types/index";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import imageCompression from "browser-image-compression";
-import { getDoc} from "firebase/firestore";
+import { getDoc } from "firebase/firestore";
 
 export const fetchUserEmail = async (uid: string): Promise<string | null> => {
   try {
@@ -34,6 +34,9 @@ export interface ListingFormData {
   title: string;
   bio: string;
   neighborhood: string;
+  address: string;
+  lat?: number;
+  lng?: number;
   beds: string;
   baths: string;
   availableDate: Date;
@@ -80,52 +83,13 @@ export interface Listing {
   pets: boolean;
   onCampus: boolean;
   neighborhood: string;
+  address: string;
+  lat?: number;
+  lng?: number;
   tags: {
     [key in QuestionnaireCategory]?: string | string[];
   };
 }
-
-// Compress an image before uploading
-export const compressImage = async (file: File): Promise<File> => {
-  const options = {
-    maxSizeMB: 1, // Maximum size in MB
-    maxWidthOrHeight: 1200, // Maximum width or height in pixels
-    useWebWorker: true,
-    initialQuality: 0.7, // Initial quality setting for JPEG/WEBP/etc
-  };
-  
-  try {
-    const compressedFile = await imageCompression(file, options);
-    console.log(`Original file size: ${file.size / 1024 / 1024} MB`);
-    console.log(`Compressed file size: ${compressedFile.size / 1024 / 1024} MB`);
-    return compressedFile;
-  } catch (error) {
-    console.error('Error compressing image:', error);
-    return file; // Return original file if compression fails
-  }
-};
-
-// Upload a single image to Firebase Storage
-export const uploadImage = async (image: File, path: string): Promise<string> => {
-  try {
-    // Compress the image
-    const compressedImage = await compressImage(image);
-    
-    // Create a reference to the file location
-    const storageRef = ref(storage, path);
-    
-    // Upload the file
-    await uploadBytes(storageRef, compressedImage);
-    
-    // Get the download URL
-    const downloadURL = await getDownloadURL(storageRef);
-    
-    return downloadURL;
-  } catch (error) {
-    console.error('Error uploading image:', error);
-    throw error;
-  }
-};
 
 // POST a new listing to Firestore
 export const postListing = async (formData: ListingFormData): Promise<string> => {
@@ -135,48 +99,17 @@ export const postListing = async (formData: ListingFormData): Promise<string> =>
     throw new Error("User not authenticated");
   }
 
-  // Upload images if any
-  let imageURLs: string[] = formData.imageURLs || [];
-  let thumbnailURL: string | undefined = formData.thumbnailURL;
-
-  if (!imageURLs.length && formData.images && formData.images.length > 0) {
-    const uploadPromises = formData.images.map((image, index) => {
-      const path = `listings/${user.uid}/${Date.now()}_${index}_${image.name}`;
-      return uploadImage(image, path);
-    });
-
-    imageURLs = await Promise.all(uploadPromises);
-
-    if (typeof formData.thumbnailIndex === 'number' && imageURLs[formData.thumbnailIndex]) {
-      thumbnailURL = imageURLs[formData.thumbnailIndex];
-    } else if (imageURLs.length > 0) {
-      thumbnailURL = imageURLs[0];
-    }
-  }
-  // let imageURLs: string[] = [];
-  // let thumbnailURL: string | undefined;
-  
-  // if (formData.images && formData.images.length > 0) {
-  //   const uploadPromises = formData.images.map((image, index) => {
-  //     const path = `listings/${user.uid}/${Date.now()}_${index}_${image.name}`;
-  //     return uploadImage(image, path);
-  //   });
-    
-  //   imageURLs = await Promise.all(uploadPromises);
-    
-  //   // Set the thumbnail URL
-  //   if (typeof formData.thumbnailIndex === 'number' && imageURLs[formData.thumbnailIndex]) {
-  //     thumbnailURL = imageURLs[formData.thumbnailIndex];
-  //   } else if (imageURLs.length > 0) {
-  //     // Default to first image if no thumbnail specified
-  //     thumbnailURL = imageURLs[0];
-  //   }
-  // }
+  // We expect frontend to handle image uploading fully now
+  const imageURLs: string[] = formData.imageURLs || [];
+  const thumbnailURL: string | undefined = formData.thumbnailURL;
 
   const listingData = {
     title: formData.title,
     bio: formData.bio,
     neighborhood: formData.neighborhood,
+    address: formData.address,
+    ...(formData.lat !== undefined && { lat: formData.lat }),
+    ...(formData.lng !== undefined && { lng: formData.lng }),
     beds: Number(formData.beds),
     baths: Number(formData.baths),
     price: Number(formData.price),
@@ -190,7 +123,7 @@ export const postListing = async (formData: ListingFormData): Promise<string> =>
     pets: formData.pets || false,
     tags: formData.tags || {},
     imageURLs: imageURLs,
-    thumbnailURL: thumbnailURL,
+    ...(thumbnailURL !== undefined && { thumbnailURL }),
   };
 
   const docRef = await addDoc(collection(db, "listings"), listingData);
@@ -224,6 +157,9 @@ export const fetchListings = async (): Promise<Listing[]> => {
         pets: data.pets,
         onCampus: data.onCampus,
         neighborhood: data.neighborhood,
+        address: data.address,
+        lat: data.lat,
+        long: data.lng,
         tags: data.tags || {},
         compatibilityScores: data.compatibilityScores || {}
       };

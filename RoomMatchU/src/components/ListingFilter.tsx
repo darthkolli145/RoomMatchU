@@ -13,6 +13,7 @@ export type FilterOptions = {
   bathrooms?: number;
   onCampus?: boolean;
   neighborhood?: string;
+  maxDistance?: number;
   minCompatibility?: number;
   pets?: boolean;
   priorityCategories?: QuestionnaireCategory[];
@@ -171,6 +172,25 @@ export default function ListingFilter({ onFilterChange, initialFilters = {} }: F
         </div>
       </div>
       
+      <div className="filter-group">
+        <h3>Distance</h3>
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <label htmlFor="maxDistance">Max Distance (miles)</label>
+            <input
+              type="number"
+              id="maxDistance"
+              name="maxDistance"
+              placeholder="e.g. 5"
+              min="0"
+              value={filters.maxDistance || ''}
+              onChange={handleInputChange}
+              className="w-full p-2 border rounded"
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="filter-group">
         <h3>Pets</h3>
         <label className="flex items-center">
