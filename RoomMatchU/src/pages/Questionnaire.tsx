@@ -107,6 +107,18 @@ const Questionnaire: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
   
+    if (
+      formData.fullname.length === 0 ||
+      formData.Major.length === 0 ||
+      formData.yearlvl === '' ||
+      formData.Gender === '' ||
+      formData.sleepSchedule === '' ||
+      formData.cleanliness === ''
+    ) {
+      alert("Please complete all required fields before submitting.");
+      return;
+    }
+
     try {
       await postQuestionnaire(formData);
       console.log('Questionnaire submitted:', formData);
@@ -129,7 +141,7 @@ const Questionnaire: React.FC = () => {
     <div className="questionnaire-page">
       <h1 className="text-3xl font-bold text-purple-700 text-center mb-4">Roommate Questionnaire</h1>
       
-      <form onSubmit={handleSubmit}>
+      <form>
         <div className="relative min-h-[250px]">
           <AnimatePresence mode="wait">
             {step === 0 && (
@@ -139,6 +151,7 @@ const Questionnaire: React.FC = () => {
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">What is your full name? </label>
                     <input
+                      required
                       type="text"
                       name="fullname"
                       value={formData.fullname.join('\n')}
@@ -156,6 +169,7 @@ const Questionnaire: React.FC = () => {
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">What are you majoring in? </label>
                     <input
+                      required
                       type="text"
                       name="Major"
                       value={formData.Major.join('\n')}
@@ -174,10 +188,10 @@ const Questionnaire: React.FC = () => {
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">What year are you? </label>
                     <select
+                    required
                     name="yearlvl"
                     value={formData.yearlvl}
                     onChange={handleChange}
-                    required
                     className="w-full border rounded p-2"
                     >
                     <option value="">Select an option</option>
@@ -596,7 +610,8 @@ const Questionnaire: React.FC = () => {
             </button>
           ) : (
             <button
-              type="submit"
+              type="button"
+              onClick={handleSubmit}
               className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded"
             >
               Submit

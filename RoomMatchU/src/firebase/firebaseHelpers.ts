@@ -1,6 +1,8 @@
 // src/firebase/firebaseHelpers.ts
 import {
   collection,
+  query,
+  where,
   getDocs,
   addDoc,
   setDoc,
@@ -171,10 +173,12 @@ export const postQuestionnaire = async (questionnaireData: UserQuestionnaire): P
     throw new Error("User not authenticated");
   }
 
-  const docRef = await addDoc(collection(db, "questionnaireResponses"), {
+  const docRef = doc(db, "questionnaireResponses", user.uid);
+
+  await setDoc(docRef, {
     ...questionnaireData,
     userId: user.uid,
-    createdAt: serverTimestamp(),
+    createdAt: serverTimestamp()
   });
 
   return docRef.id;
@@ -232,4 +236,38 @@ export const removeFavorite = async (listingId: string) => {
   const user = auth.currentUser;
   if (!user) throw new Error("User not authenticated");
   await deleteDoc(doc(db, `users/${user.uid}/favorites/${listingId}`));
+};
+
+// export const fetchQuestionnaireByUserId = async (userId: string): Promise<UserQuestionnaire | null> => {
+//   try {
+//     const q = query(
+//       collection(db, "questionnaireResponses"),
+//       where("userId", "==", userId)
+//     );
+
+//     const snapshot = await getDocs(q);
+
+//     if (!snapshot.empty) {
+//       const docData = snapshot.docs[0].data();
+//       return docData as UserQuestionnaire;
+//     }
+
+//     return null;
+//   } catch (error) {
+//     console.error("Error fetching questionnaire:", error);
+//     return null;
+//   }
+// };
+
+export const fetchQuestionnaireByUserId = async (userId: string): Promise<UserQuestionnaire | null> => {
+  try {
+    const docSnap = await getDoc(doc(db, "questionnaireResponses", userId));
+    if (docSnap.exists()) {
+      return docSnap.data() as UserQuestionnaire;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching questionnaire:", error);
+    return null;
+  }
 };
