@@ -1,6 +1,8 @@
 // src/firebase/firebaseHelpers.ts
 import {
   collection,
+  query,
+  where,
   getDocs,
   addDoc,
   setDoc,
@@ -232,4 +234,25 @@ export const removeFavorite = async (listingId: string) => {
   const user = auth.currentUser;
   if (!user) throw new Error("User not authenticated");
   await deleteDoc(doc(db, `users/${user.uid}/favorites/${listingId}`));
+};
+
+export const fetchQuestionnaireByUserId = async (userId: string): Promise<UserQuestionnaire | null> => {
+  try {
+    const q = query(
+      collection(db, "questionnaireResponses"),
+      where("userId", "==", userId)
+    );
+
+    const snapshot = await getDocs(q);
+
+    if (!snapshot.empty) {
+      const docData = snapshot.docs[0].data();
+      return docData as UserQuestionnaire;
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Error fetching questionnaire:", error);
+    return null;
+  }
 };
