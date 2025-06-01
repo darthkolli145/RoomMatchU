@@ -178,6 +178,7 @@ export const postQuestionnaire = async (questionnaireData: UserQuestionnaire): P
     throw new Error("User not authenticated");
   }
 
+  // First, save the questionnaire in the questionnaireResponses collection
   const docRef = doc(db, "questionnaireResponses", user.uid);
 
   await setDoc(docRef, {
@@ -185,6 +186,20 @@ export const postQuestionnaire = async (questionnaireData: UserQuestionnaire): P
     userId: user.uid,
     createdAt: serverTimestamp()
   });
+
+  // Then, update the user's profile to include the questionnaire data
+  const userDocRef = doc(db, "users", user.uid);
+  
+  try {
+    await setDoc(userDocRef, {
+      questionnaire: questionnaireData
+    }, { merge: true });
+    
+    console.log("User profile updated with questionnaire data");
+  } catch (error) {
+    console.error("Error updating user profile with questionnaire:", error);
+    // We don't throw here to not block the main questionnaire save
+  }
 
   return docRef.id;
 };

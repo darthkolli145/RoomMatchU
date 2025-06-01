@@ -59,7 +59,7 @@ export type ListingType = {
   description: string;
   bedrooms: number;
   bathrooms: number;
-  availableDate: string;
+  availableDate: Date;
   imageURLs: string[];
   thumbnailURL?: string;
   amenities: string[];
@@ -70,6 +70,9 @@ export type ListingType = {
   pets: boolean;
   onCampus: boolean;
   neighborhood: string;
+  address: string;
+  lat?: number;
+  lng?: number;
   tags: {
     [key in QuestionnaireCategory]?: string | string[];
   };

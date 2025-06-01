@@ -11,6 +11,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { fetchListings } from '../firebase/firebaseHelpers';
 import { Listing } from '../firebase/firebaseHelpers';
 import { Timestamp } from 'firebase/firestore';
+import { calculateCompatibility } from '../utils/compatibilityScoring';
 
 
 // Fallback mock data with required tags - only used if sample listings fail
@@ -24,7 +25,7 @@ const fallbackListings: Listing[] = [
     neighborhood: 'westside',
     bedrooms: 2,
     bathrooms: 1,
-    availableDate: '2025-06-01',
+    availableDate: new Date('2025-06-01'),
     imageURLs: ['https://via.placeholder.com/300?text=Apartment'],
     thumbnailURL: 'https://via.placeholder.com/300?text=Apartment',
     amenities: ['parking', 'laundry'],
@@ -34,6 +35,7 @@ const fallbackListings: Listing[] = [
     favoriteCount: 5,
     pets: true,
     onCampus: false,
+    address: '123 West St, Santa Cruz, CA',
     tags: {
       sleepSchedule: "10pm – 12am",
       cleanliness: "Moderately tidy",
@@ -50,7 +52,7 @@ const fallbackListings: Listing[] = [
     neighborhood: 'westside',
     bedrooms: 2,
     bathrooms: 1,
-    availableDate: '2025-06-01',
+    availableDate: new Date('2025-06-01'),
     imageURLs: ['https://via.placeholder.com/300?text=Apartment'],
     thumbnailURL: 'https://via.placeholder.com/300?text=Apartment',
     amenities: ['parking', 'laundry'],
@@ -60,6 +62,7 @@ const fallbackListings: Listing[] = [
     favoriteCount: 5,
     pets: true,
     onCampus: false,
+    address: '123 West St, Santa Cruz, CA',
     tags: {
       sleepSchedule: "10pm – 12am",
       cleanliness: "Moderately tidy",
@@ -91,8 +94,33 @@ export default function Home() {
           });
   
           setNewListings(sortedByDate.slice(0, 4));
+          
+          // If the user has a questionnaire, generate personalized matches
+          if (currentUser?.questionnaire) {
+            console.log('Generating matches based on questionnaire');
+            
+            // Add compatibility scores to listings
+            const listingsWithScores = listingsData.map(listing => {
+              const compatibilityScore = calculateCompatibility(currentUser.questionnaire!, listing);
+              return { ...listing, compatibilityScore };
+            });
+            
+            // Sort by compatibility score
+            const sortedByCompatibility = [...listingsWithScores].sort((a, b) => {
+              const scoreA = a.compatibilityScore?.score || 0;
+              const scoreB = b.compatibilityScore?.score || 0;
+              return scoreB - scoreA;
+            });
+            
+            // Get top matches
+            setMatchedListings(sortedByCompatibility.slice(0, 4));
+          } else {
+            // If no questionnaire, just use random listings
+            setMatchedListings([...listingsData].sort(() => 0.5 - Math.random()).slice(0, 4));
+          }
+          
+          // Additional listings
           setRoommateListings(sortedByDate.slice(4, 8));
-          setMatchedListings([...listingsData].sort(() => 0.5 - Math.random()).slice(0, 4));
         }
   
         setLoading(false);
@@ -106,7 +134,7 @@ export default function Home() {
     };
   
     fetchAndSetListings();
-  }, []);
+  }, [currentUser]);
 
   const handleFavorite = async (listingId: string) => {
     if (!currentUser) {
@@ -142,6 +170,9 @@ export default function Home() {
       navigate(`/listings?search=${encodeURIComponent(searchTerm.trim())}`);
     }
   };
+
+  // Check if the user has already completed the questionnaire
+  const hasCompletedQuestionnaire = currentUser?.questionnaire !== undefined;
 
   if (loading) {
     return <div className="loading">Loading...</div>;
@@ -207,7 +238,7 @@ export default function Home() {
           </div>
         </section>
 
-        {currentUser && currentUser.questionnaire ? (
+        {currentUser && hasCompletedQuestionnaire ? (
           <section className="listings-section">
             <div className="section-header">
               <h2>Based on Questionnaire</h2>
@@ -228,7 +259,7 @@ export default function Home() {
               )}
             </div>
           </section>
-        ) : currentUser ? (
+        ) : currentUser && !hasCompletedQuestionnaire ? (
           <section className="listings-section">
             <div className="section-header">
               <h2>Personalized Recommendations</h2>
