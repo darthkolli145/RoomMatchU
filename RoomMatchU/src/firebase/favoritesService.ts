@@ -64,10 +64,15 @@ export const getUserFavorites = async (userId: string): Promise<string[]> => {
     const querySnapshot = await getDocs(q);
     const favoriteIds: string[] = [];
     
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      favoriteIds.push(data.listingId);
-    });
+    for (const docSnap of querySnapshot.docs) {
+      const data = docSnap.data();
+      const listingRef = doc(db, "listings", data.listingId);
+      const listingSnap = await getDoc(listingRef);
+
+      if (listingSnap.exists()) {
+        favoriteIds.push(data.listingId);
+      }
+    }
     
     return favoriteIds;
   } catch (error) {
