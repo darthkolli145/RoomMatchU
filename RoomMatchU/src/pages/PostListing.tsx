@@ -246,9 +246,9 @@ export default function PostListing() {
           <input
             type="text"
             name="address"
-            value={formData.address || "1156 High St, Santa Cruz, CA"}
+            value={formData.address}
             onChange={handleChange}
-            placeholder="123 Main St, Santa Cruz, CA"
+            placeholder="1156 High St, Santa Cruz, CA"
             required
           />
         </label>
