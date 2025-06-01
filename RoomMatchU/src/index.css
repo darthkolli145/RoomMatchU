@@ -143,6 +143,7 @@ input:focus, select:focus, textarea:focus {
   padding: 10px 0;
   min-width: 150px;
   z-index: 10;
+  border: 2px solid white;
 }
 
 .user-menu a, .user-menu button {
@@ -150,6 +151,7 @@ input:focus, select:focus, textarea:focus {
   padding: 8px 15px;
   color: white;
   width: 100%;
+  font-weight: 600;
   text-align: left;
 }
 
@@ -247,7 +249,7 @@ input:focus, select:focus, textarea:focus {
 
 /* Listing Card */
 .listing-card {
-  background-color: #9b3220;
+  background-color: #c1dde7;
   border-radius: 10px;
   border: 1px solid var(--text-color);
   overflow: hidden;
@@ -268,7 +270,7 @@ input:focus, select:focus, textarea:focus {
 .listing-image {
   position: relative;
   height: 150px;
-  background-color: #e0e0e0;
+  background-color: #fff9e8;
 }
 
 .listing-image img {
@@ -307,7 +309,7 @@ input:focus, select:focus, textarea:focus {
   position: absolute;
   bottom: 10px;
   right: 10px;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: #c1dde7;
   color: white;
   padding: 5px 10px;
   border-radius: 4px;
@@ -320,10 +322,11 @@ input:focus, select:focus, textarea:focus {
 
 .listing-title {
   font-size: 1rem;
+  color: var(--card-color);
 }
 
 .listing-location, .listing-info {
-  color: var(--text-secondary);
+  color: var(--card-color);
   font-size: 0.8rem;
   margin-bottom: 3px;
 }
@@ -350,7 +353,7 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 20px;
   height: fit-content;
-  border: 1px solid #db090c;
+  border: 1px solid #fff9e8;
   color: #6dacdf;
 }
 
@@ -375,7 +378,7 @@ input:focus, select:focus, textarea:focus {
 .filter-group select, .filter-group input{
   width: 100%;
   background-color: var(--background-color);
-  border: 1px solid #db090c;
+  border: 1px solid var(--background-color);
 }
 
 .price-inputs {
@@ -628,7 +631,7 @@ input:focus, select:focus, textarea:focus {
 .tag {
   font-size: 0.7rem;
   background-color: #fff9e8;
-  color: #db090c;
+  color: var(--card-color);
   padding: 2px 6px;
   border-radius: 10px;
   white-space: nowrap;
@@ -643,7 +646,7 @@ input:focus, select:focus, textarea:focus {
 
 .listing-filter input, select, textarea{
     background-color: var(--background-color);
-    border: 1px solid #db090c;
+    border: 1px solid var(--background-color);
     color: #be1818;
 }
 
@@ -854,7 +857,7 @@ input:focus, select:focus, textarea:focus {
 
 .listing-location {
   font-size: 1rem;
-  color: var(--text-color);
+  color: var(--card-color);
 }
 
 .listing-price-banner {
@@ -1479,8 +1482,8 @@ input:focus, select:focus, textarea:focus {
 
 /* Questionnaire Prompt */
 .questionnaire-prompt {
-  background-color: #9b3220;
-  border: 1px solid #bae6fd;
+  background-color: #c1dde7;
+  border: 1px solid var(--background-color);
   border-radius: 8px;
   padding: 20px;
   text-align: center;
@@ -1488,13 +1491,13 @@ input:focus, select:focus, textarea:focus {
 }
 
 .questionnaire-prompt h3 {
-  color: var(--text-color);
+  color: var(--card-color);
   font-size: 1.2rem;
   margin-bottom: 8px;
 }
 
 .questionnaire-prompt p {
-  color: var(--text-color);
+  color: var(--card-color);
   margin-bottom: 15px;
 }
 
@@ -1510,8 +1513,8 @@ input:focus, select:focus, textarea:focus {
 }
 
 .questionnaire-btn:hover {
-  background-color: #8fddff;
-  color: var(--text-color);
+  background-color: var(--background-color);
+  color: var(--card-color);
 }
 
 
