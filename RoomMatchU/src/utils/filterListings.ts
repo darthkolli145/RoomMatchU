@@ -1,4 +1,5 @@
-import { ListingType, CompatibilityScore, UserQuestionnaire, QuestionnaireCategory } from "../types";
+// filterListings.ts
+import { ListingType, CompatibilityScore, UserQuestionnaire, QuestionnaireCategory } from "../types/index";
 import { FilterOptions } from "../components/ListingFilter";
 import { calculateCompatibility } from "./compatibilityScoring";
 import { referenceCoords } from "./constants";
@@ -89,6 +90,57 @@ export function filterListings(
     
     // Priority categories - removed since categoryScores is no longer available
     // We could replace this with a check on matches/conflicts in the future
+
+    // Priority category filtering
+    if (filters.priorityCategories && filters.priorityCategories.length > 0 && userQuestionnaire) {
+      for (const category of filters.priorityCategories) {
+        let userResponse: string | string[] | undefined;
+        let listingResponse: string | string[] | undefined;
+
+        // Map fields carefully based on your Firestore structure:
+        switch (category) {
+          case 'sleepSchedule':
+            userResponse = userQuestionnaire?.sharing?.sleepSchedule;
+            listingResponse = listing.tags?.sleepSchedule;
+            break;
+          case 'wakeupSchedule':
+            userResponse = userQuestionnaire?.sharing?.wakeupSchedule;
+            listingResponse = listing.tags?.wakeupSchedule;
+            break;
+          case 'visitors':
+            userResponse = userQuestionnaire?.sharing?.visitors;
+            listingResponse = listing.tags?.visitors;
+            break;
+          case 'studyHabits':
+            userResponse = userQuestionnaire?.sharing?.studySpot;
+            listingResponse = listing.tags?.studyHabits;
+            break;
+          case 'cleanliness':
+            userResponse = userQuestionnaire?.cleanliness;
+            listingResponse = listing.tags?.cleanliness;
+            break;
+          case 'noiseLevel':
+            userResponse = userQuestionnaire?.noiseLevel;
+            listingResponse = listing.tags?.noiseLevel;
+            break;
+          case 'lifestyle':
+            userResponse = userQuestionnaire?.lifestyle;
+            listingResponse = listing.tags?.lifestyle;
+            break;
+        }
+
+        // Handle array vs string comparisons
+        if (Array.isArray(userResponse) && Array.isArray(listingResponse)) {
+          const overlap = userResponse.some(val => listingResponse.includes(val));
+          if (!overlap) return false;
+        } else if (typeof userResponse === "string" && typeof listingResponse === "string") {
+          if (userResponse.trim() !== listingResponse.trim()) return false;
+        } else {
+          return false;
+        }
+      }
+    }
+
     
     return true;
   });
