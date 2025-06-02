@@ -1,53 +1,39 @@
 import imageCompression from 'browser-image-compression';
+import heic2any from 'heic2any';
 
 /**
- * Converts a HEIC/HEIF file to JPEG format
+ * Converts a HEIC/HEIF file to JPEG format using heic2any
  * @param file The HEIC/HEIF file to convert
  * @returns A Promise that resolves to a File object in JPEG format
  */
 export async function convertHeicToJpeg(file: File): Promise<File> {
-  // Dynamically import heic-convert (it's an ESM module)
-  const heicConvert = await import('heic-convert');
-  
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
+  try {
+    console.log('Converting HEIC file:', file.name);
     
-    reader.onload = async (event) => {
-      try {
-        if (!event.target || !event.target.result) {
-          reject(new Error('Failed to read file'));
-          return;
-        }
-        
-        const buffer = event.target.result as ArrayBuffer;
-        
-        // Convert HEIC to JPEG
-        const jpegBuffer = await heicConvert.default({
-          buffer: Buffer.from(buffer),
-          format: 'JPEG',
-          quality: 0.85
-        });
-        
-        // Create a new File from the JPEG buffer
-        const jpegFile = new File(
-          [jpegBuffer], 
-          file.name.replace(/\.heic$/i, '.jpg'), 
-          { type: 'image/jpeg' }
-        );
-        
-        resolve(jpegFile);
-      } catch (error) {
-        console.error('HEIC conversion error:', error);
-        reject(error);
-      }
-    };
+    // Convert HEIC to JPEG blob using heic2any
+    const convertedBlob = await heic2any({
+      blob: file,
+      toType: 'image/jpeg',
+      quality: 0.85
+    });
     
-    reader.onerror = () => {
-      reject(new Error('Failed to read file'));
-    };
+    // heic2any might return an array of blobs for multi-page HEIC files
+    // We'll just use the first one
+    const jpegBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
     
-    reader.readAsArrayBuffer(file);
-  });
+    // Create a new File from the blob
+    const jpegFile = new File(
+      [jpegBlob], 
+      file.name.replace(/\.(heic|heif)$/i, '.jpg'), 
+      { type: 'image/jpeg' }
+    );
+    
+    console.log('HEIC conversion successful:', jpegFile.name);
+    return jpegFile;
+  } catch (error) {
+    console.error('HEIC conversion error:', error);
+    throw new Error(`Failed to convert HEIC file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 }
 
 /**
@@ -57,14 +43,17 @@ export async function convertHeicToJpeg(file: File): Promise<File> {
  */
 export async function compressImage(file: File): Promise<File> {
   const options = {
-    maxSizeMB: 0.5,           // Reduce to 500KB max
-    maxWidthOrHeight: 1600,   // Resize if bigger
+    maxSizeMB: 1,             // Increase to 1MB for better quality
+    maxWidthOrHeight: 1920,   // Allow slightly larger images
     useWebWorker: true,
-    initialQuality: 0.85
+    initialQuality: 0.9,      // Start with higher quality
+    alwaysKeepResolution: false
   };
 
   try {
+    console.log('Compressing image:', file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
     const compressedFile = await imageCompression(file, options);
+    console.log('Compressed to:', (compressedFile.size / 1024 / 1024).toFixed(2), 'MB');
     return compressedFile;
   } catch (error) {
     console.error("Image compression failed:", error);
@@ -86,11 +75,24 @@ export async function processImageFile(file: File): Promise<File> {
       file.name.toLowerCase().endsWith('.heic') || 
       file.name.toLowerCase().endsWith('.heif');
     
+    console.log('Processing image:', file.name, 'Is HEIC:', isHeic);
+    
     // Convert HEIC to JPEG if needed
-    const processedFile = isHeic ? await convertHeicToJpeg(file) : file;
+    let processedFile = file;
+    if (isHeic) {
+      try {
+        processedFile = await convertHeicToJpeg(file);
+      } catch (error) {
+        console.error('HEIC conversion failed, using original:', error);
+        // If HEIC conversion fails, we'll try to continue with the original
+        // Some browsers might handle HEIC natively
+      }
+    }
     
     // Compress the image
-    return await compressImage(processedFile);
+    const finalFile = await compressImage(processedFile);
+    console.log('Image processing complete:', finalFile.name);
+    return finalFile;
   } catch (error) {
     console.error('Error processing image:', error);
     // Return original file if processing fails

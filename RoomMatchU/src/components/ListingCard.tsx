@@ -28,6 +28,7 @@ export default function ListingCard({
   const { currentUser, favorites, refreshFavorites } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showAuthMessage, setShowAuthMessage] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const handleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent navigation to the listing detail
@@ -65,15 +66,38 @@ export default function ListingCard({
   // Check if listing is favorited using the context's favorites array
   const isFavorite = currentUser ? favorites.includes(listing.id) : false;
 
+  // Get the image URL to display
+  const getImageUrl = () => {
+    if (imageError) {
+      return `https://placehold.co/400x300?text=${encodeURIComponent(listing.title || 'Listing')}`;
+    }
+    
+    if (listing.thumbnailURL) {
+      return listing.thumbnailURL;
+    }
+    
+    if (listing.imageURLs && listing.imageURLs.length > 0) {
+      return listing.imageURLs[0];
+    }
+    
+    return `https://placehold.co/400x300?text=${encodeURIComponent(listing.title || 'Listing')}`;
+  };
+
+  const handleImageError = () => {
+    console.error('Image failed to load:', getImageUrl());
+    setImageError(true);
+  };
+
   return (
     <div className="listing-card">
       <Link to={`/listing/${listing.id}`} className="listing-link">
         <div className="listing-image">
-          {listing.imageURLs && listing.imageURLs.length > 0 ? (
-            <img src={listing.thumbnailURL || listing.imageURLs[0]} alt={listing.title} />
-          ) : (
-            <div className="placeholder-image">No image available</div>
-          )}
+          <img 
+            src={getImageUrl()} 
+            alt={listing.title}
+            onError={handleImageError}
+            loading="lazy"
+          />
           
           <button 
             className={`favorite-btn ${isFavorite ? 'favorited' : ''}`}
@@ -110,7 +134,7 @@ export default function ListingCard({
         
         <div className="listing-details">
           <h3 className="listing-title">{listing.title}</h3>
-          <p className="listing-location">{listing.location}</p>
+          <p className="listing-location">{listing.location || listing.neighborhood || 'Location not specified'}</p>
           <p className="listing-info">
             {listing.bedrooms} BD · {listing.bathrooms} BA · Available: {new Date(listing.availableDate).toLocaleDateString()}
           </p>
