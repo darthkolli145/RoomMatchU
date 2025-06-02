@@ -106,20 +106,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        await fetchUserData(firebaseUser);
-      } else {
+  const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    if (firebaseUser) {
+      const email = firebaseUser.email || '';
+
+      if (!email.endsWith('@ucsc.edu')) {
+        console.warn('Non-UCSC email detected, signing out:', email);
+        alert('Only UCSC email addresses are allowed.');
+        await signOut(auth);
         setCurrentUser(null);
         setFavorites([]);
+        return;
       }
-      setLoading(false);
-      
-      console.log('Auth state changed:', firebaseUser ? 'User signed in' : 'User signed out');
-    });
 
-    return unsubscribe;
-  }, []);
+      await fetchUserData(firebaseUser);
+    } else {
+      setCurrentUser(null);
+      setFavorites([]);
+    }
+
+    setLoading(false);
+    console.log('Auth state changed:', firebaseUser ? 'User signed in' : 'User signed out');
+  });
+
+  return unsubscribe;
+}, []);
 
   // Load favorites whenever user changes
   useEffect(() => {
@@ -131,11 +142,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signIn = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
+      const email = result.user.email || '';
+  
+      if (!email.endsWith('@ucsc.edu')) {
+        console.warn(`Blocked non-UCSC email sign-in: ${email}`);
+        alert('Only UCSC email addresses are allowed.');
+        await signOut(auth);
+        // Add: Reload app to reset UI
+        window.location.reload();
+        return;
+      }
+  
+      // Proceed ONLY if valid UCSC email
       await fetchUserData(result.user);
     } catch (error) {
       console.error('Error signing in:', error);
     }
   };
+  
 
   const signOutUser = async () => {
     try {
