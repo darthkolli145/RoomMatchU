@@ -11,8 +11,8 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from './config';
 
-// Collection name
-const FAVORITES_COLLECTION = 'favorites';
+// Collection path to match the one used in firebaseHelpers.ts
+const getUserFavoritesPath = (userId: string) => `users/${userId}/favorites`;
 
 /**
  * Add a listing to a user's favorites
@@ -21,10 +21,8 @@ const FAVORITES_COLLECTION = 'favorites';
  */
 export const addFavorite = async (userId: string, listingId: string): Promise<void> => {
   try {
-    const favoriteRef = doc(db, FAVORITES_COLLECTION, `${userId}_${listingId}`);
+    const favoriteRef = doc(db, getUserFavoritesPath(userId), listingId);
     await setDoc(favoriteRef, {
-      userId,
-      listingId,
       createdAt: serverTimestamp()
     });
     console.log(`Added listing ${listingId} to favorites for user ${userId}`);
@@ -41,7 +39,7 @@ export const addFavorite = async (userId: string, listingId: string): Promise<vo
  */
 export const removeFavorite = async (userId: string, listingId: string): Promise<void> => {
   try {
-    const favoriteRef = doc(db, FAVORITES_COLLECTION, `${userId}_${listingId}`);
+    const favoriteRef = doc(db, getUserFavoritesPath(userId), listingId);
     await deleteDoc(favoriteRef);
     console.log(`Removed listing ${listingId} from favorites for user ${userId}`);
   } catch (error) {
@@ -57,20 +55,23 @@ export const removeFavorite = async (userId: string, listingId: string): Promise
  */
 export const getUserFavorites = async (userId: string): Promise<string[]> => {
   try {
-    // Create a query against the favorites collection
-    const favoritesRef = collection(db, FAVORITES_COLLECTION);
-    const q = query(favoritesRef, where('userId', '==', userId));
+    // Create a query for the user's favorites subcollection
+    const favoritesRef = collection(db, getUserFavoritesPath(userId));
+    const querySnapshot = await getDocs(favoritesRef);
     
-    const querySnapshot = await getDocs(q);
     const favoriteIds: string[] = [];
     
+    // Get all favorite IDs and verify they exist in the listings collection
     for (const docSnap of querySnapshot.docs) {
-      const data = docSnap.data();
-      const listingRef = doc(db, "listings", data.listingId);
+      // The document ID is the listing ID
+      const listingId = docSnap.id;
+      
+      // Optionally verify the listing still exists
+      const listingRef = doc(db, "listings", listingId);
       const listingSnap = await getDoc(listingRef);
 
       if (listingSnap.exists()) {
-        favoriteIds.push(data.listingId);
+        favoriteIds.push(listingId);
       }
     }
     
@@ -89,7 +90,7 @@ export const getUserFavorites = async (userId: string): Promise<string[]> => {
  */
 export const isFavorited = async (userId: string, listingId: string): Promise<boolean> => {
   try {
-    const favoriteRef = doc(db, FAVORITES_COLLECTION, `${userId}_${listingId}`);
+    const favoriteRef = doc(db, getUserFavoritesPath(userId), listingId);
     const docSnap = await getDoc(favoriteRef);
     return docSnap.exists();
   } catch (error) {

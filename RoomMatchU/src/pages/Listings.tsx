@@ -132,15 +132,37 @@ export default function Listings() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<FilterOptions>({});
-  const [useQuestionnaire, setUseQuestionnaire] = useState<boolean>(false);
+  const [useQuestionnaire, setUseQuestionnaire] = useState<boolean>(currentUser?.questionnaire !== undefined);
   const [userQuestionnaire, setUserQuestionnaire] = useState<UserQuestionnaire | null>(null);
 
 
   useEffect(() => {
     const fetchQuestionnaire = async () => {
       if (currentUser) {
-        const response = await fetchQuestionnaireByUserId(currentUser.id);
-        setUserQuestionnaire(response);
+        try {
+          // First try to get the questionnaire from the user object
+          if (currentUser.questionnaire) {
+            setUserQuestionnaire(currentUser.questionnaire);
+            setUseQuestionnaire(true);
+            console.log('Using questionnaire from user profile');
+          } else {
+            // If not in user object, try to fetch from questionnaireResponses collection
+            const response = await fetchQuestionnaireByUserId(currentUser.id);
+            if (response) {
+              setUserQuestionnaire(response);
+              setUseQuestionnaire(true);
+              console.log('Using questionnaire from responses collection');
+            } else {
+              console.log('No questionnaire found for user');
+              setUseQuestionnaire(false);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching questionnaire:', error);
+          setUseQuestionnaire(false);
+        }
+      } else {
+        setUseQuestionnaire(false);
       }
     };
     fetchQuestionnaire();
@@ -186,10 +208,20 @@ export default function Listings() {
     // First filter by search term
     let searchResults = listings;
     if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
       searchResults = listings.filter(listing => 
-        listing.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        listing.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        listing.location.toLowerCase().includes(searchTerm.toLowerCase())
+        listing.title?.toLowerCase().includes(searchLower) ||
+        listing.description?.toLowerCase().includes(searchLower) ||
+        listing.location?.toLowerCase().includes(searchLower) ||
+        listing.neighborhood?.toLowerCase().includes(searchLower) ||
+        listing.address?.toLowerCase().includes(searchLower) ||
+        (listing.amenities && listing.amenities.some(amenity => 
+          amenity.toLowerCase().includes(searchLower)
+        )) ||
+        (listing.tags && Object.values(listing.tags).some(tag => 
+          (typeof tag === 'string' && tag.toLowerCase().includes(searchLower)) ||
+          (Array.isArray(tag) && tag.some(t => t.toLowerCase().includes(searchLower)))
+        ))
       );
     }
     
@@ -197,17 +229,17 @@ export default function Listings() {
     const { filteredListings: filtered, listingsWithScores } = filterListings(
       searchResults, 
       filters, 
-      useQuestionnaire ? mockQuestionnaire : undefined
+      useQuestionnaire && userQuestionnaire ? userQuestionnaire : undefined
     );
     
-    // Sort by compatibility score if questionnaire is enabled
+    // Sort by compatibility score if questionnaire is enabled and userQuestionnaire exists
     let sortedListings = filtered;
-    if (useQuestionnaire) {
+    if (useQuestionnaire && userQuestionnaire) {
       sortedListings = sortListingsByCompatibility(filtered);
     }
     
     setFilteredListings(sortedListings);
-  }, [listings, filters, searchTerm, useQuestionnaire]);
+  }, [listings, filters, searchTerm, useQuestionnaire, userQuestionnaire]);
 
   const handleFilterChange = (newFilters: FilterOptions) => {
     setFilters(newFilters);
@@ -259,14 +291,41 @@ export default function Listings() {
     <div className="listings-page">
       <div className="listings-content">
         <aside className="filters-sidebar">
-          <div className="mb-4">
-            <button 
-              onClick={toggleQuestionnaire}
-              className={`w-full p-3 rounded ${useQuestionnaire ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800'}`}
-            >
-              {useQuestionnaire ? 'Using Sample Compatibility Filter' : 'Enable Sample Compatibility Filter'}
-            </button>
-          </div>
+          {userQuestionnaire ? (
+            <div className="mb-4">
+              <button 
+                onClick={toggleQuestionnaire}
+                className={`w-full p-3 rounded ${useQuestionnaire ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800'}`}
+              >
+                {useQuestionnaire ? 'Using Your Compatibility Profile' : 'Enable Compatibility Matching'}
+              </button>
+              {useQuestionnaire && (
+                <p className="text-sm text-gray-600 mt-1">
+                  Listings are sorted by how well they match your preferences.
+                </p>
+              )}
+            </div>
+          ) : currentUser ? (
+            <div className="mb-4 p-3 bg-yellow-100 rounded">
+              <p className="text-sm">Complete your questionnaire to enable compatibility matching!</p>
+              <button 
+                onClick={() => navigate('/questionnaire')}
+                className="mt-2 w-full p-2 rounded bg-yellow-500 text-white text-sm"
+              >
+                Take Questionnaire
+              </button>
+            </div>
+          ) : (
+            <div className="mb-4 p-3 bg-gray-100 rounded">
+              <p className="text-sm">Sign in to enable compatibility matching!</p>
+              <button 
+                onClick={() => navigate('/login')}
+                className="mt-2 w-full p-2 rounded bg-gray-500 text-white text-sm"
+              >
+                Sign In
+              </button>
+            </div>
+          )}
           
           <ListingFilter 
             onFilterChange={handleFilterChange} 

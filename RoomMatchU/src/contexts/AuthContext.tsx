@@ -5,6 +5,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { User, UserQuestionnaire } from '../types/index';
 import { getUserFavorites } from '../firebase/favoritesService';
 import { setDoc } from 'firebase/firestore';
+import { fetchQuestionnaireByUserId } from '../firebase/firebaseHelpers';
 
 const createUserDocumentIfNotExists = async (firebaseUser: FirebaseUser) => {
   const userDocRef = doc(db, 'users', firebaseUser.uid);
@@ -56,26 +57,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const userDocRef = doc(db, 'users', firebaseUser.uid);
       const userDoc = await getDoc(userDocRef);
       
+      // Try to fetch questionnaire data directly from questionnaireResponses collection
+      let questionnaireData: UserQuestionnaire | null = null;
+      try {
+        questionnaireData = await fetchQuestionnaireByUserId(firebaseUser.uid);
+        console.log('Questionnaire data found:', !!questionnaireData);
+      } catch (error) {
+        console.error('Error fetching questionnaire data:', error);
+      }
+      
       if (userDoc.exists()) {
         const userData = userDoc.data();
         
         // Create full user object with the Firebase user and additional Firestore data
+        // Use questionnaire data from either user document or from direct fetch
         const fullUser: User = {
           id: firebaseUser.uid,
           displayName: firebaseUser.displayName || '',
           email: firebaseUser.email || '',
           photoURL: firebaseUser.photoURL || undefined,
-          questionnaire: userData.questionnaire as UserQuestionnaire || undefined
+          questionnaire: questionnaireData || userData.questionnaire as UserQuestionnaire || undefined
         };
+        
+        // If we found questionnaire data but it's not in the user doc, update the user doc
+        if (questionnaireData && !userData.questionnaire) {
+          try {
+            await setDoc(userDocRef, { questionnaire: questionnaireData }, { merge: true });
+            console.log('Updated user document with questionnaire data');
+          } catch (updateError) {
+            console.error('Error updating user with questionnaire data:', updateError);
+          }
+        }
         
         setCurrentUser(fullUser);
       } else {
         // If no additional data exists, just use the Firebase user
+        // but still include questionnaire if found
         setCurrentUser({
           id: firebaseUser.uid,
           displayName: firebaseUser.displayName || '',
           email: firebaseUser.email || '',
-          photoURL: firebaseUser.photoURL || undefined
+          photoURL: firebaseUser.photoURL || undefined,
+          questionnaire: questionnaireData || undefined
         });
       }
     } catch (error) {

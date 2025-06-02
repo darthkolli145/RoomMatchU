@@ -87,9 +87,6 @@ export function filterListings(
     ) {
       return false;
     }
-    
-    // Priority categories - removed since categoryScores is no longer available
-    // We could replace this with a check on matches/conflicts in the future
 
     // Priority category filtering
     if (filters.priorityCategories && filters.priorityCategories.length > 0 && userQuestionnaire) {
@@ -97,50 +94,70 @@ export function filterListings(
         let userResponse: string | string[] | undefined;
         let listingResponse: string | string[] | undefined;
 
-        // Map fields carefully based on your Firestore structure:
+        // Map fields based on the UserQuestionnaire structure
         switch (category) {
           case 'sleepSchedule':
-            userResponse = userQuestionnaire?.sharing?.sleepSchedule;
+            userResponse = userQuestionnaire.sleepSchedule;
             listingResponse = listing.tags?.sleepSchedule;
             break;
           case 'wakeupSchedule':
-            userResponse = userQuestionnaire?.sharing?.wakeupSchedule;
+            userResponse = userQuestionnaire.wakeupSchedule;
             listingResponse = listing.tags?.wakeupSchedule;
             break;
           case 'visitors':
-            userResponse = userQuestionnaire?.sharing?.visitors;
+            userResponse = userQuestionnaire.visitors;
             listingResponse = listing.tags?.visitors;
             break;
           case 'studyHabits':
-            userResponse = userQuestionnaire?.sharing?.studySpot;
+            userResponse = userQuestionnaire.studySpot;
             listingResponse = listing.tags?.studyHabits;
             break;
           case 'cleanliness':
-            userResponse = userQuestionnaire?.cleanliness;
+            userResponse = userQuestionnaire.cleanliness;
             listingResponse = listing.tags?.cleanliness;
             break;
           case 'noiseLevel':
-            userResponse = userQuestionnaire?.noiseLevel;
+            userResponse = userQuestionnaire.noiseLevel;
             listingResponse = listing.tags?.noiseLevel;
             break;
           case 'lifestyle':
-            userResponse = userQuestionnaire?.lifestyle;
+            userResponse = userQuestionnaire.lifestyle;
             listingResponse = listing.tags?.lifestyle;
             break;
+          case 'pets':
+            userResponse = userQuestionnaire.pets;
+            // For pets, we need to check the listing.pets boolean, not the tags
+            return listing.pets === (userResponse === 'Yes');
+        }
+
+        // Skip this category if either user or listing doesn't have data for it
+        if (userResponse === undefined || listingResponse === undefined) {
+          continue;
         }
 
         // Handle array vs string comparisons
         if (Array.isArray(userResponse) && Array.isArray(listingResponse)) {
-          const overlap = userResponse.some(val => listingResponse.includes(val));
+          const overlap = userResponse.some(val => 
+            listingResponse.some(listVal => 
+              String(val).trim().toLowerCase() === String(listVal).trim().toLowerCase()
+            )
+          );
           if (!overlap) return false;
         } else if (typeof userResponse === "string" && typeof listingResponse === "string") {
-          if (userResponse.trim() !== listingResponse.trim()) return false;
-        } else {
-          return false;
+          if (userResponse.trim().toLowerCase() !== listingResponse.trim().toLowerCase()) return false;
+        } else if (Array.isArray(userResponse) && typeof listingResponse === "string") {
+          const match = userResponse.some(val => 
+            String(val).trim().toLowerCase() === listingResponse.trim().toLowerCase()
+          );
+          if (!match) return false;
+        } else if (typeof userResponse === "string" && Array.isArray(listingResponse)) {
+          const match = listingResponse.some(val => 
+            userResponse.trim().toLowerCase() === String(val).trim().toLowerCase()
+          );
+          if (!match) return false;
         }
       }
     }
-
     
     return true;
   });
