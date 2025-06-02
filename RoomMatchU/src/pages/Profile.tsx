@@ -1,47 +1,83 @@
 import React, { useState, useEffect } from 'react';
-import { getAuth } from 'firebase/auth';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../firebase/config'; // adjust the path to match your project
+import { db } from '../firebase/config';
 import { deleteListing } from '../firebase/firebaseHelpers';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Profile() {
+  const { currentUser } = useAuth();
   const [editMode, setEditMode] = useState(false);
   const [listings, setListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
 
-  // Dummy user info
-  const user = {
-    fullName: 'Jane Doe',
-    major: 'Computer Science',
-    year: 'Junior',
-  };
+  // User profile form state
+  const [userProfile, setUserProfile] = useState({
+    fullName: '',
+    major: '',
+    year: '',
+  });
 
-  // Dummy questionnaire answers
-  const questionnaire = {
-    cleanliness: 'Very tidy',
-    sleepSchedule: '10pm - 12am',
-    wakeupSchedule: '7am - 9am',
-    noiseLevel: 'Background noise/music',
-    visitors: 'Occasionally',
-    studyHabits: 'Home',
-    lifestyle: ['Cooks often', 'Vegetarian'],
-  };
+  // Questionnaire data state
+  const [questionnaireData, setQuestionnaireData] = useState<any>(null);
+
+  // Fetch user profile and questionnaire data
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!currentUser) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Get user doc from Firestore
+        const userDocRef = doc(db, 'users', currentUser.id);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          
+          // Set user profile data
+          setUserProfile({
+            fullName: userData.fullName || currentUser.displayName || '',
+            major: userData.major || (userData.questionnaire?.Major?.[0] || ''),
+            year: userData.year || (userData.questionnaire?.yearlvl || ''),
+          });
+          
+          // Set questionnaire data if available
+          if (currentUser.questionnaire || userData.questionnaire) {
+            setQuestionnaireData(currentUser.questionnaire || userData.questionnaire);
+          }
+        } else {
+          // Initialize with currentUser data if available
+          setUserProfile({
+            fullName: currentUser.displayName || '',
+            major: '',
+            year: '',
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+      }
+    };
+
+    fetchUserData();
+  }, [currentUser]);
 
   // Fetch listings from Firestore where posterUID matches current user
   useEffect(() => {
     const fetchUserListings = async () => {
-      const auth = getAuth();
-      const currentUser = auth.currentUser;
-
       if (!currentUser) {
-        console.log('No authenticated user');
+        setLoading(false);
         return;
       }
 
       try {
         const q = query(
           collection(db, 'listings'),
-          where('posterUID', '==', currentUser.uid)
+          where('posterUID', '==', currentUser.id)
         );
         const snapshot = await getDocs(q);
         const fetchedListings = snapshot.docs.map(doc => ({
@@ -57,7 +93,40 @@ export default function Profile() {
     };
 
     fetchUserListings();
-  }, []);
+  }, [currentUser]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setUserProfile(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSaveProfile = async () => {
+    if (!currentUser) return;
+    
+    setSaving(true);
+    setMessage('');
+    
+    try {
+      const userDocRef = doc(db, 'users', currentUser.id);
+      await setDoc(userDocRef, {
+        fullName: userProfile.fullName,
+        major: userProfile.major,
+        year: userProfile.year,
+        // Don't overwrite other fields
+      }, { merge: true });
+      
+      setMessage('Profile updated successfully!');
+      setEditMode(false);
+    } catch (err) {
+      console.error('Error updating profile:', err);
+      setMessage('Error updating profile. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleArchive = (id: string) => {
     console.log(`[ARCHIVE] Listing ID: ${id}`);
@@ -74,18 +143,51 @@ export default function Profile() {
     }
   };
 
+  if (!currentUser) {
+    return (
+      <div className="profile p-6 max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold mb-4 text-center text-[#2c3e50]">Profile</h1>
+        <p className="text-center">Please sign in to view your profile.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="profile p-6 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-4 text-center text-[#2c3e50]">Your Profile</h1>
 
+      {message && (
+        <div className={`p-3 mb-4 rounded text-center ${message.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+          {message}
+        </div>
+      )}
+
       {/* Edit toggle */}
       <div className="text-center mb-6">
-        <button
-          className="text-indigo-600 underline"
-          onClick={() => setEditMode(!editMode)}
-        >
-          {editMode ? 'Cancel Edit' : 'Edit Profile'}
-        </button>
+        {!editMode ? (
+          <button
+            className="text-indigo-600 underline"
+            onClick={() => setEditMode(true)}
+          >
+            Edit Profile
+          </button>
+        ) : (
+          <div className="flex justify-center gap-4">
+            <button
+              className="text-gray-600 underline"
+              onClick={() => setEditMode(false)}
+            >
+              Cancel
+            </button>
+            <button
+              className="bg-indigo-600 text-white px-4 py-1 rounded"
+              onClick={handleSaveProfile}
+              disabled={saving}
+            >
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Basic Info */}
@@ -93,31 +195,73 @@ export default function Profile() {
         <h2 className="text-xl font-semibold text-[#2c3e50] mb-2">Basic Info</h2>
         {editMode ? (
           <div className="space-y-2">
-            <input className="w-full border p-2 rounded" value={user.fullName} readOnly />
-            <input className="w-full border p-2 rounded" value={user.major} readOnly />
-            <input className="w-full border p-2 rounded" value={user.year} readOnly />
+            <div>
+              <label className="block text-sm text-gray-600">Full Name</label>
+              <input 
+                className="w-full border p-2 rounded" 
+                name="fullName"
+                value={userProfile.fullName} 
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600">Major</label>
+              <input 
+                className="w-full border p-2 rounded" 
+                name="major"
+                value={userProfile.major} 
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600">Year</label>
+              <input 
+                className="w-full border p-2 rounded" 
+                name="year"
+                value={userProfile.year} 
+                onChange={handleInputChange}
+              />
+            </div>
           </div>
         ) : (
           <div className="space-y-1">
-            <p><strong>Name:</strong> {user.fullName}</p>
-            <p><strong>Major:</strong> {user.major}</p>
-            <p><strong>Year:</strong> {user.year}</p>
+            <p><strong>Name:</strong> {userProfile.fullName || currentUser.displayName || 'Not provided'}</p>
+            <p><strong>Major:</strong> {userProfile.major || 'Not provided'}</p>
+            <p><strong>Year:</strong> {userProfile.year || 'Not provided'}</p>
+            <p><strong>Email:</strong> {currentUser.email}</p>
           </div>
         )}
       </section>
 
       {/* Questionnaire */}
-      <section className="mb-8">
-        <h2 className="text-xl font-semibold text-[#2c3e50] mb-2">Your Answers</h2>
-        <div className="space-y-1">
-          {Object.entries(questionnaire).map(([key, value]) => (
-            <p key={key}>
-              <strong>{key}:</strong>{' '}
-              {Array.isArray(value) ? value.join(', ') : value}
-            </p>
-          ))}
-        </div>
-      </section>
+      {questionnaireData && (
+        <section className="mb-8">
+          <h2 className="text-xl font-semibold text-[#2c3e50] mb-2">Your Questionnaire Answers</h2>
+          <div className="space-y-1">
+            {Object.entries(questionnaireData)
+              .filter(([key]) => 
+                !['userId', 'createdAt', 'email', 'priorities'].includes(key) && 
+                typeof questionnaireData[key] !== 'object'
+              )
+              .map(([key, value]) => (
+                <p key={key}>
+                  <strong>{key}:</strong>{' '}
+                  {Array.isArray(value) 
+                    ? (value as any[]).join(', ') 
+                    : (value as any).toString()}
+                </p>
+              ))}
+          </div>
+          <div className="mt-4">
+            <button
+              className="text-indigo-600 underline"
+              onClick={() => window.location.href = '/questionnaire'}
+            >
+              Update Questionnaire
+            </button>
+          </div>
+        </section>
+      )}
 
       {/* Listings */}
       <section>

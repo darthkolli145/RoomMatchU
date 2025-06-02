@@ -63,7 +63,7 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lng: numb
   });
   const url = `https://maps.googleapis.com/maps/api/geocode/json?${params.toString()}`;
 
-  // Call Google’s API
+  // Call Google's API
   let resp;
   try {
     resp = await axios.get<GeocodingResult>(url);
@@ -161,13 +161,8 @@ export const postListing = async (formData: ListingFormData): Promise<string> =>
       coords = await geocodeAddress(formData.address);
     } catch (err) {
       console.error("Geocoding error:", err);
-      throw new Error("Failed to geocode address. Listing not posted.");
-    }
-    try {
-      coords = await geocodeAddress(formData.address);
-    } catch (err) {
-      console.error("Geocoding error:", err);
-      throw new Error("Failed to geocode address. Listing not posted.");
+      // Continue without coordinates rather than failing completely
+      coords = { lat: 0, lng: 0 };
     }
   }
 

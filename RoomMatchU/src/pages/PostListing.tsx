@@ -1,12 +1,16 @@
 // postlisting.tsx
-import { useState, useRef, ChangeEvent } from 'react';
+import { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { postListing, ListingFormData } from '../firebase/firebaseHelpers';
 import { QuestionnaireCategory } from '../types/index';
 import { uploadImageToCloudinary } from '../utils/cloudinaryUpload';
 import imageCompression from 'browser-image-compression';
-
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { processImageFile } from '../utils/imageUtils';
 
 export default function PostListing() {
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<ListingFormData>({
     title: '',
     bio: '',
@@ -14,7 +18,7 @@ export default function PostListing() {
     address: '',
     beds: '',
     baths: '',
-    availableDate: '',
+    availableDate: new Date(),
     price: '',
     onCampus: false,
     pets: false,
@@ -32,7 +36,17 @@ export default function PostListing() {
   
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Check if user is logged in
+  useEffect(() => {
+    if (!currentUser) {
+      setErrorMessage('You must be logged in to post a listing');
+    } else {
+      setErrorMessage(null);
+    }
+  }, [currentUser]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -40,6 +54,9 @@ export default function PostListing() {
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData(prev => ({ ...prev, [name]: checked }));
+    } else if (name === 'availableDate') {
+      // Convert string date to Date object
+      setFormData(prev => ({ ...prev, [name]: new Date(value) }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -57,25 +74,57 @@ export default function PostListing() {
     });
   };
   
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     
     if (files && files.length > 0) {
-      const newImages = Array.from(files);
-      const newPreviewUrls: string[] = [];
+      setIsSubmitting(true); // Disable submit while processing images
+      setErrorMessage('Processing images, please wait...');
       
-      // Generate preview URLs for the uploaded images
-      newImages.forEach(image => {
-        const url = URL.createObjectURL(image);
-        newPreviewUrls.push(url);
-      });
-      
-      setFormData(prev => ({
-        ...prev,
-        images: [...(prev.images || []), ...newImages]
-      }));
-      
-      setImagePreviewUrls(prev => [...prev, ...newPreviewUrls]);
+      try {
+        const newImages: File[] = [];
+        const newPreviewUrls: string[] = [];
+        
+        // Process each file - convert HEIC if needed and compress
+        for (const file of Array.from(files)) {
+          try {
+            // Check if file is an image
+            if (!file.type.startsWith('image/') && 
+                !file.name.toLowerCase().match(/\.(jpg|jpeg|png|gif|bmp|webp|heic|heif)$/)) {
+              console.warn(`Skipping non-image file: ${file.name}`);
+              continue;
+            }
+            
+            // Process the image (convert HEIC and compress)
+            const processedFile = await processImageFile(file);
+            
+            // Generate preview URL
+            const url = URL.createObjectURL(processedFile);
+            
+            newImages.push(processedFile);
+            newPreviewUrls.push(url);
+          } catch (error) {
+            console.error(`Error processing image ${file.name}:`, error);
+          }
+        }
+        
+        if (newImages.length > 0) {
+          setFormData(prev => ({
+            ...prev,
+            images: [...(prev.images || []), ...newImages]
+          }));
+          
+          setImagePreviewUrls(prev => [...prev, ...newPreviewUrls]);
+          setErrorMessage(null);
+        } else {
+          setErrorMessage('No valid images were selected. Supported formats: JPG, PNG, GIF, HEIC');
+        }
+      } catch (error) {
+        console.error('Error processing images:', error);
+        setErrorMessage('Error processing images. Please try different files.');
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
   
@@ -138,6 +187,14 @@ export default function PostListing() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!currentUser) {
+      setErrorMessage('You must be logged in to post a listing');
+      return;
+    }
+    
+    // Reset error message
+    setErrorMessage(null);
+    
     try {
       setIsSubmitting(true);
 
@@ -145,16 +202,41 @@ export default function PostListing() {
         sleepSchedule, wakeupSchedule, cleanliness, noiseLevel,
         visitors, studyHabits, lifestyle, ...baseData
       } = formData; 
+      
+      // Validate the date
+      if (!(baseData.availableDate instanceof Date) || isNaN(baseData.availableDate.getTime())) {
+        throw new Error('Please provide a valid available date');
+      }
 
       // Upload images to Cloudinary
       let uploadedImageURLs: string[] = [];
       if (formData.images && formData.images.length > 0) {
-        uploadedImageURLs = await Promise.all(
-          formData.images.map(async (file) => {
-            const compressedFile = await compressImage(file);
-            return uploadImageToCloudinary(compressedFile);
-          })
-        );
+        try {
+          setErrorMessage('Uploading images, please wait...');
+          
+          // Upload images one by one and handle errors individually
+          for (const file of formData.images) {
+            try {
+              // Images are already processed at this point
+              const imageUrl = await uploadImageToCloudinary(file);
+              uploadedImageURLs.push(imageUrl);
+            } catch (error) {
+              console.error('Error uploading image:', error);
+              // Continue with other images if one fails
+            }
+          }
+          
+          if (uploadedImageURLs.length === 0) {
+            // If all uploads failed, use a placeholder
+            const placeholderImage = `https://placehold.co/800x600?text=${encodeURIComponent(formData.title || 'Listing')}`;
+            uploadedImageURLs = [placeholderImage];
+          }
+        } catch (error) {
+          console.error('Error uploading images:', error);
+          // Fall back to placeholder if all uploads fail
+          const placeholderImage = `https://placehold.co/800x600?text=${encodeURIComponent(formData.title || 'Listing')}`;
+          uploadedImageURLs = [placeholderImage];
+        }
       } else {
         // Use correct placeholder URL if no images uploaded
         const placeholderImage = `https://placehold.co/800x600?text=${encodeURIComponent(formData.title || 'Listing')}`;
@@ -175,53 +257,28 @@ export default function PostListing() {
           visitors,
           studyHabits,
           lifestyle
-        // ...formData,
-        // tags: {
-        //   sleepSchedule: formData.sleepSchedule,
-        //   wakeupSchedule: formData.wakeupSchedule,
-        //   cleanliness: formData.cleanliness,
-        //   noiseLevel: formData.noiseLevel,
-        //   visitors: formData.visitors,
-        //   studyHabits: formData.studyHabits,
-        //   lifestyle: formData.lifestyle,
         },
         imageURLs: uploadedImageURLs,
         thumbnailURL: thumbnailURL
       };
       
       const listingId = await postListing(listingWithTags);
-      alert(`Listing submitted! ID: ${listingId}`);
+      alert(`Listing submitted successfully!`);
       console.log('Successfully posted:', listingId);
       
       // Clean up all object URLs to prevent memory leaks
       imagePreviewUrls.forEach(url => URL.revokeObjectURL(url));
       
-      // Reset form
-      setFormData({
-        title: '',
-        bio: '',
-        neighborhood: '',
-        address: '',
-        beds: '',
-        baths: '',
-        availableDate: '',
-        price: '',
-        onCampus: false,
-        pets: false,
-        sleepSchedule: '',
-        wakeupSchedule: '',
-        cleanliness: '',
-        noiseLevel: '',
-        visitors: '',
-        lifestyle: [],
-        studyHabits: '',
-        images: [],
-        thumbnailIndex: 0,
-      });
-      setImagePreviewUrls([]);
+      // Redirect to the listing detail page
+      navigate(`/listing/${listingId}`);
+      
     } catch (error) {
       console.error('Failed to submit listing:', error);
-      alert('Failed to submit listing. Check console for details.');
+      if (error instanceof Error) {
+        setErrorMessage(error.message || 'Failed to submit listing. Please try again.');
+      } else {
+        setErrorMessage('Failed to submit listing. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -230,6 +287,12 @@ export default function PostListing() {
   return (
     <div className="post-listing-page">
       <h1>Post Your Own Listing!</h1>
+      
+      {errorMessage && (
+        <div className="error-message">
+          {errorMessage}
+        </div>
+      )}
       
       <form onSubmit={handleSubmit} className="post-listing-form">
         <h2 className="text-xl font-semibold text-indigo-600 border-b pb-1 mt-8 mb-4">
@@ -294,7 +357,13 @@ export default function PostListing() {
 
         <label>
           Available Date:
-          <input type="date" name="availableDate" value={formData.availableDate} onChange={handleChange} required />
+          <input 
+            type="date" 
+            name="availableDate" 
+            value={formData.availableDate instanceof Date ? formData.availableDate.toISOString().split('T')[0] : ''} 
+            onChange={handleChange} 
+            required 
+          />
         </label>
 
         <label>
