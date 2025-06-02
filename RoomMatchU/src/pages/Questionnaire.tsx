@@ -124,7 +124,15 @@ const Questionnaire: React.FC = () => {
       console.log('Questionnaire submitted:', formData);
       setSubmitted(true);
       setFormData(initialForm); // reset form after submission
-      setTimeout(() => setSubmitted(false), 3000);
+      
+      // Add a message about redirecting
+      alert("Questionnaire submitted successfully! Redirecting to home page...");
+      
+      // Add a slight delay and then redirect to home page to see the recommendations
+      setTimeout(() => {
+        window.location.href = '/'; // Force a full page reload to refresh auth state
+      }, 1500);
+      
     } catch (error) {
       console.error('Error submitting questionnaire:', error);
       alert('There was an error submitting your form. Please try again.');
