@@ -18,6 +18,19 @@ import { UserQuestionnaire } from "../types/index";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import imageCompression from "browser-image-compression";
 import { getDoc } from "firebase/firestore";
+import axios from "axios";
+
+interface GeocodingResult {
+  results: Array<{
+    geometry: {
+      location: {
+        lat: number;
+        lng: number;
+      };
+    };
+  }>;
+  status: string;
+}
 
 export const fetchUserEmail = async (uid: string): Promise<string | null> => {
   try {
@@ -30,6 +43,43 @@ export const fetchUserEmail = async (uid: string): Promise<string | null> => {
   }
   return null;
 };
+
+async function geocodeAddress(address: string): Promise<{ lat: number; lng: number }> {
+  // Read API key from process.env
+  const KEY = import.meta.env.VITE_GEOCODING_API_KEY;
+  if (!KEY) {
+    throw new Error("Missing REACT_APP_GEOCODING_API_KEY in environment");
+  }
+
+  console.log("Using Geocoding API key:", import.meta.env.VITE_GEOCODING_API_KEY);
+  if (!address || address.trim().length === 0) {
+    throw new Error("Cannot geocode an empty address.");
+  }
+
+  // Build the request URL
+  const params = new URLSearchParams({
+    address: address,
+    key: KEY,
+  });
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?${params.toString()}`;
+
+  // Call Google’s API
+  let resp;
+  try {
+    resp = await axios.get<GeocodingResult>(url);
+  } catch (err) {
+    console.error("Error fetching geocoding data:", err);
+    throw new Error("Network or Axios error while geocoding address.");
+  }
+
+  const data = resp.data;
+  if (data.status !== "OK" || !data.results || data.results.length === 0) {
+    throw new Error(`Geocoding failed for "${address}", status: ${data.status}`);
+  }
+
+  const location = data.results[0].geometry.location;
+  return { lat: location.lat, lng: location.lng };
+}
 
 // Input from the PostListing form
 export interface ListingFormData {
@@ -93,7 +143,6 @@ export interface Listing {
   };
 }
 
-// POST a new listing to Firestore
 export const postListing = async (formData: ListingFormData): Promise<string> => {
   // Only authenticated users can post
   const user = auth.currentUser as User | null;
@@ -101,17 +150,33 @@ export const postListing = async (formData: ListingFormData): Promise<string> =>
     throw new Error("User not authenticated");
   }
 
-  // We expect frontend to handle image uploading fully now
-  const imageURLs: string[] = formData.imageURLs || [];
-  const thumbnailURL: string | undefined = formData.thumbnailURL;
+  // If lat/lng were already provided in formData, skip geocoding.
+  //     Otherwise, call geocodeAddress(...) to look them up.
+  let coords: { lat: number; lng: number } | undefined;
+  if (typeof formData.lat === "number" && typeof formData.lng === "number") {
+    coords = { lat: formData.lat, lng: formData.lng };
+  } else {
+    console.log("Debug: about to geocode with address =", JSON.stringify(formData.address));
+    try {
+      coords = await geocodeAddress(formData.address);
+    } catch (err) {
+      console.error("Geocoding error:", err);
+      throw new Error("Failed to geocode address. Listing not posted.");
+    }
+    try {
+      coords = await geocodeAddress(formData.address);
+    } catch (err) {
+      console.error("Geocoding error:", err);
+      throw new Error("Failed to geocode address. Listing not posted.");
+    }
+  }
 
-  const listingData = {
+  // Build the object that we will actually store in Firestore
+  const listingData: any = {
     title: formData.title,
     bio: formData.bio,
     neighborhood: formData.neighborhood,
     address: formData.address,
-    ...(formData.lat !== undefined && { lat: formData.lat }),
-    ...(formData.lng !== undefined && { lng: formData.lng }),
     beds: Number(formData.beds),
     baths: Number(formData.baths),
     price: Number(formData.price),
@@ -124,10 +189,14 @@ export const postListing = async (formData: ListingFormData): Promise<string> =>
     onCampus: formData.onCampus || false,
     pets: formData.pets || false,
     tags: formData.tags || {},
-    imageURLs: imageURLs,
-    ...(thumbnailURL !== undefined && { thumbnailURL }),
+    imageURLs: formData.imageURLs || [],
+    ...(formData.thumbnailURL !== undefined && { thumbnailURL: formData.thumbnailURL }),
+    // Insert geocoded coordinates here:
+    lat: coords.lat,
+    lng: coords.lng,
   };
 
+  // Actually write the document
   const docRef = await addDoc(collection(db, "listings"), listingData);
   return docRef.id;
 };
