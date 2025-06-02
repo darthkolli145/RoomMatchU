@@ -3,10 +3,9 @@ import { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { postListing, ListingFormData } from '../firebase/firebaseHelpers';
 import { QuestionnaireCategory } from '../types/index';
 import { uploadImageToCloudinary } from '../utils/cloudinaryUpload';
-import imageCompression from 'browser-image-compression';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { processImageFile } from '../utils/imageUtils';
+import imageCompression from 'browser-image-compression';
 
 export default function PostListing() {
   const { currentUser } = useAuth();
@@ -85,23 +84,23 @@ export default function PostListing() {
         const newImages: File[] = [];
         const newPreviewUrls: string[] = [];
         
-        // Process each file - convert HEIC if needed and compress
+        // Process each file - only accept standard image formats
         for (const file of Array.from(files)) {
           try {
-            // Check if file is an image
-            if (!file.type.startsWith('image/') && 
-                !file.name.toLowerCase().match(/\.(jpg|jpeg|png|gif|bmp|webp|heic|heif)$/)) {
-              console.warn(`Skipping non-image file: ${file.name}`);
+            // Check if file is a standard image format
+            if (!file.type.startsWith('image/') || 
+                !file.name.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)$/)) {
+              console.warn(`Skipping non-supported file: ${file.name}`);
               continue;
             }
             
-            // Process the image (convert HEIC and compress)
-            const processedFile = await processImageFile(file);
+            // Compress the image if needed
+            const compressedFile = await compressImage(file);
             
             // Generate preview URL
-            const url = URL.createObjectURL(processedFile);
+            const url = URL.createObjectURL(compressedFile);
             
-            newImages.push(processedFile);
+            newImages.push(compressedFile);
             newPreviewUrls.push(url);
           } catch (error) {
             console.error(`Error processing image ${file.name}:`, error);
@@ -117,7 +116,7 @@ export default function PostListing() {
           setImagePreviewUrls(prev => [...prev, ...newPreviewUrls]);
           setErrorMessage(null);
         } else {
-          setErrorMessage('No valid images were selected. Supported formats: JPG, PNG, GIF, HEIC');
+          setErrorMessage('No valid images were selected. Supported formats: JPG, PNG, GIF, WebP');
         }
       } catch (error) {
         console.error('Error processing images:', error);

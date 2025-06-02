@@ -6,6 +6,7 @@ type ImageGalleryProps = {
 
 export default function ImageGallery({ images }: ImageGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [imageError, setImageError] = useState<{ [key: number]: boolean }>({});
   
   // If no images, show placeholder
   if (!images || images.length === 0) {
@@ -18,10 +19,25 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
     );
   }
   
+  const handleImageError = (index: number) => {
+    setImageError(prev => ({ ...prev, [index]: true }));
+  };
+  
   return (
     <div className="image-gallery">
       <div className="main-image">
-        <img src={images[activeIndex]} alt={`Property view ${activeIndex + 1}`} />
+        {imageError[activeIndex] ? (
+          <div className="error-placeholder">
+            <p>Image unavailable</p>
+            <small>Please check back later or contact the poster</small>
+          </div>
+        ) : (
+          <img 
+            src={images[activeIndex]} 
+            alt={`Property view ${activeIndex + 1}`}
+            onError={() => handleImageError(activeIndex)}
+          />
+        )}
       </div>
       
       {images.length > 1 && (
@@ -32,7 +48,15 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
               className={`thumbnail ${index === activeIndex ? 'active' : ''}`}
               onClick={() => setActiveIndex(index)}
             >
-              <img src={image} alt={`Thumbnail ${index + 1}`} />
+              {imageError[index] ? (
+                <div className="thumbnail-error">❌</div>
+              ) : (
+                <img 
+                  src={image} 
+                  alt={`Thumbnail ${index + 1}`}
+                  onError={() => handleImageError(index)}
+                />
+              )}
             </div>
           ))}
         </div>

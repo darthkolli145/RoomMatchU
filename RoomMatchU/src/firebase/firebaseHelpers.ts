@@ -355,3 +355,33 @@ export const fetchQuestionnaireByUserId = async (userId: string): Promise<UserQu
     return null;
   }
 };
+
+// Upload image to Firebase Storage
+export const uploadImageToFirebase = async (file: File): Promise<string> => {
+  try {
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
+    // Create a unique filename
+    const timestamp = Date.now();
+    const filename = `listings/${user.uid}/${timestamp}_${file.name}`;
+    
+    // Create a storage reference
+    const storageRef = ref(storage, filename);
+    
+    // Upload the file
+    console.log(`Uploading ${file.name} to Firebase Storage...`);
+    const snapshot = await uploadBytes(storageRef, file);
+    
+    // Get the download URL
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    console.log('Successfully uploaded to Firebase:', downloadURL);
+    
+    return downloadURL;
+  } catch (error) {
+    console.error('Error uploading image to Firebase Storage:', error);
+    throw error;
+  }
+};
