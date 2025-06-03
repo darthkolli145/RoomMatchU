@@ -63,7 +63,7 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lng: numb
   });
   const url = `https://maps.googleapis.com/maps/api/geocode/json?${params.toString()}`;
 
-  // Call Google’s API
+  // Call Google's API
   let resp;
   try {
     resp = await axios.get<GeocodingResult>(url);
@@ -85,7 +85,6 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lng: numb
 export interface ListingFormData {
   title: string;
   bio: string;
-  neighborhood: string;
   address: string;
   lat?: number;
   lng?: number;
@@ -134,7 +133,6 @@ export interface Listing {
   favoriteCount: number;
   pets: boolean;
   onCampus: boolean;
-  neighborhood: string;
   address: string;
   lat?: number;
   lng?: number;
@@ -161,13 +159,8 @@ export const postListing = async (formData: ListingFormData): Promise<string> =>
       coords = await geocodeAddress(formData.address);
     } catch (err) {
       console.error("Geocoding error:", err);
-      throw new Error("Failed to geocode address. Listing not posted.");
-    }
-    try {
-      coords = await geocodeAddress(formData.address);
-    } catch (err) {
-      console.error("Geocoding error:", err);
-      throw new Error("Failed to geocode address. Listing not posted.");
+      // Continue without coordinates rather than failing completely
+      coords = { lat: 0, lng: 0 };
     }
   }
 
@@ -175,7 +168,6 @@ export const postListing = async (formData: ListingFormData): Promise<string> =>
   const listingData: any = {
     title: formData.title,
     bio: formData.bio,
-    neighborhood: formData.neighborhood,
     address: formData.address,
     beds: Number(formData.beds),
     baths: Number(formData.baths),
@@ -227,10 +219,9 @@ export const fetchListings = async (): Promise<Listing[]> => {
         favoriteCount: data.favoriteCount || 0,
         pets: data.pets,
         onCampus: data.onCampus,
-        neighborhood: data.neighborhood,
         address: data.address,
         lat: data.lat,
-        long: data.lng,
+        lng: data.lng,
         tags: data.tags || {},
         compatibilityScores: data.compatibilityScores || {}
       };
@@ -358,5 +349,35 @@ export const fetchQuestionnaireByUserId = async (userId: string): Promise<UserQu
   } catch (error) {
     console.error("Error fetching questionnaire:", error);
     return null;
+  }
+};
+
+// Upload image to Firebase Storage
+export const uploadImageToFirebase = async (file: File): Promise<string> => {
+  try {
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
+    // Create a unique filename
+    const timestamp = Date.now();
+    const filename = `listings/${user.uid}/${timestamp}_${file.name}`;
+    
+    // Create a storage reference
+    const storageRef = ref(storage, filename);
+    
+    // Upload the file
+    console.log(`Uploading ${file.name} to Firebase Storage...`);
+    const snapshot = await uploadBytes(storageRef, file);
+    
+    // Get the download URL
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    console.log('Successfully uploaded to Firebase:', downloadURL);
+    
+    return downloadURL;
+  } catch (error) {
+    console.error('Error uploading image to Firebase Storage:', error);
+    throw error;
   }
 };

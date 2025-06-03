@@ -40,6 +40,7 @@ export type UserQuestionnaire = {
   okPets: string;
   prefGender: string;
   dealMust: string[];
+  maxDistanceFromCampus?: number;
   priorities: {
     [key in QuestionnaireCategory]?: PriorityLevel;
   };
@@ -69,7 +70,6 @@ export type ListingType = {
   favoriteCount: number;
   pets: boolean;
   onCampus: boolean;
-  neighborhood: string;
   address: string;
   lat?: number;
   lng?: number;

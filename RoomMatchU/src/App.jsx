@@ -9,6 +9,7 @@ import Favorites from './pages/Favorites';
 import ListingDetail from './pages/ListingDetail';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
+import Matches from './pages/Matches';
 import './App.css';
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
               <Route path="/post-listing" element={<PostListing />} />
               <Route path="/questionnaire" element={<Questionnaire />} />
               <Route path="/favorites" element={<Favorites />} />
+              <Route path="/matches" element={<Matches />} />
               <Route path="/login" element={<Login />} />
               <Route path="/profile" element={<Profile/>} /> 
               {/* Add more routes as you build additional pages */}

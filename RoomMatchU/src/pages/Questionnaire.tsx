@@ -24,6 +24,7 @@ const initialForm: UserQuestionnaire = {
   okPets: '',
   prefGender: '',
   dealMust: [],
+  maxDistanceFromCampus: undefined,
   priorities: {},
 };
 
@@ -530,6 +531,33 @@ const Questionnaire: React.FC = () => {
                 <option>Male</option>
                 <option>Non-binary</option>
                 </select>
+                </div>
+
+                {/* Max Distance from Campus */}
+                <div>
+                  <label className="block font-medium mb-1 text-indigo-600">
+                    Maximum distance from UCSC campus (in miles)?
+                  </label>
+                  <input
+                    type="number"
+                    name="maxDistanceFromCampus"
+                    value={formData.maxDistanceFromCampus || ''}
+                    onChange={(e) => {
+                      const value = e.target.value ? Number(e.target.value) : undefined;
+                      setFormData((prev) => ({
+                        ...prev,
+                        maxDistanceFromCampus: value
+                      }));
+                    }}
+                    min="0"
+                    max="50"
+                    step="0.5"
+                    className="w-full border rounded p-2"
+                    placeholder="e.g. 5"
+                  />
+                  <p className="text-sm text-gray-600 mt-1">
+                    Leave blank if distance doesn't matter
+                  </p>
                 </div>
 
                 {/* Hobbies */}

@@ -12,7 +12,6 @@ export type FilterOptions = {
   bedrooms?: number;
   bathrooms?: number;
   onCampus?: boolean;
-  neighborhood?: string;
   maxDistance?: number;
   minCompatibility?: number;
   pets?: boolean;
@@ -152,24 +151,6 @@ export default function ListingFilter({ onFilterChange, initialFilters = {} }: F
             On Campus
           </label>
         </div>
-        <div>
-          <label htmlFor="neighborhood">Neighborhood</label>
-          <select
-            id="neighborhood"
-            name="neighborhood"
-            value={filters.neighborhood || ''}
-            onChange={handleInputChange}
-            className="w-full p-2 border rounded"
-          >
-            <option value="">Any</option>
-            <option value="campus">Campus</option>
-            <option value="downtown">Downtown</option>
-            <option value="westside">Westside</option>
-            <option value="eastside">Eastside</option>
-            <option value="seabright">Seabright</option>
-            <option value="capitola">Capitola</option>
-          </select>
-        </div>
       </div>
       
       <div className="filter-group">
@@ -187,6 +168,13 @@ export default function ListingFilter({ onFilterChange, initialFilters = {} }: F
               onChange={handleInputChange}
               className="w-full p-2 border rounded"
             />
+            {filters.maxDistance && (
+              <p className="text-sm text-gray-600 mt-1">
+                {initialFilters?.maxDistance === filters.maxDistance 
+                  ? "Using your preferred distance from questionnaire"
+                  : "Filtering by distance"}
+              </p>
+            )}
           </div>
         </div>
       </div>

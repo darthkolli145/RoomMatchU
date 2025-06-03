@@ -59,7 +59,6 @@ export function filterListings(
     
     // Location
     if (filters.onCampus !== undefined && listing.onCampus !== filters.onCampus) return false;
-    if (filters.neighborhood && listing.neighborhood !== filters.neighborhood) return false;
 
     if (
       filters.maxDistance &&

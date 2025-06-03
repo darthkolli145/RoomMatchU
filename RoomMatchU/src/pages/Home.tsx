@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { collection, getDocs, query, orderBy, limit, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, useMockFirebase } from '../firebase';
-import { ListingType } from '../types/index';
+import { ListingType, CompatibilityScore } from '../types/index';
 import ListingCard from '../components/ListingCard';
 import { Link, useNavigate } from 'react-router-dom';
 import { populateWithSampleListings } from '../utils/populateDatabase';
@@ -12,7 +12,10 @@ import { fetchListings } from '../firebase/firebaseHelpers';
 import { Listing } from '../firebase/firebaseHelpers';
 import { Timestamp } from 'firebase/firestore';
 import { calculateCompatibility } from '../utils/compatibilityScoring';
+import { calculateDistanceFromUCSC } from '../utils/distanceCalculator';
 
+// Type for listings with compatibility scores
+type ListingWithScore = Listing & { compatibilityScore?: CompatibilityScore };
 
 // Fallback mock data with required tags - only used if sample listings fail
 const fallbackListings: Listing[] = [
@@ -22,7 +25,6 @@ const fallbackListings: Listing[] = [
     description: 'Spacious apartment with view',
     location: 'Westside, Santa Cruz',
     price: 1200,
-    neighborhood: 'westside',
     bedrooms: 2,
     bathrooms: 1,
     availableDate: new Date('2025-06-01'),
@@ -49,7 +51,6 @@ const fallbackListings: Listing[] = [
     description: 'Spacious apartment with view',
     location: 'Westside, Santa Cruz',
     price: 1200,
-    neighborhood: 'westside',
     bedrooms: 2,
     bathrooms: 1,
     availableDate: new Date('2025-06-01'),
@@ -72,15 +73,57 @@ const fallbackListings: Listing[] = [
   }
 ];
 
+const sampleListings = [
+  {
+    id: '1',
+    title: 'Sunny Room in Westside',
+    price: 800,
+    location: 'Westside, Santa Cruz',
+    description: 'Bright room in shared house',
+    bedrooms: 1,
+    bathrooms: 1,
+    availableDate: new Date('2024-02-01'),
+    imageURLs: ['https://placehold.co/400x300?text=Room'],
+    amenities: ['parking', 'laundry'],
+    utilities: ['water', 'garbage'],
+    ownerId: 'user1',
+    createdAt: new Date(),
+    favoriteCount: 5,
+    pets: false,
+    onCampus: false,
+    address: '',
+    tags: {}
+  },
+  {
+    id: '2',
+    title: '2BR Apartment Near Campus',
+    price: 1500,
+    location: 'Near UCSC',
+    description: 'Modern apartment, walking distance to campus',
+    bedrooms: 2,
+    bathrooms: 1,
+    availableDate: new Date('2024-03-01'),
+    imageURLs: ['https://placehold.co/400x300?text=Apartment'],
+    amenities: ['parking', 'dishwasher'],
+    utilities: ['water', 'garbage', 'electricity'],
+    ownerId: 'user2',
+    createdAt: new Date(),
+    favoriteCount: 12,
+    pets: true,
+    onCampus: false,
+    address: '',
+    tags: {}
+  }
+];
+
 export default function Home() {
   const navigate = useNavigate();
   const { currentUser, favorites, refreshFavorites } = useAuth();
   const [newListings, setNewListings] = useState<Listing[]>([]);
   const [roommateListings, setRoommateListings] = useState<Listing[]>([]);
-  const [matchedListings, setMatchedListings] = useState<Listing[]>([]);
+  const [matchedListings, setMatchedListings] = useState<ListingWithScore[]>([]);
   const [loading, setLoading] = useState(true);
   const [populateStatus, setPopulateStatus] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const fetchAndSetListings = async () => {
@@ -105,8 +148,21 @@ export default function Home() {
               return { ...listing, compatibilityScore };
             });
             
+            // Filter by user's preferred max distance if specified
+            let filteredByDistance = listingsWithScores;
+            if (currentUser.questionnaire.maxDistanceFromCampus) {
+              filteredByDistance = listingsWithScores.filter(listing => {
+                if (listing.lat !== undefined && listing.lng !== undefined) {
+                  const distance = calculateDistanceFromUCSC(listing.lat, listing.lng);
+                  if (distance === null) return true; // Include listings if distance can't be calculated
+                  return distance <= currentUser.questionnaire!.maxDistanceFromCampus!;
+                }
+                return true; // Include listings without coordinates
+              });
+            }
+            
             // Sort by compatibility score
-            const sortedByCompatibility = [...listingsWithScores].sort((a, b) => {
+            const sortedByCompatibility = [...filteredByDistance].sort((a, b) => {
               const scoreA = a.compatibilityScore?.score || 0;
               const scoreB = b.compatibilityScore?.score || 0;
               return scoreB - scoreA;
@@ -163,14 +219,6 @@ export default function Home() {
     navigate('/favorites');
   };
 
-  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (searchTerm.trim()) {
-      // Navigate to listings page with search query parameter
-      navigate(`/listings?search=${encodeURIComponent(searchTerm.trim())}`);
-    }
-  };
-
   // Check if the user has already completed the questionnaire
   const hasCompletedQuestionnaire = currentUser?.questionnaire !== undefined;
 
@@ -184,17 +232,12 @@ export default function Home() {
         <h1>Find Your Perfect Match!</h1>
         <p>Connect with roommates or find listings that match your lifestyle</p>
         <div className="search-section">
-          <form onSubmit={handleSearch}>
-            <input 
-              type="text" 
-              placeholder="Search for listings by location or amenities" 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <button type="submit" className="search-icon">
-              <span className="material-icon">search</span>
-            </button>
-          </form>
+          <button 
+            onClick={() => navigate('/listings')}
+            className="hero-cta-button"
+          >
+            Look for your perfect Place
+          </button>
           
           {useMockFirebase && populateStatus && (
             <div className="mt-4 text-center text-sm text-gray-600">
@@ -252,6 +295,8 @@ export default function Home() {
                     listing={listing}
                     onFavorite={handleFavorite}
                     isFavorited={favorites.includes(listing.id)}
+                    compatibilityScore={listing.compatibilityScore}
+                    showCompatibilityScore={true}
                   />
                 ))
               ) : (

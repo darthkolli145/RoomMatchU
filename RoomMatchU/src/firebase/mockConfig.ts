@@ -4,64 +4,76 @@ const GoogleAuthProvider = function() {
   // Empty constructor
 };
 
+// Mock Firebase implementation for development
+import { Listing } from './firebaseHelpers';
+
+const mockDb = {
+  listings: new Map(),
+  users: new Map(),
+  favorites: new Map(),
+};
+
 // Create mock data for listings
-const mockListings = [
+export const mockListings: Listing[] = [
   {
-    id: 'listing-1',
-    title: 'Beautiful 2 Bedroom in Westside',
+    id: 'mock-1',
+    title: 'Cozy Studio near Campus',
     price: 1200,
-    location: 'Westside, Santa Cruz',
-    description: 'Spacious apartment with view',
-    bedrooms: 2,
+    location: 'Near UCSC',
+    description: 'Perfect for students. Walking distance to campus.',
+    bedrooms: 1,
     bathrooms: 1,
-    availableDate: '2025-06-01',
-    imageURLs: ['https://via.placeholder.com/300?text=Apartment'],
+    availableDate: new Date('2024-03-01'),
+    imageURLs: ['https://picsum.photos/400/300?random=1'],
     amenities: ['parking', 'laundry'],
     utilities: ['water', 'garbage'],
     ownerId: 'user-1',
-    createdAt: { toDate: () => new Date() },
+    createdAt: new Date(),
     favoriteCount: 5,
-    pets: true,
+    pets: false,
     onCampus: false,
-    neighborhood: 'westside'
+    address: '123 High St, Santa Cruz, CA 95064',
+    tags: {}
   },
   {
-    id: 'listing-2',
-    title: '3 Bedroom House in Seabright',
+    id: 'mock-2',
+    title: '2BR Apartment with Ocean View',
     price: 2200,
-    location: 'Seabright, Santa Cruz',
-    description: 'Charming house near the beach',
-    bedrooms: 3,
+    location: 'Westside Santa Cruz',
+    description: 'Beautiful apartment with stunning ocean views.',
+    bedrooms: 2,
     bathrooms: 2,
-    availableDate: '2025-05-15',
-    imageURLs: ['https://via.placeholder.com/300?text=House'],
-    amenities: ['parking', 'laundry', 'backyard'],
-    utilities: ['water', 'garbage'],
+    availableDate: new Date('2024-02-15'),
+    imageURLs: ['https://picsum.photos/400/300?random=2'],
+    amenities: ['parking', 'dishwasher', 'balcony'],
+    utilities: ['water', 'garbage', 'internet'],
     ownerId: 'user-2',
-    createdAt: { toDate: () => new Date(Date.now() - 86400000) },
-    favoriteCount: 8,
+    createdAt: new Date(),
+    favoriteCount: 12,
     pets: true,
     onCampus: false,
-    neighborhood: 'seabright'
+    address: '456 Ocean View Dr, Santa Cruz, CA 95062',
+    tags: {}
   },
   {
-    id: 'listing-3',
-    title: 'Room in 4-person apartment on campus',
-    price: 900,
-    location: 'UC Santa Cruz',
-    description: 'Room available in student housing',
+    id: 'mock-3',
+    title: 'Room in Shared House',
+    price: 800,
+    location: 'Downtown Santa Cruz',
+    description: 'One room available in friendly shared house.',
     bedrooms: 1,
     bathrooms: 1,
-    availableDate: '2025-06-15',
-    imageURLs: ['https://via.placeholder.com/300?text=Dorm'],
-    amenities: ['furnished', 'kitchen'],
-    utilities: ['all'],
+    availableDate: new Date('2024-04-01'),
+    imageURLs: ['https://picsum.photos/400/300?random=3'],
+    amenities: ['shared-kitchen', 'backyard'],
+    utilities: ['all-included'],
     ownerId: 'user-3',
-    createdAt: { toDate: () => new Date(Date.now() - 172800000) },
-    favoriteCount: 3,
+    createdAt: new Date(),
+    favoriteCount: 8,
     pets: false,
     onCampus: true,
-    neighborhood: 'campus'
+    address: '789 Pacific Ave, Santa Cruz, CA 95060',
+    tags: {}
   }
 ];
 

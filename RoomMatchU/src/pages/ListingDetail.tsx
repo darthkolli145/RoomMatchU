@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ListingType } from '../types/index';
+import { ListingType, UserQuestionnaire } from '../types/index';
 import ImageGallery from '../components/ImageGallery';
 import { useAuth } from '../contexts/AuthContext';
 import { toggleFavorite } from '../firebase/favoritesService';
 import { fetchListings, fetchUserEmail, fetchQuestionnaireByUserId} from '../firebase/firebaseHelpers';
+import { calculateDistanceFromUCSC, formatDistance } from '../utils/distanceCalculator';
 
 export default function ListingDetail() {
   const { id } = useParams<{ id: string }>();
@@ -167,30 +168,30 @@ useEffect(() => {
         <div className="listing-details">
           <div className="detail-group">
             <h2>Property Details</h2>
-            <div className="property-features">
-              <div className="feature">
+            <div className="features-grid">
+              <div className="feature-item">
                 <span className="feature-label">Bedrooms</span>
                 <span className="feature-value">{listing.bedrooms}</span>
               </div>
-              <div className="feature">
+              <div className="feature-item">
                 <span className="feature-label">Bathrooms</span>
                 <span className="feature-value">{listing.bathrooms}</span>
               </div>
-              <div className="feature">
-                <span className="feature-label">Available Starting</span>
-                <span className="feature-value">{new Date(listing.availableDate).toLocaleDateString()}</span>
+              <div className="feature-item">
+                <span className="feature-label">Location</span>
+                <span className="feature-value">{listing.onCampus ? 'On Campus' : 'Off Campus'}</span>
               </div>
-              <div className="feature">
-                <span className="feature-label">Neighborhood</span>
-                <span className="feature-value">{listing.neighborhood}</span>
-              </div>
-              <div className="feature">
-                <span className="feature-label">On Campus</span>
-                <span className="feature-value">{listing.onCampus ? 'Yes' : 'No'}</span>
-              </div>
-              <div className="feature">
+              <div className="feature-item">
                 <span className="feature-label">Pet Friendly</span>
                 <span className="feature-value">{listing.pets ? 'Yes' : 'No'}</span>
+              </div>
+              <div className="feature-item">
+                <span className="feature-label">Available Date</span>
+                <span className="feature-value">{new Date(listing.availableDate).toLocaleDateString()}</span>
+              </div>
+              <div className="feature-item">
+                <span className="feature-label">Distance from UCSC</span>
+                <span className="feature-value">{formatDistance(calculateDistanceFromUCSC(listing.lat, listing.lng))}</span>
               </div>
             </div>
           </div>

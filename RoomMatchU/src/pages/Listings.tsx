@@ -6,7 +6,7 @@ import ListingFilter, { FilterOptions } from '../components/ListingFilter';
 import { filterListings, ListingWithScore, sortListingsByCompatibility } from '../utils/filterListings';
 import { sampleListings } from '../utils/sampleListings'; // Import the sample listings
 import { useMockFirebase } from '../firebase';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchListings, fetchQuestionnaireByUserId } from '../firebase/firebaseHelpers';
 
@@ -21,7 +21,7 @@ const fallbackListings = [
     description: 'Spacious apartment with view',
     bedrooms: 2,
     bathrooms: 1,
-    availableDate: '2025-06-01',
+    availableDate: new Date('2025-06-01'),
     imageURLs: ['https://via.placeholder.com/300?text=Apartment'],
     amenities: ['parking', 'laundry'],
     utilities: ['water', 'garbage'],
@@ -30,7 +30,9 @@ const fallbackListings = [
     favoriteCount: 5,
     pets: true,
     onCampus: false,
-    neighborhood: 'westside',
+    address: '123 West St, Santa Cruz, CA 95060',
+    lat: 36.9741, // About 2 miles from UCSC
+    lng: -122.0308,
     tags: {
       sleepSchedule: "10pm - 12am",
       cleanliness: "Moderately tidy",
@@ -46,7 +48,7 @@ const fallbackListings = [
     description: 'Charming house near the beach',
     bedrooms: 3,
     bathrooms: 2,
-    availableDate: '2025-05-15',
+    availableDate: new Date('2025-05-15'),
     imageURLs: ['https://via.placeholder.com/300?text=House'],
     amenities: ['parking', 'laundry', 'backyard'],
     utilities: ['water', 'garbage'],
@@ -55,7 +57,9 @@ const fallbackListings = [
     favoriteCount: 8,
     pets: true,
     onCampus: false,
-    neighborhood: 'seabright',
+    address: '456 Ocean View Ave, Santa Cruz, CA 95062',
+    lat: 36.9627, // About 4 miles from UCSC
+    lng: -122.0000,
     tags: {
       sleepSchedule: "After 12am",
       cleanliness: "Very tidy",
@@ -71,7 +75,7 @@ const fallbackListings = [
     description: 'Room available in student housing',
     bedrooms: 1,
     bathrooms: 1,
-    availableDate: '2025-06-15',
+    availableDate: new Date('2025-06-15'),
     imageURLs: ['https://via.placeholder.com/300?text=Dorm'],
     amenities: ['furnished', 'kitchen'],
     utilities: ['all'],
@@ -80,7 +84,9 @@ const fallbackListings = [
     favoriteCount: 3,
     pets: false,
     onCampus: true,
-    neighborhood: 'campus',
+    address: '1156 High St, Santa Cruz, CA 95064',
+    lat: 36.9916, // On campus
+    lng: -122.0583,
     tags: {
       sleepSchedule: "Before 10pm",
       cleanliness: "Moderately tidy",
@@ -113,6 +119,7 @@ const mockQuestionnaire: UserQuestionnaire = {
   okPets: "No", // No pets allowed, will conflict with pet-friendly places
   prefGender: "Male",
   dealMust: ["Quiet environment", "No smoking inside"],
+  maxDistanceFromCampus: 5, // Added: prefers within 5 miles of campus
   priorities: {
     sleepSchedule: "Deal Breaker" as PriorityLevel, // Increased priority weight
     cleanliness: "Very Important" as PriorityLevel,
@@ -125,12 +132,10 @@ const mockQuestionnaire: UserQuestionnaire = {
 
 export default function Listings() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { currentUser, favorites, refreshFavorites } = useAuth();
   const [listings, setListings] = useState<ListingType[]>([]);
   const [filteredListings, setFilteredListings] = useState<ListingWithScore[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<FilterOptions>({});
   const [useQuestionnaire, setUseQuestionnaire] = useState<boolean>(currentUser?.questionnaire !== undefined);
   const [userQuestionnaire, setUserQuestionnaire] = useState<UserQuestionnaire | null>(null);
@@ -142,9 +147,17 @@ export default function Listings() {
         try {
           // First try to get the questionnaire from the user object
           if (currentUser.questionnaire) {
-            setUserQuestionnaire(currentUser.questionnaire);
+            const questionnaire = currentUser.questionnaire;
+            setUserQuestionnaire(questionnaire);
             setUseQuestionnaire(true);
             console.log('Using questionnaire from user profile');
+            // Set initial filters based on user's questionnaire preferences
+            if (questionnaire.maxDistanceFromCampus) {
+              setFilters(prev => ({
+                ...prev,
+                maxDistance: questionnaire.maxDistanceFromCampus
+              }));
+            }
           } else {
             // If not in user object, try to fetch from questionnaireResponses collection
             const response = await fetchQuestionnaireByUserId(currentUser.id);
@@ -152,6 +165,13 @@ export default function Listings() {
               setUserQuestionnaire(response);
               setUseQuestionnaire(true);
               console.log('Using questionnaire from responses collection');
+              // Set initial filters based on user's questionnaire preferences
+              if (response.maxDistanceFromCampus) {
+                setFilters(prev => ({
+                  ...prev,
+                  maxDistance: response.maxDistanceFromCampus
+                }));
+              }
             } else {
               console.log('No questionnaire found for user');
               setUseQuestionnaire(false);
@@ -168,15 +188,6 @@ export default function Listings() {
     fetchQuestionnaire();
   }, [currentUser]);
   
-  // Extract search query from URL on component mount
-  useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const searchParam = queryParams.get('search');
-    if (searchParam) {
-      setSearchTerm(searchParam);
-    }
-  }, [location.search]);
-
   useEffect(() => {
     const fetchListingsData = async () => {
       try {
@@ -201,33 +212,13 @@ export default function Listings() {
     fetchListingsData();
   }, []);
 
-  // Apply filters whenever filters or search term changes
+  // Apply filters whenever filters change
   useEffect(() => {
     if (listings.length === 0) return;
     
-    // First filter by search term
-    let searchResults = listings;
-    if (searchTerm.trim()) {
-      const searchLower = searchTerm.toLowerCase();
-      searchResults = listings.filter(listing => 
-        listing.title?.toLowerCase().includes(searchLower) ||
-        listing.description?.toLowerCase().includes(searchLower) ||
-        listing.location?.toLowerCase().includes(searchLower) ||
-        listing.neighborhood?.toLowerCase().includes(searchLower) ||
-        listing.address?.toLowerCase().includes(searchLower) ||
-        (listing.amenities && listing.amenities.some(amenity => 
-          amenity.toLowerCase().includes(searchLower)
-        )) ||
-        (listing.tags && Object.values(listing.tags).some(tag => 
-          (typeof tag === 'string' && tag.toLowerCase().includes(searchLower)) ||
-          (Array.isArray(tag) && tag.some(t => t.toLowerCase().includes(searchLower)))
-        ))
-      );
-    }
-    
-    // Then apply compatibility filters
+    // Apply compatibility filters
     const { filteredListings: filtered, listingsWithScores } = filterListings(
-      searchResults, 
+      listings, 
       filters, 
       useQuestionnaire && userQuestionnaire ? userQuestionnaire : undefined
     );
@@ -239,28 +230,10 @@ export default function Listings() {
     }
     
     setFilteredListings(sortedListings);
-  }, [listings, filters, searchTerm, useQuestionnaire, userQuestionnaire]);
+  }, [listings, filters, useQuestionnaire, userQuestionnaire]);
 
   const handleFilterChange = (newFilters: FilterOptions) => {
     setFilters(newFilters);
-  };
-
-  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    // Update URL with search query without page reload
-    const searchParams = new URLSearchParams(location.search);
-    if (searchTerm.trim()) {
-      searchParams.set('search', searchTerm);
-    } else {
-      searchParams.delete('search');
-    }
-    
-    navigate({
-      pathname: location.pathname,
-      search: searchParams.toString()
-    }, { replace: true });
-    
-    // The search term filtering is handled in the useEffect
   };
 
   const handleFavorite = async (listingId: string) => {
@@ -347,19 +320,6 @@ export default function Listings() {
         <main className="listings-main">
           <div className="listings-header">
             <h1>Listings</h1>
-            <div className="search-section">
-              <form onSubmit={handleSearch}>
-                <input 
-                  type="text" 
-                  placeholder="Search listings" 
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <button type="submit" className="search-icon">
-                  <span className="material-icon">search</span>
-                </button>
-              </form>
-            </div>
           </div>
           <div className="listings-count">
             <p>{filteredListings.length} listings found</p>
