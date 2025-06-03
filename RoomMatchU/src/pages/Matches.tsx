@@ -71,7 +71,7 @@ export default function Matches() {
             (listing) =>
                 listing.compatibilityScore &&
                 typeof listing.compatibilityScore.score === 'number' &&
-                listing.compatibilityScore.score >= 50
+                listing.compatibilityScore.score >= 60
             );
 
             setMatches(finalFiltered);
@@ -118,7 +118,7 @@ export default function Matches() {
           <ListingFilter
             onFilterChange={handleFilterChange}
             initialFilters={filters}
-            minCompatibilityLimit={70}
+            minCompatibilityLimit={60}
             />
 
           {currentUser && favorites.length > 0 && (
@@ -137,7 +137,7 @@ export default function Matches() {
           <div className="listings-header">
             <h1>Your Top Matches!</h1>
             <p>
-                Showing matches with 70%+ compatibility!
+                Showing matches with 60%+ compatibility!
             </p>
           </div>
 

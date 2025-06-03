@@ -162,7 +162,7 @@ export default function Home() {
 
             // Now apply score threshold
             const filteredByScore = filteredByDistance.filter(listing =>
-              (listing.compatibilityScore?.score || 0) >= 70
+              (listing.compatibilityScore?.score || 0) >= 60
             );
 
             // Sort remaining listings by score
@@ -304,7 +304,7 @@ export default function Home() {
                 ))
               ) : (
                 <div className="no-listings">
-                  <p>😕 No top matches found right now.</p>
+                  <p>😕 No matches above 60% compatibility found.</p>
                   <p>Check out our <Link to="/listings" className="listings-link">new listings</Link> or try updating your <Link to="/questionnaire" className="quest-link">questionnaire</Link>.</p>
                 </div>
               )}
