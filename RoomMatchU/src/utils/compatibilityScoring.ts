@@ -15,6 +15,21 @@ const DEFAULT_PRIORITY_WEIGHT = 1;
 // Weight for distance in the overall score (treated as "Very Important" by default)
 const DISTANCE_WEIGHT = 3;
 
+// Default score for missing data (penalizes incomplete questionnaires)
+const MISSING_DATA_SCORE = 50; // Neutral score when data is missing
+
+// All possible categories that should be considered
+const ALL_CATEGORIES: QuestionnaireCategory[] = [
+  'sleepSchedule',
+  'wakeupSchedule', 
+  'cleanliness',
+  'noiseLevel',
+  'visitors',
+  'pets',
+  'lifestyle',
+  'studyHabits'
+];
+
 // Calculate compatibility between a user's questionnaire and a listing
 export function calculateCompatibility(
   userQuestionnaire: UserQuestionnaire,
@@ -23,6 +38,7 @@ export function calculateCompatibility(
   const categoryScores: { [key in QuestionnaireCategory | 'distance']?: number } = {};
   const matches: string[] = [];
   const conflicts: string[] = [];
+  const missingData: string[] = [];
   let totalScore = 0;
   let totalWeight = 0;
 
@@ -32,161 +48,187 @@ export function calculateCompatibility(
     return priority ? PRIORITY_WEIGHTS[priority] : DEFAULT_PRIORITY_WEIGHT;
   };
 
-  // Sleep Schedule
-  if (userQuestionnaire.sleepSchedule && listing.tags?.sleepSchedule) {
-    const weight = getCategoryWeight('sleepSchedule');
-    const score = calculateCategoryMatch(
-      userQuestionnaire.sleepSchedule, 
-      listing.tags.sleepSchedule as string
-    );
-    
-    categoryScores.sleepSchedule = score;
-    totalScore += score * weight;
-    totalWeight += weight;
-    
-    if (score > 70) {
-      matches.push('Compatible sleep schedules');
-    } else if (score < 40) {
-      conflicts.push('Different sleep schedules');
-    }
-  }
+  // Process all categories, not just the ones with data
+  for (const category of ALL_CATEGORIES) {
+    const weight = getCategoryWeight(category);
+    let score: number;
+    let hasUserData = false;
+    let hasListingData = false;
 
-  // Wake-up Schedule
-  if (userQuestionnaire.wakeupSchedule && listing.tags?.wakeupSchedule) {
-    const weight = getCategoryWeight('wakeupSchedule');
-    const score = calculateCategoryMatch(
-      userQuestionnaire.wakeupSchedule, 
-      listing.tags.wakeupSchedule as string
-    );
-    
-    categoryScores.wakeupSchedule = score;
-    totalScore += score * weight;
-    totalWeight += weight;
-    
-    if (score > 70) {
-      matches.push('Compatible wake-up times');
-    } else if (score < 40) {
-      conflicts.push('Different wake-up times');
-    }
-  }
+    switch (category) {
+      case 'sleepSchedule':
+        hasUserData = !!userQuestionnaire.sleepSchedule;
+        hasListingData = !!listing.tags?.sleepSchedule;
+        if (hasUserData && hasListingData) {
+          score = calculateCategoryMatch(
+            userQuestionnaire.sleepSchedule, 
+            listing.tags.sleepSchedule as string
+          );
+          if (score > 70) {
+            matches.push('Compatible sleep schedules');
+          } else if (score < 40) {
+            conflicts.push('Different sleep schedules');
+          }
+        } else {
+          score = MISSING_DATA_SCORE;
+          if (!hasUserData) missingData.push('Your sleep schedule preference');
+          if (!hasListingData) missingData.push('Listing sleep schedule info');
+        }
+        break;
 
-  // Cleanliness
-  if (userQuestionnaire.cleanliness && listing.tags?.cleanliness) {
-    const weight = getCategoryWeight('cleanliness');
-    const score = calculateCategoryMatch(
-      userQuestionnaire.cleanliness, 
-      listing.tags.cleanliness as string
-    );
-    
-    categoryScores.cleanliness = score;
-    totalScore += score * weight;
-    totalWeight += weight;
-    
-    if (score > 70) {
-      matches.push('Compatible cleanliness preferences');
-    } else if (score < 40) {
-      conflicts.push('Different cleanliness preferences');
-    }
-  }
+      case 'wakeupSchedule':
+        hasUserData = !!userQuestionnaire.wakeupSchedule;
+        hasListingData = !!listing.tags?.wakeupSchedule;
+        if (hasUserData && hasListingData) {
+          score = calculateCategoryMatch(
+            userQuestionnaire.wakeupSchedule, 
+            listing.tags.wakeupSchedule as string
+          );
+          if (score > 70) {
+            matches.push('Compatible wake-up times');
+          } else if (score < 40) {
+            conflicts.push('Different wake-up times');
+          }
+        } else {
+          score = MISSING_DATA_SCORE;
+          if (!hasUserData) missingData.push('Your wake-up time preference');
+          if (!hasListingData) missingData.push('Listing wake-up time info');
+        }
+        break;
 
-  // Noise Level
-  if (userQuestionnaire.noiseLevel && listing.tags?.noiseLevel) {
-    const weight = getCategoryWeight('noiseLevel');
-    const score = calculateCategoryMatch(
-      userQuestionnaire.noiseLevel, 
-      listing.tags.noiseLevel as string
-    );
-    
-    categoryScores.noiseLevel = score;
-    totalScore += score * weight;
-    totalWeight += weight;
-    
-    if (score > 70) {
-      matches.push('Compatible noise level preferences');
-    } else if (score < 40) {
-      conflicts.push('Different noise level preferences');
-    }
-  }
+      case 'cleanliness':
+        hasUserData = !!userQuestionnaire.cleanliness;
+        hasListingData = !!listing.tags?.cleanliness;
+        if (hasUserData && hasListingData) {
+          score = calculateCategoryMatch(
+            userQuestionnaire.cleanliness, 
+            listing.tags.cleanliness as string
+          );
+          if (score > 70) {
+            matches.push('Compatible cleanliness preferences');
+          } else if (score < 40) {
+            conflicts.push('Different cleanliness preferences');
+          }
+        } else {
+          score = MISSING_DATA_SCORE;
+          if (!hasUserData) missingData.push('Your cleanliness preference');
+          if (!hasListingData) missingData.push('Listing cleanliness info');
+        }
+        break;
 
-  // Visitors
-  if (userQuestionnaire.visitors && listing.tags?.visitors) {
-    const weight = getCategoryWeight('visitors');
-    const score = calculateCategoryMatch(
-      userQuestionnaire.visitors, 
-      listing.tags.visitors as string
-    );
-    
-    categoryScores.visitors = score;
-    totalScore += score * weight;
-    totalWeight += weight;
-    
-    if (score > 70) {
-      matches.push('Compatible visitor preferences');
-    } else if (score < 40) {
-      conflicts.push('Different visitor preferences');
-    }
-  }
+      case 'noiseLevel':
+        hasUserData = !!userQuestionnaire.noiseLevel;
+        hasListingData = !!listing.tags?.noiseLevel;
+        if (hasUserData && hasListingData) {
+          score = calculateCategoryMatch(
+            userQuestionnaire.noiseLevel, 
+            listing.tags.noiseLevel as string
+          );
+          if (score > 70) {
+            matches.push('Compatible noise level preferences');
+          } else if (score < 40) {
+            conflicts.push('Different noise level preferences');
+          }
+        } else {
+          score = MISSING_DATA_SCORE;
+          if (!hasUserData) missingData.push('Your noise level preference');
+          if (!hasListingData) missingData.push('Listing noise level info');
+        }
+        break;
 
-  // Pets
-  if (userQuestionnaire.pets && listing.tags?.pets) {
-    const weight = getCategoryWeight('pets');
-    const score = calculatePetsMatch(
-      userQuestionnaire.pets, 
-      userQuestionnaire.okPets,
-      listing.pets
-    );
-    
-    categoryScores.pets = score;
-    totalScore += score * weight;
-    totalWeight += weight;
-    
-    if (score > 70) {
-      matches.push('Compatible pet preferences');
-    } else if (score < 40) {
-      conflicts.push('Different pet preferences');
-    }
-  }
+      case 'visitors':
+        hasUserData = !!userQuestionnaire.visitors;
+        hasListingData = !!listing.tags?.visitors;
+        if (hasUserData && hasListingData) {
+          score = calculateCategoryMatch(
+            userQuestionnaire.visitors, 
+            listing.tags.visitors as string
+          );
+          if (score > 70) {
+            matches.push('Compatible visitor preferences');
+          } else if (score < 40) {
+            conflicts.push('Different visitor preferences');
+          }
+        } else {
+          score = MISSING_DATA_SCORE;
+          if (!hasUserData) missingData.push('Your visitor preference');
+          if (!hasListingData) missingData.push('Listing visitor info');
+        }
+        break;
 
-  // Lifestyle
-  if (userQuestionnaire.lifestyle.length > 0 && listing.tags?.lifestyle) {
-    const weight = getCategoryWeight('lifestyle');
-    const listingLifestyles = Array.isArray(listing.tags.lifestyle)
-      ? listing.tags.lifestyle
-      : [listing.tags.lifestyle];
-      
-    const score = calculateLifestyleMatch(
-      userQuestionnaire.lifestyle,
-      listingLifestyles
-    );
-    
-    categoryScores.lifestyle = score;
-    totalScore += score * weight;
-    totalWeight += weight;
-    
-    if (score > 70) {
-      matches.push('Compatible lifestyle habits');
-    } else if (score < 40) {
-      conflicts.push('Different lifestyle habits');
-    }
-  }
+      case 'pets':
+        hasUserData = !!userQuestionnaire.pets;
+        hasListingData = listing.pets !== undefined;
+        if (hasUserData && hasListingData) {
+          score = calculatePetsMatch(
+            userQuestionnaire.pets, 
+            userQuestionnaire.okPets,
+            listing.pets
+          );
+          if (score > 70) {
+            matches.push('Compatible pet preferences');
+          } else if (score < 40) {
+            conflicts.push('Different pet preferences');
+          }
+        } else {
+          score = MISSING_DATA_SCORE;
+          if (!hasUserData) missingData.push('Your pet preference');
+          if (!hasListingData) missingData.push('Listing pet policy');
+        }
+        break;
 
-  // Study Habits
-  if (userQuestionnaire.studySpot && listing.tags?.studyHabits) {
-    const weight = getCategoryWeight('studyHabits');
-    const score = calculateCategoryMatch(
-      userQuestionnaire.studySpot, 
-      listing.tags.studyHabits as string
-    );
-    
-    categoryScores.studyHabits = score;
+      case 'lifestyle':
+        hasUserData = userQuestionnaire.lifestyle && userQuestionnaire.lifestyle.length > 0;
+        hasListingData = !!listing.tags?.lifestyle;
+        if (hasUserData && hasListingData) {
+          const rawLifestyles = Array.isArray(listing.tags.lifestyle)
+            ? listing.tags.lifestyle
+            : [listing.tags.lifestyle];
+          // Filter out any undefined values
+          const listingLifestyles = rawLifestyles.filter((item): item is string => item !== undefined);
+          score = calculateLifestyleMatch(
+            userQuestionnaire.lifestyle || [],
+            listingLifestyles
+          );
+          if (score > 70) {
+            matches.push('Compatible lifestyle habits');
+          } else if (score < 40) {
+            conflicts.push('Different lifestyle habits');
+          }
+        } else {
+          score = MISSING_DATA_SCORE;
+          if (!hasUserData) missingData.push('Your lifestyle preferences');
+          if (!hasListingData) missingData.push('Listing lifestyle info');
+        }
+        break;
+
+      case 'studyHabits':
+        hasUserData = !!userQuestionnaire.studySpot;
+        hasListingData = !!listing.tags?.studyHabits;
+        if (hasUserData && hasListingData) {
+          score = calculateCategoryMatch(
+            userQuestionnaire.studySpot, 
+            listing.tags.studyHabits as string
+          );
+          if (score > 70) {
+            matches.push('Compatible study habits');
+          } else if (score < 40) {
+            conflicts.push('Different study habits');
+          }
+        } else {
+          score = MISSING_DATA_SCORE;
+          if (!hasUserData) missingData.push('Your study habit preference');
+          if (!hasListingData) missingData.push('Listing study habit info');
+        }
+        break;
+
+      default:
+        score = MISSING_DATA_SCORE;
+    }
+
+    categoryScores[category] = score;
     totalScore += score * weight;
     totalWeight += weight;
-    
-    if (score > 70) {
-      matches.push('Compatible study habits');
-    } else if (score < 40) {
-      conflicts.push('Different study habits');
-    }
   }
   
   // Distance from Campus
@@ -227,9 +269,12 @@ export function calculateCompatibility(
     const actualDistance = calculateDistanceFromUCSC(listing.lat, listing.lng);
     
     if (actualDistance !== null && actualDistance < 1) {
-      // Small bonus for being very close to campus
-      const bonusScore = actualDistance < 0.1 ? 10 : (1 - actualDistance) * 8; // 0-10 bonus points
-      totalScore += bonusScore;
+      // Small bonus for being very close to campus - treat as a lightly weighted category
+      const bonusScore = actualDistance < 0.1 ? 100 : (1 - actualDistance) * 80; // 20-100 score based on proximity
+      const bonusWeight = 0.5; // Light weight for bonus
+      totalScore += bonusScore * bonusWeight;
+      totalWeight += bonusWeight;
+      
       if (actualDistance < 0.1) {
         matches.push('On campus');
       } else {
@@ -239,10 +284,19 @@ export function calculateCompatibility(
   }
   
   // Calculate overall score
-  const overall = totalWeight > 0 ? (totalScore / totalWeight) * 100 : 0;
+  // totalScore is sum of (score * weight) where score is 0-100
+  // totalWeight is sum of weights
+  // So average is totalScore / totalWeight (already in percentage form)
+  const overall = totalWeight > 0 ? (totalScore / totalWeight) : 0;
   
   // Ensure the overall score is between 0-100
   const normalizedOverall = Math.max(0, Math.min(100, overall));
+  
+  // Debug for edge cases
+  if (totalWeight === 0) {
+    console.warn('Warning: No categories were compared - totalWeight is 0');
+    conflicts.push('Unable to calculate compatibility - no matching data');
+  }
   
   // Additional adjustment for important dealbreakers
   // If a deal breaker category scores below 30, cap the overall score
@@ -260,11 +314,18 @@ export function calculateCompatibility(
     }
   }
 
-  return {
+  // Add information about missing data if significant
+  if (missingData.length > 0) {
+    conflicts.push(`Incomplete data for: ${missingData.length} categories`);
+  }
+
+  const result = {
     score: Math.round(finalScore),
     matches,
     conflicts
   };
+  
+  return result;
 }
 
 // Helper functions
