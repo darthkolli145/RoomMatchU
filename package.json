@@ -16,6 +16,7 @@
     "framer-motion": "^12.12.1",
     "heic2any": "^0.0.4",
     "postcss": "^8.5.3",
+    "react-hot-toast": "^2.5.2",
     "tailwindcss": "^4.1.7"
   }
 }

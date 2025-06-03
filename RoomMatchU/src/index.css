@@ -403,7 +403,12 @@ input:focus, select:focus, textarea:focus {
 
 .listings-count {
   margin-bottom: 15px;
-  color: var(--text-secondary);
+  color: #be1818;
+}
+
+.listings-link, .quest-link{
+  color: #be1818;
+  text-decoration: underline;
 }
 
 .no-listings {

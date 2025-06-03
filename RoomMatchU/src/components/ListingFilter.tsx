@@ -4,6 +4,7 @@ import { QuestionnaireCategory } from '../types/index';
 type FilterProps = {
   onFilterChange: (filters: FilterOptions) => void;
   initialFilters?: FilterOptions;
+  minCompatibilityLimit?: number; // Add this prop (optional)
 };
 
 export type FilterOptions = {
@@ -18,8 +19,11 @@ export type FilterOptions = {
   priorityCategories?: QuestionnaireCategory[];
 };
 
-export default function ListingFilter({ onFilterChange, initialFilters = {} }: FilterProps) {
+export default function ListingFilter({ onFilterChange, initialFilters = {}, minCompatibilityLimit = 0 }: FilterProps) {
   const [filters, setFilters] = useState<FilterOptions>(initialFilters);
+  const minScore = minCompatibilityLimit;
+  const currentScore = filters.minCompatibility ?? minScore;
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -204,14 +208,14 @@ export default function ListingFilter({ onFilterChange, initialFilters = {} }: F
             type="range"
             id="minCompatibility"
             name="minCompatibility"
-            min="0"
-            max="100"
-            step="10"
-            value={filters.minCompatibility || 0}
+            min={minScore}
+            max={100}
+            step={10}
+            value={currentScore}
             onChange={handleInputChange}
             className="w-full"
           />
-          <span className="ml-2">{filters.minCompatibility || 0}%</span>
+          <span className="ml-2">{currentScore}%</span>
         </div>
       </div>
       

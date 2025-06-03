@@ -1,79 +1,90 @@
+// Matches.tsx
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { fetchListings } from '../firebase/firebaseHelpers';
-import { Listing } from '../firebase/firebaseHelpers';
+import { useNavigate } from 'react-router-dom';
+import { ListingType, UserQuestionnaire, PriorityLevel } from '../types/index';
 import ListingCard from '../components/ListingCard';
+import ListingFilter, { FilterOptions } from '../components/ListingFilter';
+import { filterListings, ListingWithScore, sortListingsByCompatibility } from '../utils/filterListings';
+import { fetchListings, fetchQuestionnaireByUserId } from '../firebase/firebaseHelpers';
+import { useAuth } from '../contexts/AuthContext';
 import { calculateCompatibility } from '../utils/compatibilityScoring';
 import { calculateDistanceFromUCSC } from '../utils/distanceCalculator';
-import { CompatibilityScore } from '../types/index';
 
-// Type for listings with compatibility scores
-type ListingWithScore = Listing & { compatibilityScore?: CompatibilityScore };
 
 export default function Matches() {
   const navigate = useNavigate();
   const { currentUser, favorites, refreshFavorites } = useAuth();
-  const [matchedListings, setMatchedListings] = useState<ListingWithScore[]>([]);
+  const [listings, setListings] = useState<ListingType[]>([]);
+  const [matches, setMatches] = useState<ListingWithScore[]>([]);
+  const [filters, setFilters] = useState<FilterOptions>({});
+  const [userQuestionnaire, setUserQuestionnaire] = useState<UserQuestionnaire | null>(null);
   const [loading, setLoading] = useState(true);
   const [filterByDistance, setFilterByDistance] = useState(true);
 
   useEffect(() => {
-    // Redirect to questionnaire if user hasn't completed it
-    if (currentUser && !currentUser.questionnaire) {
-      navigate('/questionnaire');
-      return;
-    }
-    
-    // Redirect to login if not authenticated
-    if (!currentUser) {
-      navigate('/login');
-      return;
-    }
-
-    const fetchAndSortListings = async () => {
-      try {
-        const listingsData = await fetchListings();
-        
-        if (listingsData.length && currentUser.questionnaire) {
-          // Add compatibility scores to all listings
-          const listingsWithScores = listingsData.map(listing => {
-            const compatibilityScore = calculateCompatibility(currentUser.questionnaire!, listing);
-            return { ...listing, compatibilityScore };
-          });
-          
-          // Filter by user's preferred max distance if enabled
-          let filteredListings = listingsWithScores;
-          if (filterByDistance && currentUser.questionnaire.maxDistanceFromCampus) {
-            filteredListings = listingsWithScores.filter(listing => {
-              if (listing.lat !== undefined && listing.lng !== undefined) {
-                const distance = calculateDistanceFromUCSC(listing.lat, listing.lng);
-                if (distance === null) return true;
-                return distance <= currentUser.questionnaire!.maxDistanceFromCampus!;
-              }
-              return true;
-            });
+    const fetchQuestionnaire = async () => {
+      if (currentUser) {
+        try {
+          if (currentUser.questionnaire) {
+            setUserQuestionnaire(currentUser.questionnaire);
+          } else {
+            const response = await fetchQuestionnaireByUserId(currentUser.id);
+            if (response) {
+              setUserQuestionnaire(response);
+            }
           }
-          
-          // Sort by compatibility score (highest first)
-          const sortedByCompatibility = [...filteredListings].sort((a, b) => {
-            const scoreA = a.compatibilityScore?.score || 0;
-            const scoreB = b.compatibilityScore?.score || 0;
-            return scoreB - scoreA;
-          });
-          
-          setMatchedListings(sortedByCompatibility);
+        } catch (error) {
+          console.error('Error fetching questionnaire:', error);
         }
-        
-        setLoading(false);
-      } catch (error) {
-        console.error('Error loading matches:', error);
-        setLoading(false);
       }
     };
-    
-    fetchAndSortListings();
-  }, [currentUser, navigate, filterByDistance]);
+    fetchQuestionnaire();
+  }, [currentUser]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+        if (!userQuestionnaire) return;
+
+        try {
+            const listingsData = await fetchListings();
+            setListings(listingsData);
+
+            const listingsWithScores = listingsData.map((listing) => {
+            const compatibilityScore = calculateCompatibility(userQuestionnaire, listing);
+            return { ...listing, compatibilityScore };
+            });
+
+            // Distance filter
+            let filteredListings = listingsWithScores;
+            if (filterByDistance && userQuestionnaire.maxDistanceFromCampus) {
+            filteredListings = listingsWithScores.filter((listing) => {
+                if (listing.lat !== undefined && listing.lng !== undefined) {
+                const distance = calculateDistanceFromUCSC(listing.lat, listing.lng);
+                return distance === null || distance <= userQuestionnaire.maxDistanceFromCampus!;
+                }
+                return true;
+            });
+            }
+
+            const sorted = sortListingsByCompatibility(filteredListings);
+            const finalFiltered = sorted.filter(
+            (listing) =>
+                listing.compatibilityScore &&
+                typeof listing.compatibilityScore.score === 'number' &&
+                listing.compatibilityScore.score >= 50
+            );
+
+            setMatches(finalFiltered);
+        } catch (error) {
+            console.error('Error loading matches:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+    fetchData();
+  }, [userQuestionnaire, filters]);
 
   const handleFavorite = async (listingId: string) => {
     if (!currentUser) {
@@ -83,134 +94,114 @@ export default function Matches() {
     await refreshFavorites();
   };
 
-  if (loading) {
-    return <div className="loading">Loading your matches...</div>;
-  }
+  const handleFilterChange = (newFilters: FilterOptions) => {
+    setFilters(newFilters);
+  };
 
-  if (!currentUser) {
-    return null; // Will redirect
+  if (loading) {
+    return <div className="loading">Loading...</div>;
   }
 
   return (
-    <div className="matches-page">
-      <div className="matches-header">
-        <Link to="/" className="back-link">&larr; Back to Home</Link>
-        <h1>Your Matches</h1>
-        <p className="subtitle">
-          Listings sorted by compatibility with your questionnaire preferences
-        </p>
-      </div>
+    <div className="listings-page">
+      <div className="listings-content">
+        <aside className="filters-sidebar">
+          <div className="mb-4 p-3 bg-indigo-100 rounded">
+            <button
+              onClick={() => navigate('/questionnaire')}
+              className="mt-2 w-full p-2 rounded bg-indigo-600 text-white text-sm"
+            >
+              Update Questionnaire
+            </button>
+          </div>
 
-      {currentUser.questionnaire?.maxDistanceFromCampus && (
-        <div className="distance-filter-toggle">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={filterByDistance}
-              onChange={(e) => setFilterByDistance(e.target.checked)}
-              className="mr-2"
+          <ListingFilter
+            onFilterChange={handleFilterChange}
+            initialFilters={filters}
+            minCompatibilityLimit={70}
             />
-            Only show listings within {currentUser.questionnaire.maxDistanceFromCampus} miles of campus
-          </label>
-        </div>
-      )}
 
-      <div className="matches-stats">
-        <p>Found {matchedListings.length} compatible listings</p>
-      </div>
+          {currentUser && favorites.length > 0 && (
+            <div className="favorites-shortcut mt-4">
+              <button
+                onClick={() => navigate('/favorites')}
+                className="w-full p-3 rounded bg-rose-100 text-rose-600 hover:bg-rose-200"
+              >
+                View Your Favorites ({favorites.length})
+              </button>
+            </div>
+          )}
+        </aside>
 
-      <div className="listings-grid matches-grid">
-        {matchedListings.length > 0 ? (
-          matchedListings.map(listing => (
-            <ListingCard 
-              key={listing.id} 
-              listing={listing}
-              onFavorite={handleFavorite}
-              isFavorited={favorites.includes(listing.id)}
-              compatibilityScore={listing.compatibilityScore}
-              showCompatibilityScore={true}
-            />
-          ))
-        ) : (
-          <div className="no-matches">
-            <h2>No matches found</h2>
+        <main className="listings-main">
+          <div className="listings-header">
+            <h1>Your Top Matches!</h1>
             <p>
-              {filterByDistance && currentUser.questionnaire?.maxDistanceFromCampus
-                ? 'Try unchecking the distance filter to see more listings.'
-                : 'Check back later for new listings that match your preferences.'}
+                Showing matches with 70%+ compatibility!
             </p>
           </div>
-        )}
+
+            {userQuestionnaire?.maxDistanceFromCampus && (
+                <div className="distance-filter-toggle mb-4 p-4 bg-gray-100 rounded">
+                    <label className="flex items-center gap-2 text-sm text-gray-700">
+                    <input
+                        type="checkbox"
+                        checked={filterByDistance}
+                        onChange={(e) => setFilterByDistance(e.target.checked)}
+                    />
+                    Only show listings within {userQuestionnaire.maxDistanceFromCampus} miles of campus
+                    </label>
+                </div>
+            )}
+
+          <div className="listings-count">
+            <p>{matches.length} matches found</p>
+
+            {matches.length === 0 && (
+                <>
+                <p className="text-sm text-gray-600 mt-1">
+                    But check out the rest of our{' '}
+                    <button onClick={() => navigate('/listings')} className="listings-link">
+                    listings
+                    </button> or {' '}
+                    <button onClick={() => navigate('/questionnaire')} className="quest-link">
+                    update your questionnaire
+                    </button>
+                    .
+                </p>
+                </>
+            )}
+          </div>
+
+          <div className="listings-grid listings-page-grid">
+            {matches.length > 0 ? (
+              matches.map((listing) => {
+                const isFavorited = favorites.includes(listing.id);
+                return (
+                  <ListingCard
+                    key={listing.id}
+                    listing={listing}
+                    isFavorited={isFavorited}
+                    onFavorite={handleFavorite}
+                    compatibilityScore={listing.compatibilityScore}
+                    showCompatibilityScore={true}
+                  />
+                );
+              })
+            ) : (
+              <div className="no-listings text-center p-6 bg-gray-100 rounded shadow-sm">
+                <p className="text-lg font-medium"></p>
+              </div>
+            )}
+          </div>
+
+          {matches.length >= 12 && (
+            <div className="load-more">
+              <button>Load More</button>
+            </div>
+          )}
+        </main>
       </div>
-
-      <style>{`
-        .matches-page {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 2rem;
-        }
-
-        .matches-header {
-          margin-bottom: 2rem;
-        }
-
-        .matches-header h1 {
-          font-size: 2rem;
-          margin: 1rem 0 0.5rem;
-          color: #1f2937;
-        }
-
-        .subtitle {
-          color: #6b7280;
-          font-size: 1.125rem;
-        }
-
-        .back-link {
-          color: #6366f1;
-          text-decoration: none;
-          font-size: 0.875rem;
-        }
-
-        .back-link:hover {
-          text-decoration: underline;
-        }
-
-        .distance-filter-toggle {
-          background: #f3f4f6;
-          padding: 1rem;
-          border-radius: 0.5rem;
-          margin-bottom: 1rem;
-        }
-
-        .matches-stats {
-          margin-bottom: 2rem;
-          font-size: 1rem;
-          color: #6b7280;
-        }
-
-        .matches-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-          gap: 2rem;
-        }
-
-        .no-matches {
-          grid-column: 1 / -1;
-          text-align: center;
-          padding: 4rem 2rem;
-          background: #f9fafb;
-          border-radius: 0.5rem;
-        }
-
-        .no-matches h2 {
-          color: #1f2937;
-          margin-bottom: 1rem;
-        }
-
-        .no-matches p {
-          color: #6b7280;
-        }
-      `}</style>
     </div>
   );
-} 
+}

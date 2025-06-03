@@ -13,6 +13,7 @@ import DebugPage from './pages/DebugPage';
 import Profile from './pages/Profile';
 import { AuthProvider } from './contexts/AuthContext';
 import FirebaseDebugger from './components/FirebaseDebugger';
+import { Toaster } from 'react-hot-toast';
 import './reset.css';
 import './index.css';
 
@@ -36,6 +37,7 @@ function App() {
   return (
     <Router>
       <AuthProvider>
+        <Toaster position="top-right" reverseOrder={false} />
         <div className="app">
           <Navbar />
           <div className="content">

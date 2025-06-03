@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserQuestionnaire, PriorityLevel, QuestionnaireCategory } from '../types/index';
 import { postQuestionnaire } from '../firebase/firebaseHelpers';
+import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 const initialForm: UserQuestionnaire = {
   lifestyle: [],
@@ -66,10 +68,13 @@ const steps = [
   'Finish'
 ];
 
+
 const Questionnaire: React.FC = () => {
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState<UserQuestionnaire>(initialForm);
   const [submitted, setSubmitted] = useState(false);
+  const navigate = useNavigate();
+
 
   const isLastStep = step === steps.length - 1;
 
@@ -108,36 +113,59 @@ const Questionnaire: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
   
-    if (
-      formData.fullname.length === 0 ||
-      formData.Major.length === 0 ||
-      formData.yearlvl === '' ||
-      formData.Gender === '' ||
-      formData.sleepSchedule === '' ||
-      formData.cleanliness === ''
-    ) {
-      alert("Please complete all required fields before submitting.");
+    const missingFields: string[] = [];
+
+    if (formData.fullname.length === 0) missingFields.push('full name');
+    if (formData.Major.length === 0) missingFields.push('major');
+    if (formData.yearlvl === '') missingFields.push('year level');
+    if (formData.Gender === '') missingFields.push('gender');
+    if (formData.sleepSchedule === '') missingFields.push('sleep schedule');
+    if (formData.wakeupSchedule === '') missingFields.push('wake-up schedule');
+    if (formData.cleanliness === '') missingFields.push('cleanliness');
+    if (formData.roommateCleanliness === '') missingFields.push('roommate cleanliness');
+    if (formData.noiseLevel === '') missingFields.push('noise level');
+    if (formData.visitors === '') missingFields.push('visitor frequency');
+    if (formData.okvisitors === '') missingFields.push('okay with visitors');
+    if (formData.overnightGuests === '') missingFields.push('overnight guests');
+    if (formData.studySpot === '') missingFields.push('study spot');
+    if (formData.pets === '') missingFields.push('pets');
+    if (formData.okPets === '') missingFields.push('okay with pets');
+    if (formData.prefGender === '') missingFields.push('preferred roommate gender');
+    if (formData.lifestyle.length === 0) missingFields.push('lifestyle');
+    if (formData.sharing.length === 0) missingFields.push('about yourself');
+    if (formData.Hobbies.length === 0) missingFields.push('hobbies');
+    if (formData.dealMust.length === 0) missingFields.push('dealbreakers / must-haves');
+
+    // Priorities
+    if (!formData.priorities.sleepSchedule) missingFields.push('sleep schedule priority');
+    if (!formData.priorities.wakeupSchedule) missingFields.push('wake-up schedule priority');
+    if (!formData.priorities.cleanliness) missingFields.push('cleanliness priority');
+    if (!formData.priorities.noiseLevel) missingFields.push('noise level priority');
+    if (!formData.priorities.visitors) missingFields.push('visitor priority');
+    if (!formData.priorities.pets) missingFields.push('pets priority');
+    if (!formData.priorities.studyHabits) missingFields.push('study habits priority');
+    if (!formData.priorities.lifestyle) missingFields.push('lifestyle priority');
+
+    if (missingFields.length > 0) {
+      toast.error(`🚨 Missing: ${missingFields.join(', ')}`);
       return;
     }
 
     try {
-      await postQuestionnaire(formData);
-      console.log('Questionnaire submitted:', formData);
-      setSubmitted(true);
-      setFormData(initialForm); // reset form after submission
-      
-      // Add a message about redirecting
-      alert("Questionnaire submitted successfully! Redirecting to home page...");
-      
-      // Add a slight delay and then redirect to home page to see the recommendations
-      setTimeout(() => {
-        window.location.href = '/'; // Force a full page reload to refresh auth state
-      }, 1500);
-      
+      // Clean the data
+      const cleanedData = { ...formData };
+      if (cleanedData.maxDistanceFromCampus === undefined) {
+        delete cleanedData.maxDistanceFromCampus;
+      }
+
+      toast.success("🎉 Questionnaire submitted! Redirecting...");
+      await postQuestionnaire(cleanedData);
+      navigate('/', { replace: true });
     } catch (error) {
       console.error('Error submitting questionnaire:', error);
-      alert('There was an error submitting your form. Please try again.');
+      toast.error('❌ There was an error submitting your form. Please try again.');
     }
+
   };
 
   const variants = {
@@ -150,7 +178,7 @@ const Questionnaire: React.FC = () => {
     <div className="questionnaire-page">
       <h1 className="text-3xl font-bold text-purple-700 text-center mb-4">Roommate Questionnaire</h1>
       
-      <form>
+      <form noValidate>
         <div className="relative min-h-[250px]">
           <AnimatePresence mode="wait">
             {step === 0 && (
@@ -539,19 +567,18 @@ const Questionnaire: React.FC = () => {
                     Maximum distance from UCSC campus (in miles)?
                   </label>
                   <input
-                    type="number"
+                    type="text" // <-- change this from "number" to "text"
                     name="maxDistanceFromCampus"
-                    value={formData.maxDistanceFromCampus || ''}
+                    inputMode="decimal" // allows numeric keyboard on mobile
+                    value={formData.maxDistanceFromCampus !== undefined ? formData.maxDistanceFromCampus : ''}
                     onChange={(e) => {
-                      const value = e.target.value ? Number(e.target.value) : undefined;
+                      const raw = e.target.value;
+                      const numeric = raw === '' ? undefined : Number(raw);
                       setFormData((prev) => ({
                         ...prev,
-                        maxDistanceFromCampus: value
+                        maxDistanceFromCampus: numeric,
                       }));
                     }}
-                    min="0"
-                    max="50"
-                    step="0.5"
                     className="w-full border rounded p-2"
                     placeholder="e.g. 5"
                   />
@@ -654,12 +681,6 @@ const Questionnaire: React.FC = () => {
             </button>
           )}
         </div>
-        {submitted && (
-          <div className="mt-6 p-4 bg-green-100 text-green-800 rounded text-center shadow-md">
-            <h2 className="text-2xl font-bold mb-2">🎉 Thank you!</h2>
-            <p>Your questionnaire has been submitted successfully!!</p>
-          </div>
-        )}
       </form>
     </div>
   );

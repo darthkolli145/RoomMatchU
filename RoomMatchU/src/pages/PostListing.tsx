@@ -7,6 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import imageCompression from 'browser-image-compression';
 import AddressAutocomplete from '../components/AddressAutocomplete';
+import toast from 'react-hot-toast';
+
 
 export default function PostListing() {
   const { currentUser } = useAuth();
@@ -270,14 +272,12 @@ export default function PostListing() {
       };
       
       const listingId = await postListing(listingWithTags);
-      alert(`Listing submitted successfully!`);
-      console.log('Successfully posted:', listingId);
+      toast.success('🎉 Listing posted successfully!');
+      setTimeout(() => navigate(`/listing/${listingId}`), 2000); // redirect after 2 seconds
+
       
       // Clean up all object URLs to prevent memory leaks
       imagePreviewUrls.forEach(url => URL.revokeObjectURL(url));
-      
-      // Redirect to the listing detail page
-      navigate(`/listing/${listingId}`);
       
     } catch (error) {
       console.error('Failed to submit listing:', error);
