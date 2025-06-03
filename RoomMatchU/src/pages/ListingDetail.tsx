@@ -6,6 +6,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { toggleFavorite } from '../firebase/favoritesService';
 import { fetchListings, fetchUserEmail, fetchQuestionnaireByUserId} from '../firebase/firebaseHelpers';
 import { calculateDistanceFromUCSC, formatDistance } from '../utils/distanceCalculator';
+import { getRoadDistanceFromUCSC } from '../utils/roadDistance';
+
 
 export default function ListingDetail() {
   const { id } = useParams<{ id: string }>();
@@ -17,7 +19,7 @@ export default function ListingDetail() {
   const [showAuthMessage, setShowAuthMessage] = useState(false);
   const [posterEmail, setPosterEmail] = useState<string | null>(null);
   const [posterData, setPosterData] = useState<UserQuestionnaire | null>(null);
-
+  const [distance, setDistance] = useState<number | null>(null);
   
   useEffect(() => {
     const fetchListing = async () => {
@@ -27,6 +29,11 @@ export default function ListingDetail() {
 
         if (listingData) {
           setListing(listingData);
+
+          if (listingData.lat !== undefined && listingData.lng !== undefined) {
+            const roadDist = await getRoadDistanceFromUCSC(listingData.lat, listingData.lng);
+            setDistance(roadDist);
+          }
 
           // 🔥 Get poster email
           const email = await fetchUserEmail(listingData.ownerId);
@@ -194,7 +201,7 @@ useEffect(() => {
               </div>
               <div className="tag-item">
                 <span className="tag-label">Distance from UCSC</span>
-                <span className="tag-value">{formatDistance(calculateDistanceFromUCSC(listing.lat, listing.lng))}</span>
+                <span className="tag-value">{formatDistance(distance)}</span>
               </div>
             </div>
           </div>

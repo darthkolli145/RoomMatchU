@@ -9,6 +9,7 @@ import { fetchListings, fetchQuestionnaireByUserId } from '../firebase/firebaseH
 import { useAuth } from '../contexts/AuthContext';
 import { calculateCompatibility } from '../utils/compatibilityScoring';
 import { calculateDistanceFromUCSC } from '../utils/distanceCalculator';
+import { getRoadDistanceFromUCSC } from '../utils/roadDistance';
 
 
 export default function Matches() {
@@ -49,21 +50,28 @@ export default function Matches() {
             const listingsData = await fetchListings();
             setListings(listingsData);
 
-            const listingsWithScores = listingsData.map((listing) => {
-            const compatibilityScore = calculateCompatibility(userQuestionnaire, listing);
-            return { ...listing, compatibilityScore };
-            });
+            const listingsWithScores = await Promise.all(
+              listingsData.map(async (listing) => {
+                const compatibilityScore = await calculateCompatibility(userQuestionnaire, listing);
+                return { ...listing, compatibilityScore };
+              })
+            );
 
             // Distance filter
             let filteredListings = listingsWithScores;
             if (filterByDistance && userQuestionnaire.maxDistanceFromCampus) {
-            filteredListings = listingsWithScores.filter((listing) => {
-                if (listing.lat !== undefined && listing.lng !== undefined) {
-                const distance = calculateDistanceFromUCSC(listing.lat, listing.lng);
-                return distance === null || distance <= userQuestionnaire.maxDistanceFromCampus!;
-                }
-                return true;
-            });
+              const distanceChecks = await Promise.all(
+                listingsWithScores.map(async (listing) => {
+                  if (listing.lat !== undefined && listing.lng !== undefined) {
+                    const distance = await getRoadDistanceFromUCSC(listing.lat, listing.lng);
+                    return distance === null || distance <= userQuestionnaire.maxDistanceFromCampus!;
+                  }
+                  return true;
+                })
+              );
+              
+              filteredListings = listingsWithScores.filter((_, i) => distanceChecks[i]);
+              
             }
 
             const sorted = sortListingsByCompatibility(filteredListings);

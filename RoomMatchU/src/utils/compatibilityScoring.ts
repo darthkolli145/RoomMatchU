@@ -1,5 +1,6 @@
 import { UserQuestionnaire, ListingType, CompatibilityScore, QuestionnaireCategory, PriorityLevel } from "../types/index";
 import { calculateDistanceFromUCSC } from "./distanceCalculator";
+import { getRoadDistanceFromUCSC } from "./roadDistance";
 
 // Priority level weights for calculations
 const PRIORITY_WEIGHTS = {
@@ -16,10 +17,10 @@ const DEFAULT_PRIORITY_WEIGHT = 1;
 const DISTANCE_WEIGHT = 3;
 
 // Calculate compatibility between a user's questionnaire and a listing
-export function calculateCompatibility(
+export async function calculateCompatibility(
   userQuestionnaire: UserQuestionnaire,
   listing: ListingType
-): CompatibilityScore {
+): Promise<CompatibilityScore> {
   const categoryScores: { [key in QuestionnaireCategory | 'distance']?: number } = {};
   const matches: string[] = [];
   const conflicts: string[] = [];
@@ -191,7 +192,7 @@ export function calculateCompatibility(
   
   // Distance from Campus
   if (userQuestionnaire.maxDistanceFromCampus && listing.lat !== undefined && listing.lng !== undefined) {
-    const actualDistance = calculateDistanceFromUCSC(listing.lat, listing.lng);
+    const actualDistance = await getRoadDistanceFromUCSC(listing.lat, listing.lng);  
     
     if (actualDistance !== null) {
       const maxDistance = userQuestionnaire.maxDistanceFromCampus;
@@ -224,7 +225,7 @@ export function calculateCompatibility(
     }
   } else if (listing.lat !== undefined && listing.lng !== undefined) {
     // Even without a distance preference, give a small bonus for on-campus or very close properties
-    const actualDistance = calculateDistanceFromUCSC(listing.lat, listing.lng);
+    const actualDistance = await getRoadDistanceFromUCSC(listing.lat, listing.lng);
     
     if (actualDistance !== null && actualDistance < 1) {
       // Small bonus for being very close to campus
