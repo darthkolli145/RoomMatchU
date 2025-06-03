@@ -233,7 +233,7 @@ export default function Home() {
     <div className="home-page">
       <div className="hero-section">
         <h1>Find Your Perfect Match!</h1>
-        <p>Connect with roommates or find listings that match your lifestyle</p>
+        <p>Connect with fellow ucsc roommates or find listings that match your lifestyle</p>
         <div className="search-section">
           <button 
             onClick={() => navigate('/listings')}
