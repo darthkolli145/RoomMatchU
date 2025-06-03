@@ -57,6 +57,7 @@ export default function Navbar() {
               {showUserMenu && (
                 <div className="user-menu">
                   <Link to="/questionnaire">Questionnaire</Link>
+                  <Link to="/matches">My Matches</Link>
                   <Link to="/profile">View Profile</Link>
                   <Link to="/settings">Settings</Link>
 

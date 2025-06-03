@@ -4,6 +4,7 @@ import { ListingType } from '../types/index';
 import { useAuth } from '../contexts/AuthContext';
 import { toggleFavorite } from '../firebase/favoritesService';
 import { Listing } from '../firebase/firebaseHelpers';
+import { calculateDistanceFromUCSC, formatDistance } from '../utils/distanceCalculator';
 
 
 interface ListingCardProps {
@@ -134,9 +135,14 @@ export default function ListingCard({
         
         <div className="listing-details">
           <h3 className="listing-title">{listing.title}</h3>
-          <p className="listing-location">{listing.location || listing.neighborhood || 'Location not specified'}</p>
+          <p className="listing-location">{listing.address || listing.location || 'Location not specified'}</p>
           <p className="listing-info">
             {listing.bedrooms} BD · {listing.bathrooms} BA · Available: {new Date(listing.availableDate).toLocaleDateString()}
+          </p>
+          
+          {/* Distance from UCSC */}
+          <p className="listing-distance">
+            📍 {formatDistance(calculateDistanceFromUCSC(listing.lat, listing.lng))}
           </p>
           
           {compatibilityScore && compatibilityScore.matches.length > 0 && (

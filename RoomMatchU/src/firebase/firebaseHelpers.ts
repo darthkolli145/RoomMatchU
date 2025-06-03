@@ -85,7 +85,6 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lng: numb
 export interface ListingFormData {
   title: string;
   bio: string;
-  neighborhood: string;
   address: string;
   lat?: number;
   lng?: number;
@@ -134,7 +133,6 @@ export interface Listing {
   favoriteCount: number;
   pets: boolean;
   onCampus: boolean;
-  neighborhood: string;
   address: string;
   lat?: number;
   lng?: number;
@@ -170,7 +168,6 @@ export const postListing = async (formData: ListingFormData): Promise<string> =>
   const listingData: any = {
     title: formData.title,
     bio: formData.bio,
-    neighborhood: formData.neighborhood,
     address: formData.address,
     beds: Number(formData.beds),
     baths: Number(formData.baths),
@@ -222,10 +219,9 @@ export const fetchListings = async (): Promise<Listing[]> => {
         favoriteCount: data.favoriteCount || 0,
         pets: data.pets,
         onCampus: data.onCampus,
-        neighborhood: data.neighborhood,
         address: data.address,
         lat: data.lat,
-        long: data.lng,
+        lng: data.lng,
         tags: data.tags || {},
         compatibilityScores: data.compatibilityScores || {}
       };

@@ -1,4 +1,5 @@
-import { UserQuestionnaire, ListingType, CompatibilityScore, QuestionnaireCategory, PriorityLevel } from "../types";
+import { UserQuestionnaire, ListingType, CompatibilityScore, QuestionnaireCategory, PriorityLevel } from "../types/index";
+import { calculateDistanceFromUCSC } from "./distanceCalculator";
 
 // Priority level weights for calculations
 const PRIORITY_WEIGHTS = {
@@ -11,12 +12,15 @@ const PRIORITY_WEIGHTS = {
 // Default weight if no priority is set
 const DEFAULT_PRIORITY_WEIGHT = 1;
 
+// Weight for distance in the overall score (treated as "Very Important" by default)
+const DISTANCE_WEIGHT = 3;
+
 // Calculate compatibility between a user's questionnaire and a listing
 export function calculateCompatibility(
   userQuestionnaire: UserQuestionnaire,
   listing: ListingType
 ): CompatibilityScore {
-  const categoryScores: { [key in QuestionnaireCategory]?: number } = {};
+  const categoryScores: { [key in QuestionnaireCategory | 'distance']?: number } = {};
   const matches: string[] = [];
   const conflicts: string[] = [];
   let totalScore = 0;
@@ -182,6 +186,55 @@ export function calculateCompatibility(
       matches.push('Compatible study habits');
     } else if (score < 40) {
       conflicts.push('Different study habits');
+    }
+  }
+  
+  // Distance from Campus
+  if (userQuestionnaire.maxDistanceFromCampus && listing.lat !== undefined && listing.lng !== undefined) {
+    const actualDistance = calculateDistanceFromUCSC(listing.lat, listing.lng);
+    
+    if (actualDistance !== null) {
+      const maxDistance = userQuestionnaire.maxDistanceFromCampus;
+      let distanceScore: number;
+      
+      if (actualDistance <= maxDistance) {
+        // Within preferred distance - score based on how close it is
+        distanceScore = 100 - (actualDistance / maxDistance) * 20; // 80-100 score
+      } else {
+        // Beyond preferred distance - score decreases rapidly
+        const distanceRatio = actualDistance / maxDistance;
+        if (distanceRatio <= 1.5) {
+          distanceScore = 80 - (distanceRatio - 1) * 60; // 50-80 score
+        } else if (distanceRatio <= 2) {
+          distanceScore = 50 - (distanceRatio - 1.5) * 40; // 30-50 score
+        } else {
+          distanceScore = Math.max(0, 30 - (distanceRatio - 2) * 10); // 0-30 score
+        }
+      }
+      
+      categoryScores.distance = distanceScore;
+      totalScore += distanceScore * DISTANCE_WEIGHT;
+      totalWeight += DISTANCE_WEIGHT;
+      
+      if (distanceScore > 80) {
+        matches.push(`Within preferred distance (${actualDistance.toFixed(1)} miles from campus)`);
+      } else if (distanceScore < 50) {
+        conflicts.push(`Beyond preferred distance (${actualDistance.toFixed(1)} miles, wanted ${maxDistance} miles max)`);
+      }
+    }
+  } else if (listing.lat !== undefined && listing.lng !== undefined) {
+    // Even without a distance preference, give a small bonus for on-campus or very close properties
+    const actualDistance = calculateDistanceFromUCSC(listing.lat, listing.lng);
+    
+    if (actualDistance !== null && actualDistance < 1) {
+      // Small bonus for being very close to campus
+      const bonusScore = actualDistance < 0.1 ? 10 : (1 - actualDistance) * 8; // 0-10 bonus points
+      totalScore += bonusScore;
+      if (actualDistance < 0.1) {
+        matches.push('On campus');
+      } else {
+        matches.push(`Very close to campus (${actualDistance.toFixed(1)} miles)`);
+      }
     }
   }
   

@@ -6,6 +6,7 @@ import { uploadImageToCloudinary } from '../utils/cloudinaryUpload';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import imageCompression from 'browser-image-compression';
+import AddressAutocomplete from '../components/AddressAutocomplete';
 
 export default function PostListing() {
   const { currentUser } = useAuth();
@@ -13,7 +14,6 @@ export default function PostListing() {
   const [formData, setFormData] = useState<ListingFormData>({
     title: '',
     bio: '',
-    neighborhood: '',
     address: '',
     beds: '',
     baths: '',
@@ -183,6 +183,14 @@ export default function PostListing() {
     }
   };
 
+  const handleAddressChange = (address: string, lat?: number, lng?: number) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      address,
+      ...(lat !== undefined && lng !== undefined ? { lat, lng } : {})
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -305,11 +313,9 @@ export default function PostListing() {
 
         <label>
           Address (For Distance-Based Filter):
-          <input
-            type="text"
-            name="address"
+          <AddressAutocomplete
             value={formData.address}
-            onChange={handleChange}
+            onChange={handleAddressChange}
             placeholder="1156 High St, Santa Cruz, CA"
             required
           />
@@ -318,19 +324,6 @@ export default function PostListing() {
         <label>
           Short Bio / Description:
           <textarea name="bio" value={formData.bio} onChange={handleChange} required />
-        </label>
-
-        <label>
-          Neighborhood:
-          <select name="neighborhood" value={formData.neighborhood} onChange={handleChange} required>
-            <option value="">Select neighborhood</option>
-            <option value="Campus">On Campus</option>
-            <option value="Downtown">Downtown</option>
-            <option value="Westside">Westside</option>
-            <option value="Eastside">Eastside</option>
-            <option value="Seabright">Seabright</option>
-            <option value="Capitola">Capitola</option>
-          </select>
         </label>
         
         <label className="flex items-center">

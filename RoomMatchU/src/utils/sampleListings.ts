@@ -1,4 +1,4 @@
-import { ListingType } from "../types";
+import { ListingType } from '../types/index';
 
 /**
  * Sample listings with complete compatibility tags for demonstration and testing
@@ -13,7 +13,7 @@ export const sampleListings: ListingType[] = [
     description: 'Beautiful apartment with modern amenities, close to UCSC bus routes, cafes, and restaurants. Two large bedrooms with plenty of natural light. Shared living space with kitchen and balcony.',
     bedrooms: 2,
     bathrooms: 1,
-    availableDate: '2023-09-01',
+    availableDate: new Date('2023-09-01'),
     imageURLs: [
       'https://via.placeholder.com/800x600?text=Downtown+Apartment',
       'https://via.placeholder.com/800x600?text=Kitchen',
@@ -28,7 +28,9 @@ export const sampleListings: ListingType[] = [
     favoriteCount: 12,
     pets: true,
     onCampus: false,
-    neighborhood: 'downtown',
+    address: '123 Pacific Ave, Santa Cruz, CA 95060',
+    lat: 36.9741,
+    lng: -122.0308,
     tags: {
       sleepSchedule: "10pm - 12am",
       wakeupSchedule: "7am - 9am",
@@ -47,7 +49,7 @@ export const sampleListings: ListingType[] = [
     description: 'Charming studio apartment with ocean views. Perfect for students who want a quiet study space. Recently renovated with new appliances and fixtures.',
     bedrooms: 1,
     bathrooms: 1,
-    availableDate: '2023-08-15',
+    availableDate: new Date('2023-08-15'),
     imageURLs: [
       'https://via.placeholder.com/800x600?text=Westside+Studio',
       'https://via.placeholder.com/800x600?text=Studio+Kitchen',
@@ -61,7 +63,9 @@ export const sampleListings: ListingType[] = [
     favoriteCount: 18,
     pets: false,
     onCampus: false,
-    neighborhood: 'westside',
+    address: '456 Ocean View Dr, Santa Cruz, CA 95062',
+    lat: 36.9627,
+    lng: -122.0000,
     tags: {
       sleepSchedule: "Before 10pm",
       wakeupSchedule: "Before 7am",
@@ -80,7 +84,7 @@ export const sampleListings: ListingType[] = [
     description: 'Single room available in a shared apartment in College Nine. Close to dining hall and campus facilities. Great community of students.',
     bedrooms: 1,
     bathrooms: 1,
-    availableDate: '2023-09-15',
+    availableDate: new Date('2023-09-15'),
     imageURLs: [
       'https://via.placeholder.com/800x600?text=Campus+Housing',
       'https://via.placeholder.com/800x600?text=Dorm+Room',
@@ -94,7 +98,9 @@ export const sampleListings: ListingType[] = [
     favoriteCount: 9,
     pets: false,
     onCampus: true,
-    neighborhood: 'campus',
+    address: '789 High St, Santa Cruz, CA 95064',
+    lat: 36.9916,
+    lng: -122.0583,
     tags: {
       sleepSchedule: "After 12am",
       wakeupSchedule: "After 9am",
@@ -113,7 +119,7 @@ export const sampleListings: ListingType[] = [
     description: 'Beautiful house close to the beach with a large backyard. Perfect for students who enjoy outdoor activities. Shared kitchen and living room with great natural light.',
     bedrooms: 3,
     bathrooms: 2,
-    availableDate: '2023-08-01',
+    availableDate: new Date('2023-08-01'),
     imageURLs: [
       'https://via.placeholder.com/800x600?text=Seabright+House',
       'https://via.placeholder.com/800x600?text=Backyard',
@@ -128,7 +134,9 @@ export const sampleListings: ListingType[] = [
     favoriteCount: 24,
     pets: true,
     onCampus: false,
-    neighborhood: 'seabright',
+    address: '321 Soquel Ave, Santa Cruz, CA 95062',
+    lat: 36.9599,
+    lng: -121.9905,
     tags: {
       sleepSchedule: "10pm - 12am",
       wakeupSchedule: "7am - 9am",
@@ -147,7 +155,7 @@ export const sampleListings: ListingType[] = [
     description: 'Private room in a peaceful family home. Ideal for graduate students or serious undergrads. Lovely garden and close to Harbor.',
     bedrooms: 1,
     bathrooms: 1,
-    availableDate: '2023-07-20',
+    availableDate: new Date('2023-07-20'),
     imageURLs: [
       'https://via.placeholder.com/800x600?text=Eastside+Room',
       'https://via.placeholder.com/800x600?text=Garden+View',
@@ -161,7 +169,9 @@ export const sampleListings: ListingType[] = [
     favoriteCount: 15,
     pets: true,
     onCampus: false,
-    neighborhood: 'eastside',
+    address: '654 Bay St, Santa Cruz, CA 95060',
+    lat: 36.9855,
+    lng: -121.9584,
     tags: {
       sleepSchedule: "Before 10pm",
       wakeupSchedule: "Before 7am",
@@ -180,7 +190,7 @@ export const sampleListings: ListingType[] = [
     description: 'Recently renovated apartment with ocean views. Walking distance to Capitola Beach and restaurants. Perfect for students who enjoy beach life.',
     bedrooms: 2,
     bathrooms: 1,
-    availableDate: '2023-08-10',
+    availableDate: new Date('2023-08-10'),
     imageURLs: ['https://via.placeholder.com/800x600?text=Capitola+Apartment'],
     amenities: ['parking', 'laundry', 'dishwasher', 'balcony'],
     utilities: ['water', 'garbage'],
@@ -189,7 +199,9 @@ export const sampleListings: ListingType[] = [
     favoriteCount: 20,
     pets: false,
     onCampus: false,
-    neighborhood: 'capitola',
+    address: '987 Mission St, Santa Cruz, CA 95060',
+    lat: 36.9698,
+    lng: -121.9539,
     tags: {
       sleepSchedule: "10pm - 12am",
       wakeupSchedule: "7am - 9am",
@@ -208,7 +220,7 @@ export const sampleListings: ListingType[] = [
     description: 'Bright room available in a 4-bedroom house shared with UCSC students. Close to West Cliff and Natural Bridges Beach.',
     bedrooms: 1,
     bathrooms: 1.5,
-    availableDate: '2023-07-15',
+    availableDate: new Date('2023-07-15'),
     imageURLs: ['https://via.placeholder.com/800x600?text=Westside+Room'],
     amenities: ['parking', 'laundry', 'backyard', 'storage'],
     utilities: ['all utilities included'],
@@ -217,7 +229,9 @@ export const sampleListings: ListingType[] = [
     favoriteCount: 11,
     pets: true,
     onCampus: false,
-    neighborhood: 'westside',
+    address: '456 Ocean View Dr, Santa Cruz, CA 95062',
+    lat: 36.9627,
+    lng: -122.0000,
     tags: {
       sleepSchedule: "After 12am",
       wakeupSchedule: "After 9am",
@@ -236,7 +250,7 @@ export const sampleListings: ListingType[] = [
     description: 'Graduate student housing available on campus. Private room in a shared apartment with other graduate students.',
     bedrooms: 1,
     bathrooms: 1,
-    availableDate: '2023-09-01',
+    availableDate: new Date('2023-09-01'),
     imageURLs: ['https://via.placeholder.com/800x600?text=Grad+Housing'],
     amenities: ['furnished', 'laundry', 'study spaces', 'gym access'],
     utilities: ['all utilities included'],
@@ -245,7 +259,9 @@ export const sampleListings: ListingType[] = [
     favoriteCount: 8,
     pets: false,
     onCampus: true,
-    neighborhood: 'campus',
+    address: '789 High St, Santa Cruz, CA 95064',
+    lat: 36.9900,
+    lng: -122.0600,
     tags: {
       sleepSchedule: "10pm - 12am",
       wakeupSchedule: "7am - 9am",
@@ -264,7 +280,7 @@ export const sampleListings: ListingType[] = [
     description: 'Charming loft in the heart of downtown. Walking distance to restaurants, shops, and bus routes to UCSC.',
     bedrooms: 1,
     bathrooms: 1,
-    availableDate: '2023-08-05',
+    availableDate: new Date('2023-08-05'),
     imageURLs: ['https://via.placeholder.com/800x600?text=Downtown+Loft'],
     amenities: ['laundry', 'dishwasher', 'high ceilings'],
     utilities: ['water', 'garbage', 'internet'],
@@ -273,7 +289,9 @@ export const sampleListings: ListingType[] = [
     favoriteCount: 16,
     pets: false,
     onCampus: false,
-    neighborhood: 'downtown',
+    address: '123 Pacific Ave, Santa Cruz, CA 95060',
+    lat: 36.9741,
+    lng: -122.0308,
     tags: {
       sleepSchedule: "10pm - 12am",
       wakeupSchedule: "7am - 9am",
@@ -292,7 +310,7 @@ export const sampleListings: ListingType[] = [
     description: 'Serene room in a cottage-style home. Great for students who need quiet study space. Close to Pleasure Point and East Cliff.',
     bedrooms: 1,
     bathrooms: 1,
-    availableDate: '2023-07-25',
+    availableDate: new Date('2023-07-25'),
     imageURLs: ['https://via.placeholder.com/800x600?text=Eastside+Cottage'],
     amenities: ['parking', 'garden', 'patio', 'storage'],
     utilities: ['water', 'garbage', 'internet'],
@@ -301,7 +319,9 @@ export const sampleListings: ListingType[] = [
     favoriteCount: 13,
     pets: true,
     onCampus: false,
-    neighborhood: 'eastside',
+    address: '654 Bay St, Santa Cruz, CA 95060',
+    lat: 36.9855,
+    lng: -121.9584,
     tags: {
       sleepSchedule: "Before 10pm",
       wakeupSchedule: "Before 7am",

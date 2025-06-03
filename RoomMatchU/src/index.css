@@ -170,6 +170,13 @@ input:focus, select:focus, textarea:focus {
 
 /* Home Page */
 
+.search-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+
 .search-section form {
   display: flex;
   max-width: 600px;
@@ -329,6 +336,13 @@ input:focus, select:focus, textarea:focus {
   color: var(--card-color);
   font-size: 0.8rem;
   margin-bottom: 3px;
+}
+
+.listing-distance {
+  color: var(--card-color);
+  font-size: 0.8rem;
+  margin-bottom: 3px;
+  font-weight: 500;
 }
 
 /* Listings Page */
@@ -1100,6 +1114,30 @@ input:focus, select:focus, textarea:focus {
   font-size: 1.2rem;
   color: #be1818;
   margin-bottom: 20px;
+}
+
+.hero-cta-button {
+  background-color: #be1818;
+  color: #fde9b5;
+  font-size: 1.2rem;
+  font-weight: 600;
+  padding: 15px 40px;
+  border-radius: 30px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(190, 24, 24, 0.3);
+}
+
+.hero-cta-button:hover {
+  background-color: #9b3220;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(190, 24, 24, 0.4);
+}
+
+.hero-cta-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(190, 24, 24, 0.3);
 }
 
 .auth-message {
