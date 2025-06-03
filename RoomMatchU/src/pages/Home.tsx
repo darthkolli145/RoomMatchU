@@ -141,39 +141,42 @@ export default function Home() {
           // If the user has a questionnaire, generate personalized matches
           if (currentUser?.questionnaire) {
             console.log('Generating matches based on questionnaire');
-            
-            // Add compatibility scores to listings
+
             const listingsWithScores = listingsData.map(listing => {
               const compatibilityScore = calculateCompatibility(currentUser.questionnaire!, listing);
               return { ...listing, compatibilityScore };
             });
-            
-            // Filter by user's preferred max distance if specified
+
+            // Filter by max distance from UCSC if available
             let filteredByDistance = listingsWithScores;
             if (currentUser.questionnaire.maxDistanceFromCampus) {
               filteredByDistance = listingsWithScores.filter(listing => {
                 if (listing.lat !== undefined && listing.lng !== undefined) {
                   const distance = calculateDistanceFromUCSC(listing.lat, listing.lng);
-                  if (distance === null) return true; // Include listings if distance can't be calculated
+                  if (distance === null) return true;
                   return distance <= currentUser.questionnaire!.maxDistanceFromCampus!;
                 }
-                return true; // Include listings without coordinates
+                return true;
               });
             }
-            
-            // Sort by compatibility score
-            const sortedByCompatibility = [...filteredByDistance].sort((a, b) => {
+
+            // Now apply score threshold
+            const filteredByScore = filteredByDistance.filter(listing =>
+              (listing.compatibilityScore?.score || 0) >= 70
+            );
+
+            // Sort remaining listings by score
+            const sortedByCompatibility = filteredByScore.sort((a, b) => {
               const scoreA = a.compatibilityScore?.score || 0;
               const scoreB = b.compatibilityScore?.score || 0;
               return scoreB - scoreA;
             });
-            
-            // Get top matches
+
             setMatchedListings(sortedByCompatibility.slice(0, 4));
           } else {
-            // If no questionnaire, just use random listings
             setMatchedListings([...listingsData].sort(() => 0.5 - Math.random()).slice(0, 4));
           }
+
           
           // Additional listings
           setRoommateListings(sortedByDate.slice(4, 8));
@@ -300,7 +303,10 @@ export default function Home() {
                   />
                 ))
               ) : (
-                <div className="no-listings">No matched listings found</div>
+                <div className="no-listings">
+                  <p>😕 No top matches found right now.</p>
+                  <p>Check out our <Link to="/listings" className="listings-link">new listings</Link> or try updating your <Link to="/questionnaire" className="quest-link">questionnaire</Link>.</p>
+                </div>
               )}
             </div>
           </section>

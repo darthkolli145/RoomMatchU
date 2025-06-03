@@ -102,6 +102,7 @@ export interface ListingFormData {
   visitors?: string;
   lifestyle?: string[];
   studyHabits?: string;
+  prefGender?: string;
   // Tags object for compatibility
   tags?: {
     [key in QuestionnaireCategory]?: string | string[];
@@ -134,6 +135,7 @@ export interface Listing {
   pets: boolean;
   onCampus: boolean;
   address: string;
+  prefGender?: string;
   lat?: number;
   lng?: number;
   tags: {

@@ -37,8 +37,8 @@ export default function Navbar() {
             <Link to="/favorites" className="icon-btn">
               <span className="material-icon">favorite</span>
             </Link>
-            <Link to="/notifications" className="icon-btn">
-              <span className="material-icon">notifications</span>
+            <Link to="/questionnaire" className="icon-btn">
+              <span className="material-icon">assignment</span>
             </Link>
             <div className="user-profile">
               <button
@@ -56,11 +56,8 @@ export default function Navbar() {
               </button>
               {showUserMenu && (
                 <div className="user-menu">
-                  <Link to="/questionnaire">Questionnaire</Link>
-                  <Link to="/matches">My Matches</Link>
                   <Link to="/profile">View Profile</Link>
-                  <Link to="/settings">Settings</Link>
-
+                  <Link to="/matches">My Matches</Link>
                   <button onClick={handleSignOut}>Sign Out</button>
                 </div>
               )}

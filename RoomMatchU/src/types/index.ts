@@ -16,7 +16,8 @@ export type QuestionnaireCategory =
   | 'visitors'
   | 'pets'
   | 'studyHabits'
-  | 'lifestyle';
+  | 'lifestyle'
+  | 'prefGender';
 
 export type UserQuestionnaire = {
   fullname: string[];
