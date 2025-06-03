@@ -6,6 +6,7 @@ import { User, UserQuestionnaire } from '../types/index';
 import { getUserFavorites } from '../firebase/favoritesService';
 import { setDoc } from 'firebase/firestore';
 import { fetchQuestionnaireByUserId } from '../firebase/firebaseHelpers';
+import toast from 'react-hot-toast';
 
 const createUserDocumentIfNotExists = async (firebaseUser: FirebaseUser) => {
   const userDocRef = doc(db, 'users', firebaseUser.uid);
@@ -134,13 +135,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const email = firebaseUser.email || '';
 
       if (!email.endsWith('@ucsc.edu')) {
-        console.warn('Non-UCSC email detected, signing out:', email);
-        alert('Only UCSC email addresses are allowed.');
+        console.warn(`Blocked non-UCSC email sign-in: ${email}`);
+        toast.error('Only UCSC email addresses are allowed.');
         await signOut(auth);
-        setCurrentUser(null);
-        setFavorites([]);
+        window.location.reload();
         return;
       }
+
 
       await fetchUserData(firebaseUser);
     } else {

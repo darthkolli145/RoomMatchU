@@ -403,7 +403,12 @@ input:focus, select:focus, textarea:focus {
 
 .listings-count {
   margin-bottom: 15px;
-  color: var(--text-secondary);
+  color: #be1818;
+}
+
+.listings-link, .quest-link{
+  color: #be1818;
+  text-decoration: underline;
 }
 
 .no-listings {
@@ -824,6 +829,7 @@ input:focus, select:focus, textarea:focus {
   max-width: 1200px;
   margin: 40px auto;
   padding: 0 20px;
+  padding-bottom: 1px; /* ⬅ Add this line */
   color: #be1818;
   background-color: #fff9e8;
   border-radius: 8px;
@@ -959,6 +965,7 @@ input:focus, select:focus, textarea:focus {
 .listing-description {
   line-height: 1.6;
   color: #334155;
+  text-align: left;
 }
 
 .amenities-list, .utilities-list {
@@ -1043,23 +1050,24 @@ input:focus, select:focus, textarea:focus {
 }
 
 .view-favorites-button {
-  background-color: #4f46e5;
-  color: white;
+  background-color: #db090c;
+  color: #ffe790;
   padding: 8px 16px;
   border-radius: 6px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
   border: none;
+  margin-top: 20px;
 }
 
 .view-favorites-button:hover {
-  background-color: #4338ca;
+  background-color: #be1818 ;
 }
 
 .favorites-banner {
-  background-color: #f9f3ff;
-  border: 1px solid #e6d2ff;
+  background-color: #fff9e8;
+  border: 1px solid #fff9e8;
   margin: 20px auto;
   padding: 15px;
   border-radius: 8px;
@@ -1069,14 +1077,9 @@ input:focus, select:focus, textarea:focus {
   align-items: center;
 }
 
-.favorites-banner p {
-  color: #6b46c1;
-  font-weight: 500;
-}
-
 .view-favorites-btn {
-  background-color: #7c3aed;
-  color: white;
+  background-color: #db090c;
+  color: var(--background-color);
   padding: 8px 16px;
   border-radius: 6px;
   font-weight: 500;
@@ -1086,7 +1089,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .view-favorites-btn:hover {
-  background-color: #6d28d9;
+  background-color: #be1818;
 }
 
 .favorites-shortcut {
@@ -1113,11 +1116,10 @@ input:focus, select:focus, textarea:focus {
 .hero-section p {
   font-size: 1.2rem;
   color: #be1818;
-  margin-bottom: 20px;
 }
 
 .hero-cta-button {
-  background-color: #be1818;
+  background-color: #db090c;
   color: #fde9b5;
   font-size: 1.2rem;
   font-weight: 600;
@@ -1130,7 +1132,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .hero-cta-button:hover {
-  background-color: #9b3220;
+  background-color: #be1818;
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(190, 24, 24, 0.4);
 }
@@ -1599,4 +1601,37 @@ input:focus, select:focus, textarea:focus {
   display: block;
 }
 
+.compatibility-tags-prof {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  justify-content: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
 
+.tag-item-prof {
+  background-color: #fff9e8;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.listingTitle{
+  text-decoration: underline;
+  color: #64748b;
+}
+
+.tag-label {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.tag-value {
+  font-size: 1.1rem;
+  color: #be1818;
+  font-weight: 500;
+}

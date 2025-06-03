@@ -10,12 +10,14 @@ import ListingDetail from './pages/ListingDetail';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
 import Matches from './pages/Matches';
+import { Toaster } from 'react-hot-toast';
 import './App.css';
 
 function App() {
   return (
     <Router>
       <AuthProvider>
+        <Toaster position="top-right" reverseOrder={false} />
         <div className="app">
           <Navbar />
           <main className="content">

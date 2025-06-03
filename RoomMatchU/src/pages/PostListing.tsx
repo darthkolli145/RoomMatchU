@@ -7,6 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import imageCompression from 'browser-image-compression';
 import AddressAutocomplete from '../components/AddressAutocomplete';
+import toast from 'react-hot-toast';
+
 
 export default function PostListing() {
   const { currentUser } = useAuth();
@@ -29,6 +31,7 @@ export default function PostListing() {
     visitors: '',
     lifestyle: [],
     studyHabits: '',
+    prefGender:'',
     images: [],
     thumbnailIndex: 0,
   });
@@ -207,8 +210,9 @@ export default function PostListing() {
 
       const {
         sleepSchedule, wakeupSchedule, cleanliness, noiseLevel,
-        visitors, studyHabits, lifestyle, ...baseData
-      } = formData; 
+        visitors, studyHabits, lifestyle, prefGender, ...baseData
+      } = formData;
+
       
       // Validate the date
       if (!(baseData.availableDate instanceof Date) || isNaN(baseData.availableDate.getTime())) {
@@ -263,31 +267,31 @@ export default function PostListing() {
           noiseLevel,
           visitors,
           studyHabits,
-          lifestyle
+          lifestyle,
+          prefGender, // ⬅️ Add this here
         },
         imageURLs: uploadedImageURLs,
         thumbnailURL: thumbnailURL
       };
       
       const listingId = await postListing(listingWithTags);
-      alert(`Listing submitted successfully!`);
-      console.log('Successfully posted:', listingId);
+      toast.success('🎉 Listing posted successfully!');
+      setTimeout(() => navigate(`/listing/${listingId}`), 2000); // redirect after 2 seconds
+
       
       // Clean up all object URLs to prevent memory leaks
       imagePreviewUrls.forEach(url => URL.revokeObjectURL(url));
       
-      // Redirect to the listing detail page
-      navigate(`/listing/${listingId}`);
-      
     } catch (error) {
       console.error('Failed to submit listing:', error);
       if (error instanceof Error) {
-        setErrorMessage(error.message || 'Failed to submit listing. Please try again.');
+        const message = error.message || 'Failed to submit listing. Please try again.';
+        setErrorMessage(message);
+        toast.error(`🚨 ${message}`);
       } else {
         setErrorMessage('Failed to submit listing. Please try again.');
+        toast.error('🚨 Failed to submit listing. Please try again.');
       }
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -507,6 +511,20 @@ export default function PostListing() {
           </select>
         </label>
         
+        <div>
+          <label>
+            Preferred Gender for Roommates:
+            <select name="prefGender" value={formData.prefGender} onChange={handleChange}>
+              <option value="">Select an option</option>
+              <option value="No preference">No preference</option>
+              <option value="Female">Female</option>
+              <option value="Male">Male</option>
+              <option value="Non-binary">Non-binary</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+        </div>
+
         {/* Lifestyle */}
         <div>
           <label className="block font-medium mb-1">Lifestyle factors (select all that apply):</label>

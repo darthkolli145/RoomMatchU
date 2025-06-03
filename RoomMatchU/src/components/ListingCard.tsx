@@ -122,10 +122,10 @@ export default function ListingCard({
             <div 
               className="compatibility-score" 
               style={{ 
-                backgroundColor: compatibilityScore.score >= 80 ? '#4ade80' : 
-                               compatibilityScore.score >= 60 ? '#facc15' : 
-                               compatibilityScore.score >= 40 ? '#fb923c' : '#ef4444',
-                color: compatibilityScore.score >= 60 ? '#000' : '#fff'
+                backgroundColor: compatibilityScore.score >= 80 ? '#6dacdf' : 
+                               compatibilityScore.score >= 60 ? '#fff9e8' : 
+                               compatibilityScore.score >= 40 ? '#ffb77c' : '#be1818',
+                color: compatibilityScore.score >= 60 ? '#c1dde7' : '#fff'
               }}
             >
               {compatibilityScore.score}% Match
