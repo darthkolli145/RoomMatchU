@@ -138,7 +138,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.warn(`Blocked non-UCSC email sign-in: ${email}`);
         toast.error('Only UCSC email addresses are allowed.');
         await signOut(auth);
-        window.location.reload();
+        setTimeout(async () => {
+          window.location.reload();
+        }, 3000); // 3 second delay to allow pop-up error to show
         return;
       }
 
