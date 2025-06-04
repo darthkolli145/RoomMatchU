@@ -11,6 +11,17 @@ import { calculateCompatibility } from '../utils/compatibilityScoring';
 import { calculateDistanceFromUCSC } from '../utils/distanceCalculator';
 import { getRoadDistanceFromUCSC } from '../utils/roadDistance';
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return isMobile;
+}
 
 export default function Matches() {
   const navigate = useNavigate();
@@ -21,6 +32,9 @@ export default function Matches() {
   const [userQuestionnaire, setUserQuestionnaire] = useState<UserQuestionnaire | null>(null);
   const [loading, setLoading] = useState(true);
   const [filterByDistance, setFilterByDistance] = useState(true);
+  const isMobile = useIsMobile();
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+
 
   useEffect(() => {
     const fetchQuestionnaire = async () => {
@@ -125,34 +139,51 @@ export default function Matches() {
 
   return (
     <div className="listings-page">
+      {isMobile && (
+        <div className="mobile-filter-toggle">
+          <button className="open-filter-btn" onClick={() => setShowMobileFilters(true)}>
+            <span className="material-icon">filter_list</span>
+          </button>
+        </div>
+      )}
       <div className="listings-content">
-        <aside className="filters-sidebar">
-          <div className="mb-4 p-3 bg-indigo-100 rounded">
-            <button
-              onClick={() => navigate('/questionnaire')}
-              className="mt-2 w-full p-2 rounded bg-indigo-600 text-white text-sm"
-            >
-              Update Questionnaire
-            </button>
-          </div>
+        {(!isMobile || showMobileFilters) && (
+          <aside className={`filters-sidebar ${isMobile ? 'mobile-overlay' : ''}`}>
+            {isMobile && (
+              <div className="close-filter-header">
+                <button className="close-filter-btn" onClick={() => setShowMobileFilters(false)}>
+                  <span className="material-icon">close</span>
+                </button>
+              </div>
+            )}
 
-          <ListingFilter
-            onFilterChange={handleFilterChange}
-            initialFilters={filters}
-            minCompatibilityLimit={60}
-            />
-
-          {currentUser && favorites.length > 0 && (
-            <div className="favorites-shortcut mt-4">
+            <div className="mb-4 p-3 bg-indigo-100 rounded">
               <button
-                onClick={() => navigate('/favorites')}
-                className="w-full p-3 rounded bg-rose-100 text-rose-600 hover:bg-rose-200"
+                onClick={() => navigate('/questionnaire')}
+                className="mt-2 w-full p-2 rounded bg-indigo-600 text-white text-sm"
               >
-                View Your Favorites ({favorites.length})
+                Update Questionnaire
               </button>
             </div>
-          )}
-        </aside>
+
+            <ListingFilter
+              onFilterChange={handleFilterChange}
+              initialFilters={filters}
+              minCompatibilityLimit={60}
+            />
+
+            {currentUser && favorites.length > 0 && (
+              <div className="favorites-shortcut mt-4">
+                <button
+                  onClick={() => navigate('/favorites')}
+                  className="w-full p-3 rounded bg-rose-100 text-rose-600 hover:bg-rose-200"
+                >
+                  View Your Favorites ({favorites.length})
+                </button>
+              </div>
+            )}
+          </aside>
+        )}
 
         <main className="listings-main">
           <div className="listings-header">
