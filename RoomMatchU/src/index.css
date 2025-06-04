@@ -701,12 +701,13 @@ input:focus, select:focus, textarea:focus {
   align-content: center;
 }
 
+/* Commenting out to prevent interference with inline styles
 .questionnaire-page input, select, textarea {
-  border: 1px solid #fff9e8;
-  background-color: #fff9e8;
+  background-color: var(--background-color);
   color: #be1818;
-  margin-bottom: 5px;
+  border: 1px solid #be1818;
 }
+*/
 
 .questionnaire-page button{
   display: inline-block;
@@ -1785,7 +1786,7 @@ input:focus, select:focus, textarea:focus {
   flex-direction: column;
   max-height: 100vh;
   overflow-y: auto;
-  padding: 10; /* We’ll move padding to inner container */
+  padding: 10; /* We'll move padding to inner container */
 }
 
 .filters-sidebar.mobile-overlay .filter-content {

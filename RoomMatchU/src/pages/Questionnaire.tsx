@@ -41,19 +41,21 @@ const PrioritySelector = ({
   value: PriorityLevel | undefined;
   onChange: (category: QuestionnaireCategory, value: PriorityLevel) => void;
 }) => (
-  <div className="flex justify-between items-center mt-3 text-sm" style={{ maxWidth: '600px', margin: '12px auto 0' }}>
-    <span className="mr-2">{label} priority: </span>
-    <select
-      value={value || ''}
-      onChange={(e) => onChange(category, e.target.value as PriorityLevel)}
-      className="px-2 py-1 rounded-md"
-    >
-      <option value="">Select priority</option>
-      <option value="Not Important">Not Important</option>
-      <option value="Somewhat Important">Somewhat Important</option>
-      <option value="Very Important">Very Important</option>
-      <option value="Deal Breaker">Deal Breaker</option>
-    </select>
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '8px', marginBottom: '12px' }}>
+    <span style={{ minWidth: '250px', marginRight: '15px', fontSize: '14px', color: '#6b7280', textAlign: 'right' }}>{label} priority: </span>
+    <div style={{ width: '400px' }}>
+      <select
+        value={value || ''}
+        onChange={(e) => onChange(category, e.target.value as PriorityLevel)}
+        style={{ width: '100%', padding: '4px 8px', borderRadius: '6px', fontSize: '14px', border: '1px solid #d1d5db', backgroundColor: 'white', boxSizing: 'border-box' }}
+      >
+        <option value="">Select priority</option>
+        <option value="Not Important">Not Important</option>
+        <option value="Somewhat Important">Somewhat Important</option>
+        <option value="Very Important">Very Important</option>
+        <option value="Deal Breaker">Deal Breaker</option>
+      </select>
+    </div>
   </div>
 );
 
@@ -68,6 +70,33 @@ const steps = [
   'Finish'
 ];
 
+// Consistent styles for form elements
+const formControlStyle = {
+  width: '100%',
+  padding: '8px 12px',
+  borderRadius: '6px',
+  border: '1px solid #d1d5db',
+  backgroundColor: 'white',
+  fontSize: '16px',
+  boxSizing: 'border-box' as const
+};
+
+const labelStyle = {
+  minWidth: '250px',
+  marginRight: '15px',
+  textAlign: 'right' as const
+};
+
+const fieldContainerStyle = {
+  marginBottom: '20px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center'
+};
+
+const inputWrapperStyle = {
+  width: '400px'
+};
 
 const Questionnaire: React.FC = () => {
   const [step, setStep] = useState(0);
@@ -132,9 +161,9 @@ const Questionnaire: React.FC = () => {
     if (formData.okPets === '') missingFields.push('okay with pets');
     if (formData.prefGender === '') missingFields.push('preferred roommate gender');
     if (formData.lifestyle.length === 0) missingFields.push('lifestyle');
-    if (formData.sharing.length === 0) missingFields.push('about yourself');
-    if (formData.Hobbies.length === 0) missingFields.push('hobbies');
-    if (formData.dealMust.length === 0) missingFields.push('dealbreakers / must-haves');
+    // if (formData.sharing.length === 0) missingFields.push('about yourself');
+    // if (formData.Hobbies.length === 0) missingFields.push('hobbies');
+    // if (formData.dealMust.length === 0) missingFields.push('dealbreakers / must-haves');
 
     // Priorities
     if (!formData.priorities.sleepSchedule) missingFields.push('sleep schedule priority');
@@ -185,77 +214,85 @@ const Questionnaire: React.FC = () => {
               <motion.div key="step-0" {...variants} transition={{ duration: 0.4 }} className="absolute w-full">
                 <h2 className="text-xl font-semibold mb-4 text-center">Personal Info</h2>
                 {/*Full Name */}
-                <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <label style={{ minWidth: '250px', marginRight: '15px' }}>What is your full name? </label>
-                    <input
-                      required
-                      type="text"
-                      name="fullname"
-                      value={formData.fullname.join('\n')}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          fullname: e.target.value.split('\n'),
-                        }))
-                      }
-                      className="w-full"
-                      placeholder="Sammy S. Slug"
-                    />
+                <div style={fieldContainerStyle}>
+                    <label style={labelStyle}>What is your full name? </label>
+                    <div style={inputWrapperStyle}>
+                      <input
+                        required
+                        type="text"
+                        name="fullname"
+                        value={formData.fullname.join('\n')}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            fullname: e.target.value.split('\n'),
+                          }))
+                        }
+                        style={formControlStyle}
+                        placeholder="Sammy S. Slug"
+                      />
+                    </div>
                 </div>
                 {/* Major */}
-                <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <label style={{ minWidth: '250px', marginRight: '15px' }}>What are you majoring in? </label>
-                    <input
-                      required
-                      type="text"
-                      name="Major"
-                      value={formData.Major.join('\n')}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          Major: e.target.value.split('\n'),
-                        }))
-                      }
-                      className="w-full"
-                      placeholder="Computer Science"
-                    />
+                <div style={fieldContainerStyle}>
+                    <label style={labelStyle}>What are you majoring in? </label>
+                    <div style={inputWrapperStyle}>
+                      <input
+                        required
+                        type="text"
+                        name="Major"
+                        value={formData.Major.join('\n')}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            Major: e.target.value.split('\n'),
+                          }))
+                        }
+                        style={formControlStyle}
+                        placeholder="Computer Science"
+                      />
+                    </div>
                 </div>
 
                 {/* Year in School */}
-                <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <label style={{ minWidth: '250px', marginRight: '15px' }}>What year are you? </label>
-                    <select
-                    required
-                    name="yearlvl"
-                    value={formData.yearlvl}
-                    onChange={handleChange}
-                    className="w-full"
-                    >
-                    <option value="">Select an option</option>
-                    <option>First Year</option>
-                    <option>Second Year</option>
-                    <option>Third Year</option>
-                    <option>Fourth Year</option>
-                    <option>Grad Student</option>
-                    </select>
+                <div style={fieldContainerStyle}>
+                    <label style={labelStyle}>What year are you? </label>
+                    <div style={inputWrapperStyle}>
+                      <select
+                        required
+                        name="yearlvl"
+                        value={formData.yearlvl}
+                        onChange={handleChange}
+                        style={formControlStyle}
+                      >
+                        <option value="">Select an option</option>
+                        <option>First Year</option>
+                        <option>Second Year</option>
+                        <option>Third Year</option>
+                        <option>Fourth Year</option>
+                        <option>Grad Student</option>
+                      </select>
+                    </div>
                 </div>
 
                 {/* Gender */}
-                <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <label style={{ minWidth: '250px', marginRight: '15px' }}>What gender are you? </label>
-                    <select
-                    name="Gender"
-                    value={formData.Gender}
-                    onChange={handleChange}
-                    required
-                    className="w-full"
-                    >
-                    <option value="">Select an option</option>
-                    <option>Male</option>
-                    <option>Female</option>
-                    <option>Non-binary</option>
-                    <option>Prefer not to say</option>
-                    </select>
+                <div style={fieldContainerStyle}>
+                    <label style={labelStyle}>What gender are you? </label>
+                    <div style={inputWrapperStyle}>
+                      <select
+                        name="Gender"
+                        value={formData.Gender}
+                        onChange={handleChange}
+                        required
+                        style={formControlStyle}
+                      >
+                        <option value="">Select an option</option>
+                        <option>Male</option>
+                        <option>Female</option>
+                        <option>Non-binary</option>
+                        <option>Prefer not to say</option>
+                      </select>
+                    </div>
                 </div>
               </motion.div>
             )}
@@ -264,21 +301,23 @@ const Questionnaire: React.FC = () => {
               <motion.div key="step-1" {...variants} transition={{ duration: 0.4 }} className="absolute w-full">
                 <h2 className="text-xl font-semibold mb-4 text-center">Living Habits</h2>
                   {/* Sleep Schedule */}
-                  <div style={{ marginBottom: '20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <label style={{ minWidth: '250px', marginRight: '15px' }}>When do you usually go to bed? </label>
-                      <select
-                        name="sleepSchedule"
-                        value={formData.sleepSchedule}
-                        onChange={handleChange}
-                        required
-                        className="w-full"
-                      >
-                        <option value="">Select an option</option>
-                        <option>Before 10pm</option>
-                        <option>10pm - 12am</option>
-                        <option>After 12am</option>
-                      </select>
+                  <div style={{ marginBottom: '30px' }}>
+                    <div style={{ ...fieldContainerStyle, marginBottom: '0' }}>
+                      <label style={labelStyle}>When do you usually go to bed? </label>
+                      <div style={inputWrapperStyle}>
+                        <select
+                          name="sleepSchedule"
+                          value={formData.sleepSchedule}
+                          onChange={handleChange}
+                          required
+                          style={formControlStyle}
+                        >
+                          <option value="">Select an option</option>
+                          <option>Before 10pm</option>
+                          <option>10pm - 12am</option>
+                          <option>After 12am</option>
+                        </select>
+                      </div>
                     </div>
                     <PrioritySelector 
                       category="sleepSchedule" 
@@ -289,21 +328,23 @@ const Questionnaire: React.FC = () => {
                   </div>
 
                   {/* Wake up Schedule */}
-                  <div style={{ marginBottom: '20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <label style={{ minWidth: '250px', marginRight: '15px' }}>When do you usually wake up? </label>
-                      <select
-                        name="wakeupSchedule"
-                        value={formData.wakeupSchedule}
-                        onChange={handleChange}
-                        required
-                        className="w-full"
-                      >
-                        <option value="">Select an option</option>
-                        <option>Before 7am</option>
-                        <option>7am - 9am</option>
-                        <option>After 9am</option>
-                      </select>
+                  <div style={{ marginBottom: '30px' }}>
+                    <div style={{ ...fieldContainerStyle, marginBottom: '0' }}>
+                      <label style={labelStyle}>When do you usually wake up? </label>
+                      <div style={inputWrapperStyle}>
+                        <select
+                          name="wakeupSchedule"
+                          value={formData.wakeupSchedule}
+                          onChange={handleChange}
+                          required
+                          style={formControlStyle}
+                        >
+                          <option value="">Select an option</option>
+                          <option>Before 7am</option>
+                          <option>7am - 9am</option>
+                          <option>After 9am</option>
+                        </select>
+                      </div>
                     </div>
                     <PrioritySelector 
                       category="wakeupSchedule" 
@@ -314,21 +355,23 @@ const Questionnaire: React.FC = () => {
                   </div>
 
                   {/* Cleanliness */}
-                  <div style={{ marginBottom: '20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <label style={{ minWidth: '250px', marginRight: '15px' }}>How tidy are you? </label>
-                      <select
-                        name="cleanliness"
-                        value={formData.cleanliness}
-                        onChange={handleChange}
-                        required
-                        className="w-full"
-                      >
-                        <option value="">Select an option</option>
-                        <option>Very tidy</option>
-                        <option>Moderately tidy</option>
-                        <option>Messy</option>
-                      </select>
+                  <div style={{ marginBottom: '30px' }}>
+                    <div style={{ ...fieldContainerStyle, marginBottom: '0' }}>
+                      <label style={labelStyle}>How tidy are you? </label>
+                      <div style={inputWrapperStyle}>
+                        <select
+                          name="cleanliness"
+                          value={formData.cleanliness}
+                          onChange={handleChange}
+                          required
+                          style={formControlStyle}
+                        >
+                          <option value="">Select an option</option>
+                          <option>Very tidy</option>
+                          <option>Moderately tidy</option>
+                          <option>Messy</option>
+                        </select>
+                      </div>
                     </div>
                     <PrioritySelector 
                       category="cleanliness" 
@@ -339,20 +382,22 @@ const Questionnaire: React.FC = () => {
                   </div>
                 
                   {/* roommateCleanliness */}
-                  <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <label style={{ minWidth: '250px', marginRight: '15px' }}>How important is cleanliness in a roomate? </label>
-                    <select
-                      name="roommateCleanliness"
-                      value={formData.roommateCleanliness}
-                      onChange={handleChange}
-                      required
-                      className="w-full"
-                    >
-                      <option value="">Select an option</option>
-                      <option>Not Important</option>
-                      <option>Somewhat Important</option>
-                      <option>Very Important</option>
-                    </select>
+                  <div style={fieldContainerStyle}>
+                    <label style={labelStyle}>How important is cleanliness in a roomate? </label>
+                    <div style={inputWrapperStyle}>
+                      <select
+                        name="roommateCleanliness"
+                        value={formData.roommateCleanliness}
+                        onChange={handleChange}
+                        required
+                        style={formControlStyle}
+                      >
+                        <option value="">Select an option</option>
+                        <option>Not Important</option>
+                        <option>Somewhat Important</option>
+                        <option>Very Important</option>
+                      </select>
+                    </div>
                   </div>
               </motion.div>
             )}
@@ -361,22 +406,24 @@ const Questionnaire: React.FC = () => {
               <motion.div key="step-2" {...variants} transition={{ duration: 0.4 }} className="absolute w-full">
                 <h2 className="text-xl font-semibold mb-4 text-center">Guest Preferences</h2>
                 {/* Visitors */}
-                <div style={{ marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <label style={{ minWidth: '250px', marginRight: '15px' }}>How often do you have guests over? </label>
-                    <select
-                      name="visitors"
-                      value={formData.visitors}
-                      onChange={handleChange}
-                      required
-                      className="w-full"
-                    >
-                      <option value="">Select an option</option>
-                      <option>Frequently</option>
-                      <option>Occasionally</option>
-                      <option>Rarely</option>
-                      <option>Never</option>
-                    </select>
+                <div style={{ marginBottom: '30px' }}>
+                  <div style={{ ...fieldContainerStyle, marginBottom: '0' }}>
+                    <label style={labelStyle}>How often do you have guests over? </label>
+                    <div style={inputWrapperStyle}>
+                      <select
+                        name="visitors"
+                        value={formData.visitors}
+                        onChange={handleChange}
+                        required
+                        style={formControlStyle}
+                      >
+                        <option value="">Select an option</option>
+                        <option>Frequently</option>
+                        <option>Occasionally</option>
+                        <option>Rarely</option>
+                        <option>Never</option>
+                      </select>
+                    </div>
                   </div>
                   <PrioritySelector 
                     category="visitors" 
@@ -387,37 +434,41 @@ const Questionnaire: React.FC = () => {
                 </div>
 
                 {/* Okay with Visitors? */}
-                <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <label style={{ minWidth: '250px', marginRight: '15px' }}>Are you okay with your roomate having guests over? </label>
-                  <select
-                    name="okvisitors"
-                    value={formData.okvisitors}
-                    onChange={handleChange}
-                    required
-                    className="w-full"
-                  >
-                    <option value="">Select an option</option>
-                    <option>Yes</option>
-                    <option>Occasionally</option>
-                    <option>No</option>
-                  </select>
+                <div style={fieldContainerStyle}>
+                  <label style={labelStyle}>Are you okay with your roomate having guests over? </label>
+                  <div style={inputWrapperStyle}>
+                    <select
+                      name="okvisitors"
+                      value={formData.okvisitors}
+                      onChange={handleChange}
+                      required
+                      style={formControlStyle}
+                    >
+                      <option value="">Select an option</option>
+                      <option>Yes</option>
+                      <option>Occasionally</option>
+                      <option>No</option>
+                    </select>
+                  </div>
                 </div>
 
                 {/* Overnight guests */}
-                <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <label style={{ minWidth: '250px', marginRight: '15px' }}>Are overnight guests okay? </label>
-                  <select
-                    name="overnightGuests"
-                    value={formData.overnightGuests}
-                    onChange={handleChange}
-                    required
-                    className="w-full"
-                  >
-                    <option value="">Select an option</option>
-                    <option>Yes</option>
-                    <option>With Notice</option>
-                    <option>No</option>
-                  </select>
+                <div style={fieldContainerStyle}>
+                  <label style={labelStyle}>Are overnight guests okay? </label>
+                  <div style={inputWrapperStyle}>
+                    <select
+                      name="overnightGuests"
+                      value={formData.overnightGuests}
+                      onChange={handleChange}
+                      required
+                      style={formControlStyle}
+                    >
+                      <option value="">Select an option</option>
+                      <option>Yes</option>
+                      <option>With Notice</option>
+                      <option>No</option>
+                    </select>
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -426,21 +477,23 @@ const Questionnaire: React.FC = () => {
               <motion.div key="step-3" {...variants} transition={{ duration: 0.4 }} className="absolute w-full">
                 <h2 className="text-xl font-semibold mb-4 text-center">Study Habits</h2>
                 {/* studySpot */}
-                <div style={{ marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <label style={{ minWidth: '250px', marginRight: '15px' }}>Where do you prefer to study?</label>
-                    <select
-                      name="studySpot"
-                      value={formData.studySpot}
-                      onChange={handleChange}
-                      required
-                      className="w-full"
-                    >
-                      <option value="">Select an option</option>
-                      <option>Home</option>
-                      <option>Library</option>
-                      <option>Other</option>
-                    </select>
+                <div style={{ marginBottom: '30px' }}>
+                  <div style={{ ...fieldContainerStyle, marginBottom: '0' }}>
+                    <label style={labelStyle}>Where do you prefer to study?</label>
+                    <div style={inputWrapperStyle}>
+                      <select
+                        name="studySpot"
+                        value={formData.studySpot}
+                        onChange={handleChange}
+                        required
+                        style={formControlStyle}
+                      >
+                        <option value="">Select an option</option>
+                        <option>Home</option>
+                        <option>Library</option>
+                        <option>Other</option>
+                      </select>
+                    </div>
                   </div>
                   <PrioritySelector 
                     category="studyHabits" 
@@ -451,21 +504,23 @@ const Questionnaire: React.FC = () => {
                 </div>
 
                 {/* Noise Level */}
-                <div style={{ marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <label style={{ minWidth: '250px', marginRight: '15px' }}>Preferred noise level while studying/living?</label>
-                    <select
-                    name="noiseLevel"
-                    value={formData.noiseLevel}
-                    onChange={handleChange}
-                    required
-                    className="w-full"
-                    >
-                    <option value="">Select an option</option>
-                    <option>Silent</option>
-                    <option>Background noise/music</option>
-                    <option>No preference</option>
-                    </select>
+                <div style={{ marginBottom: '30px' }}>
+                  <div style={{ ...fieldContainerStyle, marginBottom: '0' }}>
+                    <label style={labelStyle}>Preferred noise level while studying/living?</label>
+                    <div style={inputWrapperStyle}>
+                      <select
+                        name="noiseLevel"
+                        value={formData.noiseLevel}
+                        onChange={handleChange}
+                        required
+                        style={formControlStyle}
+                      >
+                        <option value="">Select an option</option>
+                        <option>Silent</option>
+                        <option>Background noise/music</option>
+                        <option>No preference</option>
+                      </select>
+                    </div>
                   </div>
                   <PrioritySelector 
                     category="noiseLevel" 
@@ -481,20 +536,22 @@ const Questionnaire: React.FC = () => {
               <motion.div key="step-4" {...variants} transition={{ duration: 0.4 }} className="absolute w-full">
                 <h2 className="text-xl font-semibold mb-4 text-center">Pets</h2>
                 {/* pets? */}
-                <div style={{ marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <label style={{ minWidth: '250px', marginRight: '15px' }}>Do you have any pets or plan to bring one? </label>
-                    <select
-                      name="pets"
-                      value={formData.pets}
-                      onChange={handleChange}
-                      required
-                      className="w-full"
-                    >
-                      <option value="">Select an option</option>
-                      <option>Yes</option>
-                      <option>No</option>
-                    </select>
+                <div style={{ marginBottom: '30px' }}>
+                  <div style={{ ...fieldContainerStyle, marginBottom: '0' }}>
+                    <label style={labelStyle}>Do you have any pets or plan to bring one? </label>
+                    <div style={inputWrapperStyle}>
+                      <select
+                        name="pets"
+                        value={formData.pets}
+                        onChange={handleChange}
+                        required
+                        style={formControlStyle}
+                      >
+                        <option value="">Select an option</option>
+                        <option>Yes</option>
+                        <option>No</option>
+                      </select>
+                    </div>
                   </div>
                   <PrioritySelector 
                     category="pets" 
@@ -505,20 +562,22 @@ const Questionnaire: React.FC = () => {
                 </div>
 
                 {/* okPets */}
-                <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <label style={{ minWidth: '250px', marginRight: '15px' }}>Are you okay living with animals(cats, dogs, etc.)? </label>
-                  <select
-                    name="okPets"
-                    value={formData.okPets}
-                    onChange={handleChange}
-                    required
-                    className="w-full"
-                  >
-                    <option value="">Select an option</option>
-                    <option>Yes</option>
-                    <option>No</option>
-                    <option>Other(allergies, certain animals, etc.)</option>
-                  </select>
+                <div style={fieldContainerStyle}>
+                  <label style={labelStyle}>Are you okay living with animals(cats, dogs, etc.)? </label>
+                  <div style={inputWrapperStyle}>
+                    <select
+                      name="okPets"
+                      value={formData.okPets}
+                      onChange={handleChange}
+                      required
+                      style={formControlStyle}
+                    >
+                      <option value="">Select an option</option>
+                      <option>Yes</option>
+                      <option>No</option>
+                      <option>Other(allergies, certain animals, etc.)</option>
+                    </select>
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -527,22 +586,36 @@ const Questionnaire: React.FC = () => {
               <motion.div key="step-5" {...variants} transition={{ duration: 0.4 }} className="absolute w-full">
                 <h2 className="text-xl font-semibold mb-4 text-center">Lifestyle</h2>
                 {/* Lifestyle (multiple) */}
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', marginBottom: '8px' }}>Which of these describe your lifestyle? (Select all that apply)</label>
-                  <div className="grid grid-cols-2 gap-3 mt-3">
-                    {[' Smokes ', ' Drinks ', ' Cooks often ', ' Vegetarian ', ' Stays up late ', ' Wakes up early '].map((item) => (
-                      <label key={item} className="flex items-center space-x-2 p-3 border rounded-md hover:bg-gray-50 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          name="lifestyle"
-                          value={item}
-                          checked={formData.lifestyle.includes(item)}
-                          onChange={handleChange}
-                          className="h-4 w-4"
-                        />
-                        <span className="text-sm">{item.trim()}</span>
-                      </label>
-                    ))}
+                <div style={{ marginBottom: '30px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
+                    <label style={{ ...labelStyle, paddingTop: '8px' }}>Which of these describe your lifestyle?</label>
+                    <div style={inputWrapperStyle}>
+                      <p className="text-sm text-gray-600 mb-3">(Select all that apply)</p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {[' Smokes ', ' Drinks ', ' Cooks often ', ' Vegetarian ', ' Stays up late ', ' Wakes up early '].map((item) => (
+                          <label key={item} style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '8px', 
+                            padding: '12px', 
+                            border: '1px solid #e5e7eb', 
+                            borderRadius: '6px', 
+                            cursor: 'pointer',
+                            backgroundColor: formData.lifestyle.includes(item) ? '#f3f4f6' : 'white'
+                          }}>
+                            <input
+                              type="checkbox"
+                              name="lifestyle"
+                              value={item}
+                              checked={formData.lifestyle.includes(item)}
+                              onChange={handleChange}
+                              style={{ width: '16px', height: '16px' }}
+                            />
+                            <span style={{ fontSize: '14px' }}>{item.trim()}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                   <PrioritySelector 
                     category="lifestyle" 
@@ -558,103 +631,128 @@ const Questionnaire: React.FC = () => {
               <motion.div key="step-6" {...variants} transition={{ duration: 0.4 }} className="absolute w-full">
                 <h2 className="text-xl font-semibold mb-4 text-center">Compatibility</h2>
                 {/* Preffered Geneder Roommate */}
-                <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <label style={{ minWidth: '250px', marginRight: '15px' }}>Preferred gender of roommate? </label>
-                  <select
-                  name="prefGender"
-                  value={formData.prefGender}
-                  onChange={handleChange}
-                  required
-                  className="w-full"
-                  >
-                  <option value="">Select an option</option>
-                  <option>No Preference</option>
-                  <option>Female</option>
-                  <option>Male</option>
-                  <option>Non-binary</option>
-                  </select>
+                <div style={fieldContainerStyle}>
+                  <label style={labelStyle}>Preferred gender of roommate? </label>
+                  <div style={inputWrapperStyle}>
+                    <select
+                      name="prefGender"
+                      value={formData.prefGender}
+                      onChange={handleChange}
+                      required
+                      style={formControlStyle}
+                    >
+                      <option value="">Select an option</option>
+                      <option>No Preference</option>
+                      <option>Female</option>
+                      <option>Male</option>
+                      <option>Non-binary</option>
+                    </select>
+                  </div>
                 </div>
 
                 {/* Max Distance from Campus */}
-                <div style={{ marginBottom: '20px' }}>
+                <div style={{ ...fieldContainerStyle, marginBottom: '20px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <label style={{ minWidth: '250px', marginRight: '15px' }}>
+                    <label style={labelStyle}>
                       Maximum distance from UCSC campus (in miles)?
                     </label>
-                    <input
-                      type="text" // <-- change this from "number" to "text"
-                      name="maxDistanceFromCampus"
-                      inputMode="decimal" // allows numeric keyboard on mobile
-                      value={formData.maxDistanceFromCampus !== undefined ? formData.maxDistanceFromCampus : ''}
-                      onChange={(e) => {
-                        const raw = e.target.value;
-                        const numeric = raw === '' ? undefined : Number(raw);
-                        setFormData((prev) => ({
-                          ...prev,
-                          maxDistanceFromCampus: numeric,
-                        }));
-                      }}
-                      className="w-full"
-                      placeholder="e.g. 5"
-                    />
+                    <div style={inputWrapperStyle}>
+                      <input
+                        type="text"
+                        name="maxDistanceFromCampus"
+                        inputMode="decimal"
+                        value={formData.maxDistanceFromCampus !== undefined ? formData.maxDistanceFromCampus : ''}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          const numeric = raw === '' ? undefined : Number(raw);
+                          setFormData((prev) => ({
+                            ...prev,
+                            maxDistanceFromCampus: numeric,
+                          }));
+                        }}
+                        style={formControlStyle}
+                        placeholder="e.g. 5"
+                      />
+                      <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '4px' }}>
+                        Leave blank if distance doesn't matter
+                      </p>
+                    </div>
                   </div>
-                  <p style={{ fontSize: '14px', color: '#6b7280', marginTop: '4px', textAlign: 'center' }}>
-                    Leave blank if distance doesn't matter
-                  </p>
                 </div>
 
                 {/* Hobbies */}
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', marginBottom: '8px' }}>What are some of your hobbies and interests? </label>
-                  <textarea
-                    name="Hobbies"
-                    value={formData.Hobbies.join('\n')}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        Hobbies: e.target.value.split('\n'),
-                      }))
-                    }
-                    className="w-full"
-                    placeholder="I really like to go hiking"
-                    rows={3}
-                  />
+                <div style={{ ...fieldContainerStyle, marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
+                    <label style={{ ...labelStyle, paddingTop: '8px' }}>What are some of your hobbies and interests? </label>
+                    <div style={inputWrapperStyle}>
+                      <textarea
+                        name="Hobbies"
+                        value={formData.Hobbies.join('\n')}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            Hobbies: e.target.value.split('\n'),
+                          }))
+                        }
+                        style={formControlStyle}
+                        placeholder="I really like to go hiking"
+                        rows={3}
+                      />
+                      <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px', fontStyle: 'italic' }}>
+                        Optional - for profile display only, not used in matching
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Dealbreakers or Must Haves */}
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', marginBottom: '8px' }}>What are some dealbreakers or must-haves in a roommate? </label>
-                  <textarea
-                    name="dealMust"
-                    value={formData.dealMust.join('\n')}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        dealMust: e.target.value.split('\n'),
-                      }))
-                    }
-                    className="w-full"
-                    placeholder="I NEED a roommate who..."
-                    rows={3}
-                  />
+                <div style={{ ...fieldContainerStyle, marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
+                    <label style={{ ...labelStyle, paddingTop: '8px' }}>What are some dealbreakers or must-haves in a roommate? </label>
+                    <div style={inputWrapperStyle}>
+                      <textarea
+                        name="dealMust"
+                        value={formData.dealMust.join('\n')}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            dealMust: e.target.value.split('\n'),
+                          }))
+                        }
+                        style={formControlStyle}
+                        placeholder="I NEED a roommate who..."
+                        rows={3}
+                      />
+                      <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px', fontStyle: 'italic' }}>
+                        Optional - for profile display only, not used in matching
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Sharing (open-ended) */}
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', marginBottom: '8px' }}>Tell us a little about yourself! </label>
-                  <textarea
-                    name="sharing"
-                    value={formData.sharing.join('\n')}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        sharing: e.target.value.split('\n'),
-                      }))
-                    }
-                    className="w-full"
-                    placeholder="Im from LA and..."
-                    rows={4}
-                  />
+                <div style={{ ...fieldContainerStyle, marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
+                    <label style={{ ...labelStyle, paddingTop: '8px' }}>Tell us a little about yourself! </label>
+                    <div style={inputWrapperStyle}>
+                      <textarea
+                        name="sharing"
+                        value={formData.sharing.join('\n')}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            sharing: e.target.value.split('\n'),
+                          }))
+                        }
+                        style={formControlStyle}
+                        placeholder="Im from LA and..."
+                        rows={4}
+                      />
+                      <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px', fontStyle: 'italic' }}>
+                        Optional - for profile display only, not used in matching
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -674,6 +772,38 @@ const Questionnaire: React.FC = () => {
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
+
+        {/* Progress Bar */}
+        <div style={{ maxWidth: '800px', margin: '30px auto 20px', padding: '0 20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <span style={{ fontSize: '14px', color: '#6b7280' }}>
+              Step {step + 1} of {steps.length}
+            </span>
+            <span style={{ fontSize: '14px', color: '#6b7280' }}>
+              {Math.round(((step + 1) / steps.length) * 100)}% Complete
+            </span>
+          </div>
+          <div style={{
+            width: '100%',
+            height: '8px',
+            backgroundColor: '#f3f4f6',
+            borderRadius: '4px',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              width: `${((step + 1) / steps.length) * 100}%`,
+              height: '100%',
+              backgroundColor: '#be1818',
+              transition: 'width 0.3s ease',
+              borderRadius: '4px'
+            }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
+            <span style={{ fontSize: '12px', color: '#9ca3af', fontWeight: '500' }}>
+              {steps[step]}
+            </span>
+          </div>
         </div>
 
         <div className="flex justify-between mt-10" style={{ maxWidth: '800px', margin: '40px auto 0' }}>
