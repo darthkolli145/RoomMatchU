@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ListingType } from '../types/index';
 import { useAuth } from '../contexts/AuthContext';
 import { toggleFavorite } from '../firebase/favoritesService';
 import { Listing } from '../firebase/firebaseHelpers';
 import { calculateDistanceFromUCSC, formatDistance } from '../utils/distanceCalculator';
-
+import { getRoadDistanceFromUCSC } from '../utils/roadDistance';
 
 interface ListingCardProps {
   listing: Listing;
@@ -30,6 +30,18 @@ export default function ListingCard({
   const [isLoading, setIsLoading] = useState(false);
   const [showAuthMessage, setShowAuthMessage] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [distance, setDistance] = useState<number | null>(null);
+
+  useEffect(() => {
+    async function fetchDistance() {
+      if (listing.lat && listing.lng) {
+        const roadDist = await getRoadDistanceFromUCSC(listing.lat, listing.lng);
+        setDistance(roadDist);
+      }
+    }
+    fetchDistance();
+  }, [listing.lat, listing.lng]);
+  
 
   const handleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent navigation to the listing detail
@@ -142,10 +154,10 @@ export default function ListingCard({
           
           {/* Distance from UCSC */}
           <p className="listing-distance">
-            📍 {formatDistance(calculateDistanceFromUCSC(listing.lat, listing.lng))}
+            📍 {formatDistance(distance)}
           </p>
           
-          {compatibilityScore && compatibilityScore.matches.length > 0 && (
+          {Array.isArray(compatibilityScore?.matches) && compatibilityScore.matches.length > 0 && (
             <div className="match-details">
               {compatibilityScore.matches[0]}
             </div>
