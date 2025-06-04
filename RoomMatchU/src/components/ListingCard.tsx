@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { toggleFavorite } from '../firebase/favoritesService';
 import { Listing } from '../firebase/firebaseHelpers';
 import { calculateDistanceFromUCSC, formatDistance } from '../utils/distanceCalculator';
+import { extractShortAddress } from '../utils/addressParser';
 import { getRoadDistanceFromUCSC } from '../utils/roadDistance';
 
 interface ListingCardProps {
@@ -101,6 +102,10 @@ export default function ListingCard({
     setImageError(true);
   };
 
+console.log("DEBUG address:", listing.address);
+console.log("DEBUG shortAddress:", listing.shortAddress);
+
+
   return (
     <div className="listing-card">
       <Link to={`/listing/${listing.id}`} className="listing-link">
@@ -147,7 +152,9 @@ export default function ListingCard({
         
         <div className="listing-details">
           <h3 className="listing-title">{listing.title}</h3>
-          <p className="listing-location">{listing.address || listing.location || 'Location not specified'}</p>
+            <p className="listing-location">
+              {listing.shortAddress || (listing.address ? extractShortAddress(listing.address) : '') || listing.location || 'Location not specified'}
+            </p>
           <p className="listing-info">
             {listing.bedrooms} BD · {listing.bathrooms} BA · Available: {new Date(listing.availableDate).toLocaleDateString()}
           </p>

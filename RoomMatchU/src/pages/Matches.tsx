@@ -50,6 +50,11 @@ export default function Matches() {
             const listingsData = await fetchListings();
             setListings(listingsData);
 
+            const { filteredListings, listingsWithScores } = filterListings(
+              listingsData,
+              filters,
+              userQuestionnaire
+            );
             const listingsWithScores = await Promise.all(
               listingsData.map(async (listing) => {
                 const compatibilityScore = await calculateCompatibility(userQuestionnaire, listing);
@@ -58,8 +63,15 @@ export default function Matches() {
             );
 
             // Distance filter
-            let filteredListings = listingsWithScores;
+            let distanceFiltered = filteredListings;
             if (filterByDistance && userQuestionnaire.maxDistanceFromCampus) {
+              distanceFiltered = filteredListings.filter((listing) => {
+                if (listing.lat !== undefined && listing.lng !== undefined) {
+                  const distance = calculateDistanceFromUCSC(listing.lat, listing.lng);
+                  return distance === null || distance <= userQuestionnaire.maxDistanceFromCampus!;
+                }
+                return true;
+              });
               const distanceChecks = await Promise.all(
                 listingsWithScores.map(async (listing) => {
                   if (listing.lat !== undefined && listing.lng !== undefined) {
@@ -74,15 +86,16 @@ export default function Matches() {
               
             }
 
-            const sorted = sortListingsByCompatibility(filteredListings);
+            const sorted = sortListingsByCompatibility(distanceFiltered);
             const finalFiltered = sorted.filter(
-            (listing) =>
+              (listing) =>
                 listing.compatibilityScore &&
                 typeof listing.compatibilityScore.score === 'number' &&
                 listing.compatibilityScore.score >= 60
             );
 
             setMatches(finalFiltered);
+
         } catch (error) {
             console.error('Error loading matches:', error);
         } finally {

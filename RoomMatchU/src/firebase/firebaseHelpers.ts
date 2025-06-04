@@ -19,6 +19,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import imageCompression from "browser-image-compression";
 import { getDoc } from "firebase/firestore";
 import axios from "axios";
+import { extractShortAddress } from '../utils/addressParser';
 
 interface GeocodingResult {
   results: Array<{
@@ -135,6 +136,7 @@ export interface Listing {
   pets: boolean;
   onCampus: boolean;
   address: string;
+  shortAddress?: string;
   prefGender?: string;
   lat?: number;
   lng?: number;
@@ -166,11 +168,14 @@ export const postListing = async (formData: ListingFormData): Promise<string> =>
     }
   }
 
+  const shortAddress = extractShortAddress(formData.address);
+
   // Build the object that we will actually store in Firestore
   const listingData: any = {
     title: formData.title,
     bio: formData.bio,
     address: formData.address,
+    shortAddress, // ⬅️ Add this line
     beds: Number(formData.beds),
     baths: Number(formData.baths),
     price: Number(formData.price),
@@ -222,6 +227,7 @@ export const fetchListings = async (): Promise<Listing[]> => {
         pets: data.pets,
         onCampus: data.onCampus,
         address: data.address,
+        shortAddress: data.shortAddress,
         lat: data.lat,
         lng: data.lng,
         tags: data.tags || {},
