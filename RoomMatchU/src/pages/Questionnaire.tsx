@@ -41,12 +41,12 @@ const PrioritySelector = ({
   value: PriorityLevel | undefined;
   onChange: (category: QuestionnaireCategory, value: PriorityLevel) => void;
 }) => (
-  <div className="flex justify-between items-center mt-3 text-sm text-gray-600">
+  <div className="flex justify-between items-center mt-3 text-sm" style={{ maxWidth: '600px', margin: '12px auto 0' }}>
     <span className="mr-2">{label} priority: </span>
     <select
       value={value || ''}
       onChange={(e) => onChange(category, e.target.value as PriorityLevel)}
-      className="border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+      className="px-2 py-1 rounded-md"
     >
       <option value="">Select priority</option>
       <option value="Not Important">Not Important</option>
@@ -175,18 +175,18 @@ const Questionnaire: React.FC = () => {
   };
 
   return (
-    <div className="questionnaire-page">
-      <h1 className="text-3xl font-bold text-purple-700 text-center mb-4">Roommate Questionnaire</h1>
+    <div className="questionnaire-page" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px' }}>
+      <h1 className="text-3xl font-bold text-center mb-6">Roommate Questionnaire</h1>
       
-      <form noValidate>
+      <form noValidate style={{ width: '100%', maxWidth: '800px' }}>
         <div className="relative min-h-[250px]">
           <AnimatePresence mode="wait">
             {step === 0 && (
               <motion.div key="step-0" {...variants} transition={{ duration: 0.4 }} className="absolute w-full">
-                <h2 className="text-xl font-semibold mb-4 text-purple-600">Personal Info</h2>
+                <h2 className="text-xl font-semibold mb-4 text-center">Personal Info</h2>
                 {/*Full Name */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">What is your full name? </label>
+                <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <label style={{ minWidth: '250px', marginRight: '15px' }}>What is your full name? </label>
                     <input
                       required
                       type="text"
@@ -198,13 +198,13 @@ const Questionnaire: React.FC = () => {
                           fullname: e.target.value.split('\n'),
                         }))
                       }
-                      className="w-full border border-gray-300 rounded-md px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full"
                       placeholder="Sammy S. Slug"
                     />
                 </div>
                 {/* Major */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">What are you majoring in? </label>
+                <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <label style={{ minWidth: '250px', marginRight: '15px' }}>What are you majoring in? </label>
                     <input
                       required
                       type="text"
@@ -216,20 +216,20 @@ const Questionnaire: React.FC = () => {
                           Major: e.target.value.split('\n'),
                         }))
                       }
-                      className="w-full border border-gray-300 rounded-md px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full"
                       placeholder="Computer Science"
                     />
                 </div>
 
                 {/* Year in School */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">What year are you? </label>
+                <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <label style={{ minWidth: '250px', marginRight: '15px' }}>What year are you? </label>
                     <select
                     required
                     name="yearlvl"
                     value={formData.yearlvl}
                     onChange={handleChange}
-                    className="w-full border rounded p-2"
+                    className="w-full"
                     >
                     <option value="">Select an option</option>
                     <option>First Year</option>
@@ -241,14 +241,14 @@ const Questionnaire: React.FC = () => {
                 </div>
 
                 {/* Gender */}
-                <div>
-                    <label className="block font-medium mb-1 text-indigo-600">What gender are you? </label>
+                <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <label style={{ minWidth: '250px', marginRight: '15px' }}>What gender are you? </label>
                     <select
                     name="Gender"
                     value={formData.Gender}
                     onChange={handleChange}
                     required
-                    className="w-full border rounded p-2"
+                    className="w-full"
                     >
                     <option value="">Select an option</option>
                     <option>Male</option>
@@ -262,22 +262,24 @@ const Questionnaire: React.FC = () => {
 
             {step === 1 && (
               <motion.div key="step-1" {...variants} transition={{ duration: 0.4 }} className="absolute w-full">
-                <h2 className="text-xl font-semibold mb-4 text-purple-600">Living Habits</h2>
+                <h2 className="text-xl font-semibold mb-4 text-center">Living Habits</h2>
                   {/* Sleep Schedule */}
-                  <div>
-                    <label className="block font-medium mb-1 text-indigo-600">When do you usually go to bed? </label>
-                    <select
-                      name="sleepSchedule"
-                      value={formData.sleepSchedule}
-                      onChange={handleChange}
-                      required
-                      className="w-full border rounded p-2"
-                    >
-                      <option value="">Select an option</option>
-                      <option>Before 10pm</option>
-                      <option>10pm - 12am</option>
-                      <option>After 12am</option>
-                    </select>
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <label style={{ minWidth: '250px', marginRight: '15px' }}>When do you usually go to bed? </label>
+                      <select
+                        name="sleepSchedule"
+                        value={formData.sleepSchedule}
+                        onChange={handleChange}
+                        required
+                        className="w-full"
+                      >
+                        <option value="">Select an option</option>
+                        <option>Before 10pm</option>
+                        <option>10pm - 12am</option>
+                        <option>After 12am</option>
+                      </select>
+                    </div>
                     <PrioritySelector 
                       category="sleepSchedule" 
                       label="Sleep schedule" 
@@ -287,20 +289,22 @@ const Questionnaire: React.FC = () => {
                   </div>
 
                   {/* Wake up Schedule */}
-                  <div>
-                    <label className="block font-medium mb-1 text-indigo-600">When do you usually wake up? </label>
-                    <select
-                      name="wakeupSchedule"
-                      value={formData.wakeupSchedule}
-                      onChange={handleChange}
-                      required
-                      className="w-full border rounded p-2"
-                    >
-                      <option value="">Select an option</option>
-                      <option>Before 7am</option>
-                      <option>7am - 9am</option>
-                      <option>After 9am</option>
-                    </select>
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <label style={{ minWidth: '250px', marginRight: '15px' }}>When do you usually wake up? </label>
+                      <select
+                        name="wakeupSchedule"
+                        value={formData.wakeupSchedule}
+                        onChange={handleChange}
+                        required
+                        className="w-full"
+                      >
+                        <option value="">Select an option</option>
+                        <option>Before 7am</option>
+                        <option>7am - 9am</option>
+                        <option>After 9am</option>
+                      </select>
+                    </div>
                     <PrioritySelector 
                       category="wakeupSchedule" 
                       label="Wake-up schedule" 
@@ -310,20 +314,22 @@ const Questionnaire: React.FC = () => {
                   </div>
 
                   {/* Cleanliness */}
-                  <div>
-                    <label className="block font-medium mb-1 text-indigo-600">How tidy are you? </label>
-                    <select
-                      name="cleanliness"
-                      value={formData.cleanliness}
-                      onChange={handleChange}
-                      required
-                      className="w-full border rounded p-2"
-                    >
-                      <option value="">Select an option</option>
-                      <option>Very tidy</option>
-                      <option>Moderately tidy</option>
-                      <option>Messy</option>
-                    </select>
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <label style={{ minWidth: '250px', marginRight: '15px' }}>How tidy are you? </label>
+                      <select
+                        name="cleanliness"
+                        value={formData.cleanliness}
+                        onChange={handleChange}
+                        required
+                        className="w-full"
+                      >
+                        <option value="">Select an option</option>
+                        <option>Very tidy</option>
+                        <option>Moderately tidy</option>
+                        <option>Messy</option>
+                      </select>
+                    </div>
                     <PrioritySelector 
                       category="cleanliness" 
                       label="Cleanliness" 
@@ -333,14 +339,14 @@ const Questionnaire: React.FC = () => {
                   </div>
                 
                   {/* roommateCleanliness */}
-                  <div>
-                    <label className="block font-medium mb-1 text-indigo-600">How important is cleanliness in a roomate? </label>
+                  <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <label style={{ minWidth: '250px', marginRight: '15px' }}>How important is cleanliness in a roomate? </label>
                     <select
                       name="roommateCleanliness"
                       value={formData.roommateCleanliness}
                       onChange={handleChange}
                       required
-                      className="w-full border rounded p-2"
+                      className="w-full"
                     >
                       <option value="">Select an option</option>
                       <option>Not Important</option>
@@ -353,23 +359,25 @@ const Questionnaire: React.FC = () => {
 
             {step === 2 && (
               <motion.div key="step-2" {...variants} transition={{ duration: 0.4 }} className="absolute w-full">
-                <h2 className="text-xl font-semibold mb-4 text-purple-600">Guest Preferences</h2>
+                <h2 className="text-xl font-semibold mb-4 text-center">Guest Preferences</h2>
                 {/* Visitors */}
-                <div>
-                  <label className="block font-medium mb-1 text-indigo-600">How often do you have guests over? </label>
-                  <select
-                    name="visitors"
-                    value={formData.visitors}
-                    onChange={handleChange}
-                    required
-                    className="w-full border rounded p-2"
-                  >
-                    <option value="">Select an option</option>
-                    <option>Frequently</option>
-                    <option>Occasionally</option>
-                    <option>Rarely</option>
-                    <option>Never</option>
-                  </select>
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <label style={{ minWidth: '250px', marginRight: '15px' }}>How often do you have guests over? </label>
+                    <select
+                      name="visitors"
+                      value={formData.visitors}
+                      onChange={handleChange}
+                      required
+                      className="w-full"
+                    >
+                      <option value="">Select an option</option>
+                      <option>Frequently</option>
+                      <option>Occasionally</option>
+                      <option>Rarely</option>
+                      <option>Never</option>
+                    </select>
+                  </div>
                   <PrioritySelector 
                     category="visitors" 
                     label="Guest policy" 
@@ -379,14 +387,14 @@ const Questionnaire: React.FC = () => {
                 </div>
 
                 {/* Okay with Visitors? */}
-                <div>
-                  <label className="block font-medium mb-1 text-indigo-600">Are you okay with your roomate having guests over? </label>
+                <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <label style={{ minWidth: '250px', marginRight: '15px' }}>Are you okay with your roomate having guests over? </label>
                   <select
                     name="okvisitors"
                     value={formData.okvisitors}
                     onChange={handleChange}
                     required
-                    className="w-full border rounded p-2"
+                    className="w-full"
                   >
                     <option value="">Select an option</option>
                     <option>Yes</option>
@@ -396,14 +404,14 @@ const Questionnaire: React.FC = () => {
                 </div>
 
                 {/* Overnight guests */}
-                <div>
-                  <label className="block font-medium mb-1 text-indigo-600">Are overnight guests okay? </label>
+                <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <label style={{ minWidth: '250px', marginRight: '15px' }}>Are overnight guests okay? </label>
                   <select
                     name="overnightGuests"
                     value={formData.overnightGuests}
                     onChange={handleChange}
                     required
-                    className="w-full border rounded p-2"
+                    className="w-full"
                   >
                     <option value="">Select an option</option>
                     <option>Yes</option>
@@ -416,22 +424,24 @@ const Questionnaire: React.FC = () => {
 
             {step === 3 && (
               <motion.div key="step-3" {...variants} transition={{ duration: 0.4 }} className="absolute w-full">
-                <h2 className="text-xl font-semibold mb-4 text-purple-600">Study Habits</h2>
+                <h2 className="text-xl font-semibold mb-4 text-center">Study Habits</h2>
                 {/* studySpot */}
-                <div>
-                  <label className="block font-medium mb-1 text-indigo-600">Where do you prefer to study?</label>
-                  <select
-                    name="studySpot"
-                    value={formData.studySpot}
-                    onChange={handleChange}
-                    required
-                    className="w-full border rounded p-2"
-                  >
-                    <option value="">Select an option</option>
-                    <option>Home</option>
-                    <option>Library</option>
-                    <option>Other</option>
-                  </select>
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <label style={{ minWidth: '250px', marginRight: '15px' }}>Where do you prefer to study?</label>
+                    <select
+                      name="studySpot"
+                      value={formData.studySpot}
+                      onChange={handleChange}
+                      required
+                      className="w-full"
+                    >
+                      <option value="">Select an option</option>
+                      <option>Home</option>
+                      <option>Library</option>
+                      <option>Other</option>
+                    </select>
+                  </div>
                   <PrioritySelector 
                     category="studyHabits" 
                     label="Study habits" 
@@ -441,47 +451,51 @@ const Questionnaire: React.FC = () => {
                 </div>
 
                 {/* Noise Level */}
-                <div>
-                <label className="block font-medium mb-1 text-indigo-600">Preferred noise level while studying/living?</label>
-                <select
-                name="noiseLevel"
-                value={formData.noiseLevel}
-                onChange={handleChange}
-                required
-                className="w-full border rounded p-2"
-                >
-                <option value="">Select an option</option>
-                <option>Silent</option>
-                <option>Background noise/music</option>
-                <option>No preference</option>
-                </select>
-                <PrioritySelector 
-                  category="noiseLevel" 
-                  label="Noise level" 
-                  value={formData.priorities.noiseLevel} 
-                  onChange={handlePriorityChange} 
-                />
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <label style={{ minWidth: '250px', marginRight: '15px' }}>Preferred noise level while studying/living?</label>
+                    <select
+                    name="noiseLevel"
+                    value={formData.noiseLevel}
+                    onChange={handleChange}
+                    required
+                    className="w-full"
+                    >
+                    <option value="">Select an option</option>
+                    <option>Silent</option>
+                    <option>Background noise/music</option>
+                    <option>No preference</option>
+                    </select>
+                  </div>
+                  <PrioritySelector 
+                    category="noiseLevel" 
+                    label="Noise level" 
+                    value={formData.priorities.noiseLevel} 
+                    onChange={handlePriorityChange} 
+                  />
                 </div>
               </motion.div>
             )}
 
             {step === 4 && (
               <motion.div key="step-4" {...variants} transition={{ duration: 0.4 }} className="absolute w-full">
-                <h2 className="text-xl font-semibold mb-4 text-purple-600">Pets</h2>
+                <h2 className="text-xl font-semibold mb-4 text-center">Pets</h2>
                 {/* pets? */}
-                <div>
-                  <label className="block font-medium mb-1 text-indigo-600">Do you have any pets or plan to bring one? </label>
-                  <select
-                    name="pets"
-                    value={formData.pets}
-                    onChange={handleChange}
-                    required
-                    className="w-full border rounded p-2"
-                  >
-                    <option value="">Select an option</option>
-                    <option>Yes</option>
-                    <option>No</option>
-                  </select>
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <label style={{ minWidth: '250px', marginRight: '15px' }}>Do you have any pets or plan to bring one? </label>
+                    <select
+                      name="pets"
+                      value={formData.pets}
+                      onChange={handleChange}
+                      required
+                      className="w-full"
+                    >
+                      <option value="">Select an option</option>
+                      <option>Yes</option>
+                      <option>No</option>
+                    </select>
+                  </div>
                   <PrioritySelector 
                     category="pets" 
                     label="Pet preferences" 
@@ -491,14 +505,14 @@ const Questionnaire: React.FC = () => {
                 </div>
 
                 {/* okPets */}
-                <div>
-                  <label className="block font-medium mb-1 text-indigo-600">Are you okay living with animals(cats, dogs, etc.)? </label>
+                <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <label style={{ minWidth: '250px', marginRight: '15px' }}>Are you okay living with animals(cats, dogs, etc.)? </label>
                   <select
                     name="okPets"
                     value={formData.okPets}
                     onChange={handleChange}
                     required
-                    className="w-full border rounded p-2"
+                    className="w-full"
                   >
                     <option value="">Select an option</option>
                     <option>Yes</option>
@@ -511,22 +525,22 @@ const Questionnaire: React.FC = () => {
 
             {step === 5 && (
               <motion.div key="step-5" {...variants} transition={{ duration: 0.4 }} className="absolute w-full">
-                <h2 className="text-xl font-semibold mb-4 text-purple-600">Lifestyle</h2>
+                <h2 className="text-xl font-semibold mb-4 text-center">Lifestyle</h2>
                 {/* Lifestyle (multiple) */}
-                <div>
-                  <label className="block font-medium mb-1 text-indigo-600">Which of these describe your lifestyle? (Select all that apply)</label>
-                  <div className="flex flex-wrap gap-4">
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px' }}>Which of these describe your lifestyle? (Select all that apply)</label>
+                  <div className="grid grid-cols-2 gap-3 mt-3">
                     {[' Smokes ', ' Drinks ', ' Cooks often ', ' Vegetarian ', ' Stays up late ', ' Wakes up early '].map((item) => (
-                      <label key={item} className="flex items-center space-x-2">
+                      <label key={item} className="flex items-center space-x-2 p-3 border rounded-md hover:bg-gray-50 cursor-pointer">
                         <input
                           type="checkbox"
                           name="lifestyle"
                           value={item}
                           checked={formData.lifestyle.includes(item)}
                           onChange={handleChange}
-                          className="accent-purple-600"
+                          className="h-4 w-4"
                         />
-                        <span>{item}</span>
+                        <span className="text-sm">{item.trim()}</span>
                       </label>
                     ))}
                   </div>
@@ -542,56 +556,57 @@ const Questionnaire: React.FC = () => {
 
             {step === 6 && (
               <motion.div key="step-6" {...variants} transition={{ duration: 0.4 }} className="absolute w-full">
-                <h2 className="text-xl font-semibold mb-4 text-purple-600">Compatability</h2>
+                <h2 className="text-xl font-semibold mb-4 text-center">Compatibility</h2>
                 {/* Preffered Geneder Roommate */}
-                <div>
-                <label className="block font-medium mb-1 text-indigo-600">Preferred gender of roommate? </label>
-                <select
-                name="prefGender"
-                value={formData.prefGender}
-                onChange={handleChange}
-                required
-                className="w-full border rounded p-2"
-                >
-                <option value="">Select an option</option>
-                <option>No Preference</option>
-                <option>Female</option>
-                <option>Male</option>
-                <option>Non-binary</option>
-                </select>
+                <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <label style={{ minWidth: '250px', marginRight: '15px' }}>Preferred gender of roommate? </label>
+                  <select
+                  name="prefGender"
+                  value={formData.prefGender}
+                  onChange={handleChange}
+                  required
+                  className="w-full"
+                  >
+                  <option value="">Select an option</option>
+                  <option>No Preference</option>
+                  <option>Female</option>
+                  <option>Male</option>
+                  <option>Non-binary</option>
+                  </select>
                 </div>
 
                 {/* Max Distance from Campus */}
-                <div>
-                  <label className="block font-medium mb-1 text-indigo-600">
-                    Maximum distance from UCSC campus (in miles)?
-                  </label>
-                  <input
-                    type="text" // <-- change this from "number" to "text"
-                    name="maxDistanceFromCampus"
-                    inputMode="decimal" // allows numeric keyboard on mobile
-                    value={formData.maxDistanceFromCampus !== undefined ? formData.maxDistanceFromCampus : ''}
-                    onChange={(e) => {
-                      const raw = e.target.value;
-                      const numeric = raw === '' ? undefined : Number(raw);
-                      setFormData((prev) => ({
-                        ...prev,
-                        maxDistanceFromCampus: numeric,
-                      }));
-                    }}
-                    className="w-full border rounded p-2"
-                    placeholder="e.g. 5"
-                  />
-                  <p className="text-sm text-gray-600 mt-1">
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <label style={{ minWidth: '250px', marginRight: '15px' }}>
+                      Maximum distance from UCSC campus (in miles)?
+                    </label>
+                    <input
+                      type="text" // <-- change this from "number" to "text"
+                      name="maxDistanceFromCampus"
+                      inputMode="decimal" // allows numeric keyboard on mobile
+                      value={formData.maxDistanceFromCampus !== undefined ? formData.maxDistanceFromCampus : ''}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        const numeric = raw === '' ? undefined : Number(raw);
+                        setFormData((prev) => ({
+                          ...prev,
+                          maxDistanceFromCampus: numeric,
+                        }));
+                      }}
+                      className="w-full"
+                      placeholder="e.g. 5"
+                    />
+                  </div>
+                  <p style={{ fontSize: '14px', color: '#6b7280', marginTop: '4px', textAlign: 'center' }}>
                     Leave blank if distance doesn't matter
                   </p>
                 </div>
 
                 {/* Hobbies */}
-                <div>
-                  <label className="block font-medium mb-1 text-indigo-600">What are some of your hobbies and interests? </label>
-                  <input
-                    type="text"
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px' }}>What are some of your hobbies and interests? </label>
+                  <textarea
                     name="Hobbies"
                     value={formData.Hobbies.join('\n')}
                     onChange={(e) =>
@@ -600,16 +615,16 @@ const Questionnaire: React.FC = () => {
                         Hobbies: e.target.value.split('\n'),
                       }))
                     }
-                    className="w-full border rounded p-2"
+                    className="w-full"
                     placeholder="I really like to go hiking"
+                    rows={3}
                   />
                 </div>
 
                 {/* Dealbreakers or Must Haves */}
-                <div>
-                  <label className="block font-medium mb-1 text-indigo-600">What are some dealbreakers or must-haves in a roommate? </label>
-                  <input
-                    type="text"
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px' }}>What are some dealbreakers or must-haves in a roommate? </label>
+                  <textarea
                     name="dealMust"
                     value={formData.dealMust.join('\n')}
                     onChange={(e) =>
@@ -618,16 +633,16 @@ const Questionnaire: React.FC = () => {
                         dealMust: e.target.value.split('\n'),
                       }))
                     }
-                    className="w-full border rounded p-2"
+                    className="w-full"
                     placeholder="I NEED a roommate who..."
+                    rows={3}
                   />
                 </div>
 
                 {/* Sharing (open-ended) */}
-                <div>
-                  <label className="block font-medium mb-1 text-indigo-600">Tell us a little about yourself! </label>
-                  <input
-                    type="text"
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px' }}>Tell us a little about yourself! </label>
+                  <textarea
                     name="sharing"
                     value={formData.sharing.join('\n')}
                     onChange={(e) =>
@@ -636,8 +651,9 @@ const Questionnaire: React.FC = () => {
                         sharing: e.target.value.split('\n'),
                       }))
                     }
-                    className="w-full border rounded p-2"
+                    className="w-full"
                     placeholder="Im from LA and..."
+                    rows={4}
                   />
                 </div>
               </motion.div>
@@ -645,20 +661,27 @@ const Questionnaire: React.FC = () => {
 
             {step === 7 && (
               <motion.div key="step-7" {...variants} transition={{ duration: 0.4 }} className="absolute w-full">
-                <h2 className="text-xl font-semibold mb-4 text-purple-600">Review & Submit</h2>
-                <p className="text-gray-700 mb-2">Double check your answers before submitting!</p>
-                <p className="text-gray-500 text-sm">We'll match you based on your inputs and priorities.</p>
+                <h2 className="text-xl font-semibold mb-4 text-center">Review & Submit</h2>
+                <div className="text-center">
+                  <div className="mb-8">
+                    <svg className="w-20 h-20 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="mb-2 text-lg">You're all set!</p>
+                    <p className="text-sm">Double check your answers before submitting. We'll match you based on your inputs and priorities.</p>
+                  </div>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        <div className="flex justify-between mt-10">
+        <div className="flex justify-between mt-10" style={{ maxWidth: '800px', margin: '40px auto 0' }}>
           <button
             type="button"
             onClick={handleBack}
             disabled={step === 0}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-6 rounded disabled:opacity-50"
+            className="px-6 py-2 font-semibold rounded-md disabled:opacity-50"
           >
             Back
           </button>
@@ -667,7 +690,7 @@ const Questionnaire: React.FC = () => {
             <button
               type="button"
               onClick={handleNext}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded"
+              className="px-6 py-2 font-semibold rounded-md"
             >
               Next
             </button>
@@ -675,7 +698,7 @@ const Questionnaire: React.FC = () => {
             <button
               type="button"
               onClick={handleSubmit}
-              className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded"
+              className="px-6 py-2 font-semibold rounded-md"
             >
               Submit
             </button>

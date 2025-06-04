@@ -13,6 +13,7 @@ import { Listing } from '../firebase/firebaseHelpers';
 import { Timestamp } from 'firebase/firestore';
 import { calculateCompatibility } from '../utils/compatibilityScoring';
 import { calculateDistanceFromUCSC } from '../utils/distanceCalculator';
+import { getRoadDistanceFromUCSC } from '../utils/roadDistance';
 
 // Type for listings with compatibility scores
 type ListingWithScore = Listing & { compatibilityScore?: CompatibilityScore };
@@ -155,22 +156,27 @@ export default function Home() {
           if (currentUser?.questionnaire) {
             console.log('Generating matches based on questionnaire');
 
-            const listingsWithScores = listingsData.map(listing => {
-              const compatibilityScore = calculateCompatibility(currentUser.questionnaire!, listing);
-              return { ...listing, compatibilityScore };
-            });
+            const listingsWithScores = await Promise.all(
+              listingsData.map(async (listing) => {
+                const compatibilityScore = await calculateCompatibility(currentUser.questionnaire!, listing);
+                return { ...listing, compatibilityScore };
+              })
+            );
 
             // Filter by max distance from UCSC if available
             let filteredByDistance = listingsWithScores;
             if (currentUser.questionnaire.maxDistanceFromCampus) {
-              filteredByDistance = listingsWithScores.filter(listing => {
-                if (listing.lat !== undefined && listing.lng !== undefined) {
-                  const distance = calculateDistanceFromUCSC(listing.lat, listing.lng);
-                  if (distance === null) return true;
-                  return distance <= currentUser.questionnaire!.maxDistanceFromCampus!;
-                }
-                return true;
-              });
+              const distanceChecks = await Promise.all(
+                listingsWithScores.map(async (listing) => {
+                  if (listing.lat !== undefined && listing.lng !== undefined) {
+                    const distance = await getRoadDistanceFromUCSC(listing.lat, listing.lng);
+                    if (distance === null) return true;
+                    return distance <= currentUser.questionnaire!.maxDistanceFromCampus!;
+                  }
+                  return true;
+                })
+              );
+              filteredByDistance = listingsWithScores.filter((_, idx) => distanceChecks[idx]);
             }
 
             // Now apply score threshold
