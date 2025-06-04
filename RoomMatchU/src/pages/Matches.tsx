@@ -49,32 +49,35 @@ export default function Matches() {
             const listingsData = await fetchListings();
             setListings(listingsData);
 
-            const listingsWithScores = listingsData.map((listing) => {
-            const compatibilityScore = calculateCompatibility(userQuestionnaire, listing);
-            return { ...listing, compatibilityScore };
-            });
+            const { filteredListings, listingsWithScores } = filterListings(
+              listingsData,
+              filters,
+              userQuestionnaire
+            );
+
 
             // Distance filter
-            let filteredListings = listingsWithScores;
+            let distanceFiltered = filteredListings;
             if (filterByDistance && userQuestionnaire.maxDistanceFromCampus) {
-            filteredListings = listingsWithScores.filter((listing) => {
+              distanceFiltered = filteredListings.filter((listing) => {
                 if (listing.lat !== undefined && listing.lng !== undefined) {
-                const distance = calculateDistanceFromUCSC(listing.lat, listing.lng);
-                return distance === null || distance <= userQuestionnaire.maxDistanceFromCampus!;
+                  const distance = calculateDistanceFromUCSC(listing.lat, listing.lng);
+                  return distance === null || distance <= userQuestionnaire.maxDistanceFromCampus!;
                 }
                 return true;
-            });
+              });
             }
 
-            const sorted = sortListingsByCompatibility(filteredListings);
+            const sorted = sortListingsByCompatibility(distanceFiltered);
             const finalFiltered = sorted.filter(
-            (listing) =>
+              (listing) =>
                 listing.compatibilityScore &&
                 typeof listing.compatibilityScore.score === 'number' &&
                 listing.compatibilityScore.score >= 60
             );
 
             setMatches(finalFiltered);
+
         } catch (error) {
             console.error('Error loading matches:', error);
         } finally {
