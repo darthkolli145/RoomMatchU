@@ -1,7 +1,7 @@
 // Matches.tsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ListingType, UserQuestionnaire, PriorityLevel } from '../types/index';
+import { ListingType, UserQuestionnaire } from '../types/index';
 import ListingCard from '../components/ListingCard';
 import ListingFilter, { FilterOptions } from '../components/ListingFilter';
 import { filterListings, ListingWithScore, sortListingsByCompatibility } from '../utils/filterListings';
@@ -58,68 +58,66 @@ export default function Matches() {
 
   useEffect(() => {
     const fetchData = async () => {
-        if (!userQuestionnaire) return;
+      console.log("fetchData called with filterByDistance =", filterByDistance);
+      if (!userQuestionnaire) return;
 
-        try {
-            const listingsData = await fetchListings();
-            setListings(listingsData);
+      try {
+          const listingsData = await fetchListings();
+          setListings(listingsData);
 
-            const { filteredListings, listingsWithScores } = filterListings(
-              listingsData,
-              filters,
-              userQuestionnaire
-            );
-            const listingsWithScores = await Promise.all(
-              listingsData.map(async (listing) => {
-                const compatibilityScore = await calculateCompatibility(userQuestionnaire, listing);
-                return { ...listing, compatibilityScore };
-              })
-            );
+          let { filteredListings } = filterListings(
+            listingsData,
+            filters,
+            userQuestionnaire
+          );
+          const scoredListings = await Promise.all(
+            listingsData.map(async (listing) => {
+              const compatibilityScore = await calculateCompatibility(userQuestionnaire, listing);
+              return { ...listing, compatibilityScore };
+            })
+          );
+          console.log("scoredListings", scoredListings);
 
-            // Distance filter
-            let distanceFiltered = filteredListings;
-            if (filterByDistance && userQuestionnaire.maxDistanceFromCampus) {
-              distanceFiltered = filteredListings.filter((listing) => {
+          // Distance filter
+          let distanceFiltered = scoredListings;
+          if (filterByDistance && userQuestionnaire.maxDistanceFromCampus) {
+            console.log("Running road distance filter with max =", userQuestionnaire.maxDistanceFromCampus);
+            const distanceChecks = await Promise.all(
+              scoredListings.map(async (listing) => {
                 if (listing.lat !== undefined && listing.lng !== undefined) {
-                  const distance = calculateDistanceFromUCSC(listing.lat, listing.lng);
+                  const distance = await getRoadDistanceFromUCSC(listing.lat, listing.lng);
                   return distance === null || distance <= userQuestionnaire.maxDistanceFromCampus!;
                 }
                 return true;
-              });
-              const distanceChecks = await Promise.all(
-                listingsWithScores.map(async (listing) => {
-                  if (listing.lat !== undefined && listing.lng !== undefined) {
-                    const distance = await getRoadDistanceFromUCSC(listing.lat, listing.lng);
-                    return distance === null || distance <= userQuestionnaire.maxDistanceFromCampus!;
-                  }
-                  return true;
-                })
-              );
-              
-              filteredListings = listingsWithScores.filter((_, i) => distanceChecks[i]);
-              
-            }
-
-            const sorted = sortListingsByCompatibility(distanceFiltered);
-            const finalFiltered = sorted.filter(
-              (listing) =>
-                listing.compatibilityScore &&
-                typeof listing.compatibilityScore.score === 'number' &&
-                listing.compatibilityScore.score >= 60
+              })
             );
+          
+            distanceFiltered = scoredListings.filter((_, i) => distanceChecks[i]);
+            console.log("Listings after road distance filtering:", distanceFiltered.length);
+          }            
 
-            setMatches(finalFiltered);
+          const sorted = sortListingsByCompatibility(distanceFiltered);
+          console.log("Scores before filtering:", sorted.map(l => l.compatibilityScore?.score));
 
-        } catch (error) {
-            console.error('Error loading matches:', error);
-        } finally {
-            setLoading(false);
-        }
+          const finalFiltered = sorted.filter(
+            (listing) =>
+              listing.compatibilityScore &&
+              typeof listing.compatibilityScore.score === 'number' &&
+              listing.compatibilityScore.score >= 60
+          );
+
+          setMatches(finalFiltered);
+
+      } catch (error) {
+          console.error('Error loading matches:', error);
+      } finally {
+          setLoading(false);
+      }
     };
 
 
     fetchData();
-  }, [userQuestionnaire, filters]);
+  }, [userQuestionnaire, filters, filterByDistance]);
 
   const handleFavorite = async (listingId: string) => {
     if (!currentUser) {
@@ -197,9 +195,12 @@ export default function Matches() {
                 <div className="distance-filter-toggle mb-4 p-4 bg-gray-100 rounded">
                     <label className="flex items-center gap-2 text-sm text-gray-700">
                     <input
-                        type="checkbox"
-                        checked={filterByDistance}
-                        onChange={(e) => setFilterByDistance(e.target.checked)}
+                      type="checkbox"
+                      checked={filterByDistance}
+                      onChange={(e) => {
+                        console.log("📦 Distance filter toggled:", e.target.checked);
+                        setFilterByDistance(e.target.checked);
+                      }}
                     />
                     Only show listings within {userQuestionnaire.maxDistanceFromCampus} miles of campus
                     </label>
