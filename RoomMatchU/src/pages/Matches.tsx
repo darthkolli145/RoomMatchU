@@ -65,45 +65,35 @@ export default function Matches() {
           const listingsData = await fetchListings();
           setListings(listingsData);
 
-          let { filteredListings } = filterListings(
+          // Prepare filters with distance if enabled
+          const filtersWithDistance = {
+            ...filters,
+            // Only apply distance filter if filterByDistance is true and no manual filter is set
+            maxDistance: filters.maxDistance || 
+                        (filterByDistance && userQuestionnaire.maxDistanceFromCampus ? 
+                         userQuestionnaire.maxDistanceFromCampus : undefined)
+          };
+
+          let { filteredListings } = await filterListings(
             listingsData,
-            filters,
+            filtersWithDistance,
             userQuestionnaire
           );
-          const scoredListings = await Promise.all(
-            listingsData.map(async (listing) => {
-              const compatibilityScore = await calculateCompatibility(userQuestionnaire, listing);
-              return { ...listing, compatibilityScore };
-            })
-          );
+          
+          const scoredListings = filteredListings; // Use the already filtered listings
           console.log("scoredListings", scoredListings);
 
-          // Distance filter
-          let distanceFiltered = scoredListings;
-          if (filterByDistance && userQuestionnaire.maxDistanceFromCampus) {
-            console.log("Running road distance filter with max =", userQuestionnaire.maxDistanceFromCampus);
-            const distanceChecks = await Promise.all(
-              scoredListings.map(async (listing) => {
-                if (listing.lat !== undefined && listing.lng !== undefined) {
-                  const distance = await getRoadDistanceFromUCSC(listing.lat, listing.lng);
-                  return distance === null || distance <= userQuestionnaire.maxDistanceFromCampus!;
-                }
-                return true;
-              })
-            );
-          
-            distanceFiltered = scoredListings.filter((_, i) => distanceChecks[i]);
-            console.log("Listings after road distance filtering:", distanceFiltered.length);
-          }            
-
-          const sorted = sortListingsByCompatibility(distanceFiltered);
+          const sorted = sortListingsByCompatibility(scoredListings);
           console.log("Scores before filtering:", sorted.map(l => l.compatibilityScore?.score));
 
+          // Use minCompatibility from filters, defaulting to 60 if not set
+          const minCompatibility = filters.minCompatibility || 60;
+          
           const finalFiltered = sorted.filter(
             (listing) =>
               listing.compatibilityScore &&
               typeof listing.compatibilityScore.score === 'number' &&
-              listing.compatibilityScore.score >= 60
+              listing.compatibilityScore.score >= minCompatibility
           );
 
           setMatches(finalFiltered);
@@ -187,7 +177,7 @@ export default function Matches() {
           <div className="listings-header">
             <h1>Your Top Matches!</h1>
             <p>
-                Showing matches with 60%+ compatibility!
+                Showing matches with {filters.minCompatibility || 60}%+ compatibility!
             </p>
           </div>
 
@@ -202,7 +192,10 @@ export default function Matches() {
                         setFilterByDistance(e.target.checked);
                       }}
                     />
-                    Only show listings within {userQuestionnaire.maxDistanceFromCampus} miles of campus
+                    Only show listings within {filters.maxDistance || userQuestionnaire.maxDistanceFromCampus} miles of campus
+                    {filters.maxDistance && filters.maxDistance !== userQuestionnaire.maxDistanceFromCampus && (
+                      <span className="text-xs text-gray-500 ml-1">(filter overrides questionnaire)</span>
+                    )}
                     </label>
                 </div>
             )}

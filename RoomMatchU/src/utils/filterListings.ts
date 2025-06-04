@@ -2,7 +2,7 @@
 import { ListingType, CompatibilityScore, UserQuestionnaire, QuestionnaireCategory } from "../types/index";
 import { FilterOptions } from "../components/ListingFilter";
 import { calculateCompatibility } from "./compatibilityScoring";
-import { referenceCoords } from "./constants";
+import { getRoadDistanceFromUCSC } from "./roadDistance";
 
 
 // Define a type that extends ListingType to include the calculated compatibility score
@@ -14,68 +14,54 @@ export type ListingWithScore = ListingType & {
  * Filter listings based on the provided filter options and optional user questionnaire 
  * for compatibility scoring
  */
-export function filterListings(
+export async function filterListings(
   listings: ListingType[],
   filters: FilterOptions,
   userQuestionnaire?: UserQuestionnaire
-): { 
+): Promise<{ 
   filteredListings: ListingWithScore[], 
   listingsWithScores: ListingWithScore[] 
-} {
+}> {
   // Calculate compatibility scores for all listings if questionnaire is provided
-  const listingsWithScores: ListingWithScore[] = listings.map(listing => {
+  const listingsWithScores: ListingWithScore[] = [];
+  
+  // Process listings with compatibility scores
+  for (const listing of listings) {
     if (userQuestionnaire) {
-      const compatibilityScore = calculateCompatibility(userQuestionnaire, listing);
-      return { ...listing, compatibilityScore };
+      const compatibilityScore = await calculateCompatibility(userQuestionnaire, listing);
+      listingsWithScores.push({ ...listing, compatibilityScore });
+    } else {
+      listingsWithScores.push(listing as ListingWithScore);
     }
-    return listing as ListingWithScore;
-  });
-  
-  function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const R = 3958.8; // Earth's radius in miles
-    const toRad = (deg: number) => (deg * Math.PI) / 180;
-  
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-  
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  
-    return R * c;
   }
 
   // Apply filters
-  const filteredListings = listingsWithScores.filter(listing => {
+  const filteredListings: ListingWithScore[] = [];
+  
+  for (const listing of listingsWithScores) {
     // Price filters
-    if (filters.minPrice && listing.price < filters.minPrice) return false;
-    if (filters.maxPrice && listing.price > filters.maxPrice) return false;
+    if (filters.minPrice && listing.price < filters.minPrice) continue;
+    if (filters.maxPrice && listing.price > filters.maxPrice) continue;
     
     // Room configuration
-    if (filters.bedrooms && listing.bedrooms < filters.bedrooms) return false;
-    if (filters.bathrooms && listing.bathrooms < filters.bathrooms) return false;
+    if (filters.bedrooms && listing.bedrooms < filters.bedrooms) continue;
+    if (filters.bathrooms && listing.bathrooms < filters.bathrooms) continue;
     
     // Location
-    if (filters.onCampus !== undefined && listing.onCampus !== filters.onCampus) return false;
+    if (filters.onCampus !== undefined && listing.onCampus !== filters.onCampus) continue;
 
+    // Distance filter using improved road distance calculation
     if (
       filters.maxDistance &&
       listing.lat !== undefined &&
       listing.lng !== undefined
     ) {
-      const distance = haversineDistance(
-        referenceCoords.lat,
-        referenceCoords.lng,
-        listing.lat,
-        listing.lng
-      );
-      if (distance > filters.maxDistance) return false;
+      const distance = await getRoadDistanceFromUCSC(listing.lat, listing.lng);
+      if (distance === null || distance > filters.maxDistance) continue;
     }
     
     // Pets
-    if (filters.pets !== undefined && listing.pets !== filters.pets) return false;
+    if (filters.pets !== undefined && listing.pets !== filters.pets) continue;
     
     // Compatibility score - Only filter if minCompatibility is explicitly set
     if (
@@ -84,11 +70,13 @@ export function filterListings(
       listing.compatibilityScore && 
       listing.compatibilityScore.score < filters.minCompatibility
     ) {
-      return false;
+      continue;
     }
 
     // Priority category filtering
     if (filters.priorityCategories && filters.priorityCategories.length > 0 && userQuestionnaire) {
+      let shouldInclude = true;
+      
       for (const category of filters.priorityCategories) {
         let userResponse: string | string[] | undefined;
         let listingResponse: string | string[] | undefined;
@@ -126,7 +114,11 @@ export function filterListings(
           case 'pets':
             userResponse = userQuestionnaire.pets;
             // For pets, we need to check the listing.pets boolean, not the tags
-            return listing.pets === (userResponse === 'Yes');
+            if (listing.pets !== (userResponse === 'Yes')) {
+              shouldInclude = false;
+              break;
+            }
+            continue;
         }
 
         // Skip this category if either user or listing doesn't have data for it
@@ -141,25 +133,39 @@ export function filterListings(
               String(val).trim().toLowerCase() === String(listVal).trim().toLowerCase()
             )
           );
-          if (!overlap) return false;
+          if (!overlap) {
+            shouldInclude = false;
+            break;
+          }
         } else if (typeof userResponse === "string" && typeof listingResponse === "string") {
-          if (userResponse.trim().toLowerCase() !== listingResponse.trim().toLowerCase()) return false;
+          if (userResponse.trim().toLowerCase() !== listingResponse.trim().toLowerCase()) {
+            shouldInclude = false;
+            break;
+          }
         } else if (Array.isArray(userResponse) && typeof listingResponse === "string") {
           const match = userResponse.some(val => 
             String(val).trim().toLowerCase() === listingResponse.trim().toLowerCase()
           );
-          if (!match) return false;
+          if (!match) {
+            shouldInclude = false;
+            break;
+          }
         } else if (typeof userResponse === "string" && Array.isArray(listingResponse)) {
           const match = listingResponse.some(val => 
             userResponse.trim().toLowerCase() === String(val).trim().toLowerCase()
           );
-          if (!match) return false;
+          if (!match) {
+            shouldInclude = false;
+            break;
+          }
         }
       }
+      
+      if (!shouldInclude) continue;
     }
     
-    return true;
-  });
+    filteredListings.push(listing);
+  }
   
   return { 
     filteredListings, 

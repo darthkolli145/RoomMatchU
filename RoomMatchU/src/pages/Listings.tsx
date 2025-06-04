@@ -212,13 +212,13 @@ export default function Listings() {
         console.log(`Fetched ${listingsData.length} listings`);
         setListings(listingsData);
   
-        const { listingsWithScores } = filterListings(listingsData, {}, undefined);
+        const { listingsWithScores } = await filterListings(listingsData, {}, undefined);
         setFilteredListings(listingsWithScores);
         setLoading(false);
       } catch (error) {
         console.error('Error loading listings:', error);
         setListings(fallbackListings);
-        const { listingsWithScores } = filterListings(fallbackListings, {}, undefined);
+        const { listingsWithScores } = await filterListings(fallbackListings, {}, undefined);
         setFilteredListings(listingsWithScores);
         setLoading(false);
       }
@@ -231,20 +231,24 @@ export default function Listings() {
   useEffect(() => {
     if (listings.length === 0) return;
     
-    // Apply compatibility filters
-    const { filteredListings: filtered, listingsWithScores } = filterListings(
-      listings, 
-      filters, 
-      useQuestionnaire && userQuestionnaire ? userQuestionnaire : undefined
-    );
+    const applyFilters = async () => {
+      // Apply compatibility filters
+      const { filteredListings: filtered, listingsWithScores } = await filterListings(
+        listings, 
+        filters, 
+        useQuestionnaire && userQuestionnaire ? userQuestionnaire : undefined
+      );
+      
+      // Sort by compatibility score if questionnaire is enabled and userQuestionnaire exists
+      let sortedListings = filtered;
+      if (useQuestionnaire && userQuestionnaire) {
+        sortedListings = sortListingsByCompatibility(filtered);
+      }
+      
+      setFilteredListings(sortedListings);
+    };
     
-    // Sort by compatibility score if questionnaire is enabled and userQuestionnaire exists
-    let sortedListings = filtered;
-    if (useQuestionnaire && userQuestionnaire) {
-      sortedListings = sortListingsByCompatibility(filtered);
-    }
-    
-    setFilteredListings(sortedListings);
+    applyFilters();
   }, [listings, filters, useQuestionnaire, userQuestionnaire]);
 
   const handleFilterChange = (newFilters: FilterOptions) => {
