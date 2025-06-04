@@ -276,7 +276,7 @@ input:focus, select:focus, textarea:focus {
 
 .listing-image {
   position: relative;
-  height: 150px;
+  height: 210px;
   background-color: #fff9e8;
 }
 
@@ -317,7 +317,7 @@ input:focus, select:focus, textarea:focus {
   bottom: 10px;
   right: 10px;
   background-color: #c1dde7;
-  color: white;
+  color: var(--card-color);
   padding: 5px 10px;
   border-radius: 4px;
   font-weight: bold;
@@ -644,7 +644,8 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  margin-top: 6px;
+  margin-top: 2px;
+  justify-content: center;
 }
 
 .tag {
@@ -693,6 +694,11 @@ input:focus, select:focus, textarea:focus {
 /* Questionnaire & priority selectors */
 .questionnaire-page{
   color: #be1818;
+  margin-top: 20px;
+}
+
+.questionnaire-page div{
+  align-content: center;
 }
 
 .questionnaire-page input, select, textarea {
@@ -748,6 +754,17 @@ input:focus, select:focus, textarea:focus {
 }
 .profile{
   color: #be1818;
+  margin-top: 20px;
+  max-width: 900px;
+  margin: 50px auto;
+  padding: 20px;
+  background-color: #fff9e8; /* light background for the form section */
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.profile h1{
+  margin-bottom: 12px;
 }
 
 .profile button{
@@ -921,8 +938,9 @@ input:focus, select:focus, textarea:focus {
 .listing-details {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  margin-right: 20px;
+  gap: 5px;
+  margin: 10px;
+  justify-content: center;
 }
 
 .detail-group {
@@ -1050,7 +1068,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .view-favorites-button {
-  background-color: #db090c;
+  background-color: #be1818;
   color: #ffe790;
   padding: 8px 16px;
   border-radius: 6px;
@@ -1062,7 +1080,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .view-favorites-button:hover {
-  background-color: #be1818 ;
+  background-color: #b01919 ;
 }
 
 .favorites-banner {
@@ -1078,7 +1096,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .view-favorites-btn {
-  background-color: #db090c;
+  background-color: #BE1818;
   color: var(--background-color);
   padding: 8px 16px;
   border-radius: 6px;
@@ -1089,7 +1107,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .view-favorites-btn:hover {
-  background-color: #be1818;
+  background-color: #b01919;
 }
 
 .favorites-shortcut {
@@ -1119,7 +1137,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .hero-cta-button {
-  background-color: #db090c;
+  background-color: #be1818;
   color: #fde9b5;
   font-size: 1.2rem;
   font-weight: 600;
@@ -1132,7 +1150,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .hero-cta-button:hover {
-  background-color: #be1818;
+  background-color: #b01919;
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(190, 24, 24, 0.4);
 }
@@ -1614,8 +1632,19 @@ input:focus, select:focus, textarea:focus {
   background-color: #fff9e8;
   padding: 12px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
   text-align: center;
+}
+
+.detail-group-prof {
+  padding-bottom: 20px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.detail-group-prof h2 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 12px;
+  color: #0f172a;
 }
 
 .listingTitle{
@@ -1634,4 +1663,153 @@ input:focus, select:focus, textarea:focus {
   font-size: 1.1rem;
   color: #be1818;
   font-weight: 500;
+}
+
+/* Show desktop nav normally */
+.desktop-nav {
+  display: flex;
+}
+
+/* Hide mobile hamburger by default */
+.mobile-menu-toggle,
+.mobile-menu {
+  display: none;
+}
+/* Mobile view */
+@media screen and (max-width: 768px) {
+  .desktop-nav {
+    display: none;
+  }
+
+  .mobile-menu-toggle {
+    display: block;
+    cursor: pointer;
+    font-size: 24px;
+    margin-right: 1rem;
+  }
+
+  .mobile-menu {
+    position: absolute;
+    top: 60px;
+    right: 10px;
+    background-color: #c1dde7;
+    border: 2px solid white;
+    padding: 10px 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    border-radius: 4px;
+    min-width: 150px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .mobile-menu a,
+  .mobile-menu button {
+    text-align: left;
+    padding: 8px 15px;
+    color: white;
+    width: 100%;
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .mobile-menu button:hover,
+  .mobile-menu a:hover {
+    background-color: #f0f0f0;
+  }
+}
+/* Mobile: Shift logo further left */
+@media screen and (max-width: 768px) {
+  .navbar {
+    padding: 15px 10px;
+  }
+
+  .navbar-brand {
+    font-size: 1.4rem; /* optional: slightly smaller for tighter mobile layout */
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .home-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .sections-container{
+    margin: 10px;
+  }
+}
+
+/* Fix for mobile layout of listings grid */
+@media (max-width: 768px) {
+  .listings-page-grid {
+    grid-template-columns: 1fr !important; /* Only one column on mobile */
+    justify-items: center;                /* Center items horizontally */
+    gap: 1rem;
+    padding: 0 1rem;
+  }
+
+  .listings-content {
+    justify-items: center;                /* Center items horizontally */
+
+  }
+  .listing-card {
+    width: 100%; /* or set a max-width */
+    max-width: 500px;
+  }
+  .listings-content {
+    display: block; /* Stack vertically */
+  }
+
+  .listings-main {
+    max-width: 100%;
+    width: 100%;
+    margin: 0 auto; /* Center it */
+    padding: 0 1rem; /* Optional: add padding on the sides */
+  }
+  
+  .mobile-filter-toggle {
+    display: flex;
+    justify-content: center;
+    margin: 1rem 0;
+  }
+
+  .filters-sidebar.mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  background: #fff9e8;
+  display: flex;
+  flex-direction: column;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: 10; /* We’ll move padding to inner container */
+}
+
+.filters-sidebar.mobile-overlay .filter-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+  .close-filter-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+  }
+
+  .post-listing-page{
+    margin: 10px;
+  }
+
+  .profile{
+    margin: 10px;
+  }
+
+}
+
+.open-filter-btn{
+  color: var(--card-color);
 }

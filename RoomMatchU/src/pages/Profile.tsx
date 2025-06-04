@@ -99,7 +99,7 @@ export default function Profile() {
     <div className="profile">
       <h1>Your Profile</h1>
 
-      <div className="detail-group">
+      <div className="detail-group-prof">
         <h2>Basic Info</h2>
         <div className="compatibility-tags-prof">
           <div className="tag-item-prof">
@@ -122,7 +122,7 @@ export default function Profile() {
       </div>
 
       {questionnaireData && (
-        <div className="detail-group">
+        <div className="detail-group-prof">
           <h2>Your Questionnaire Answers</h2>
           <div className="compatibility-tags-prof ">
             {Object.entries(questionnaireData)
@@ -137,7 +137,7 @@ export default function Profile() {
         </div>
       )}
 
-      <div className="detail-group">
+      <div className="detail-group-prof">
         <h2>Your Listings</h2>
         {loading ? (
           <p>Loading...</p>

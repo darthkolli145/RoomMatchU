@@ -116,6 +116,18 @@ const sampleListings = [
   }
 ];
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return isMobile;
+}
+
 export default function Home() {
   const navigate = useNavigate();
   const { currentUser, favorites, refreshFavorites } = useAuth();
@@ -124,6 +136,7 @@ export default function Home() {
   const [matchedListings, setMatchedListings] = useState<ListingWithScore[]>([]);
   const [loading, setLoading] = useState(true);
   const [populateStatus, setPopulateStatus] = useState('');
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const fetchAndSetListings = async () => {
@@ -270,7 +283,7 @@ export default function Home() {
           </div>
           <div className="listings-grid home-grid">
             {newListings.length > 0 ? (
-              newListings.map(listing => (
+              newListings.slice(0, isMobile ? 2 : 4).map(listing => (
                 <ListingCard 
                   key={listing.id} 
                   listing={listing}
@@ -292,7 +305,7 @@ export default function Home() {
             </div>
             <div className="listings-grid home-grid">
               {matchedListings.length > 0 ? (
-                matchedListings.map(listing => (
+                matchedListings.slice(0, isMobile ? 2 : 4).map(listing => (
                   <ListingCard 
                     key={listing.id} 
                     listing={listing}

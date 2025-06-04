@@ -72,6 +72,7 @@ export type ListingType = {
   pets: boolean;
   onCampus: boolean;
   address: string;
+  shortAddress?: string;
   lat?: number;
   lng?: number;
   tags: {
