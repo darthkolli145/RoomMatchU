@@ -64,7 +64,7 @@ export default function Matches() {
             const listingsData = await fetchListings();
             setListings(listingsData);
 
-            const { filteredListings, listingsWithScores } = filterListings(
+            const { filteredListings } = filterListings(
               listingsData,
               filters,
               userQuestionnaire
