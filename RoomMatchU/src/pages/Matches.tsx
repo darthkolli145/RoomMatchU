@@ -96,7 +96,7 @@ export default function Matches() {
                 })
               );
               
-              filteredListings = listingsWithScores.filter((_, i) => distanceChecks[i]);
+              distanceFiltered = listingsWithScores.filter((_, i) => distanceChecks[i]);
               
             }
 
