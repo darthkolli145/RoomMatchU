@@ -183,7 +183,7 @@ export default function Matches() {
 
             {userQuestionnaire?.maxDistanceFromCampus && (
                 <div className="distance-filter-toggle mb-4 p-4 bg-gray-100 rounded">
-                    <label className="flex items-center gap-2 text-sm text-gray-700">
+                    <label className="flex items-center gap-2 text-sm" style={{ color: '#dc2626', fontWeight: 'bold' }}>
                     <input
                       type="checkbox"
                       checked={filterByDistance}
