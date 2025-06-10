@@ -1718,9 +1718,7 @@ input:focus, select:focus, textarea:focus {
   .mobile-menu a:hover {
     background-color: #f0f0f0;
   }
-}
-/* Mobile: Shift logo further left */
-@media screen and (max-width: 768px) {
+
   .navbar {
     padding: 15px 10px;
   }
@@ -1728,9 +1726,7 @@ input:focus, select:focus, textarea:focus {
   .navbar-brand {
     font-size: 1.4rem; /* optional: slightly smaller for tighter mobile layout */
   }
-}
 
-@media screen and (max-width: 768px) {
   .home-grid {
     grid-template-columns: 1fr !important;
   }
@@ -1738,10 +1734,7 @@ input:focus, select:focus, textarea:focus {
   .sections-container{
     margin: 10px;
   }
-}
 
-/* Fix for mobile layout of listings grid */
-@media (max-width: 768px) {
   .listings-page-grid {
     grid-template-columns: 1fr !important; /* Only one column on mobile */
     justify-items: center;                /* Center items horizontally */
@@ -1809,6 +1802,30 @@ input:focus, select:focus, textarea:focus {
     margin: 10px;
   }
 
+  .questionnaire-page form {
+    padding: 0 10px;
+  }
+
+  .questionnaire-page form div[style*="display: flex"] {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .questionnaire-page form label {
+    text-align: left !important;
+    width: 100% !important;
+    margin-bottom: 4px;
+  }
+
+  .questionnaire-page form div[style*="width: 400px"] {
+    width: 100% !important;
+  }
+
+  .questionnaire-page form select,
+  .questionnaire-page form input,
+  .questionnaire-page form textarea {
+    width: 100% !important;
+  }
 }
 
 .open-filter-btn{

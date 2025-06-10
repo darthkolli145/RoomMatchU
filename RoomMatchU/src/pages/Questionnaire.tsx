@@ -41,8 +41,8 @@ const PrioritySelector = ({
   value: PriorityLevel | undefined;
   onChange: (category: QuestionnaireCategory, value: PriorityLevel) => void;
 }) => (
-  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '8px', marginBottom: '12px' }}>
-    <span style={{ minWidth: '250px', marginRight: '15px', fontSize: '14px', color: '#6b7280', textAlign: 'right' }}>{label} priority: </span>
+  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', marginTop: '8px', marginBottom: '12px' }}>
+    <label style={{ minWidth: '250px', marginRight: '15px', fontSize: '14px', color: '#6b7280', textAlign: 'right' }}>{label} priority: </label>
     <div style={{ width: '400px' }}>
       <select
         value={value || ''}
@@ -82,15 +82,19 @@ const formControlStyle = {
 };
 
 const labelStyle = {
-  minWidth: '250px',
+  width: '250px',
   marginRight: '15px',
-  textAlign: 'right' as const
+  textAlign: 'right' as const,
+  display: 'flex',
+  flexDirection: 'column' as const,
+  justifyContent: 'flex-start',
+  lineHeight: 1.4,
 };
 
 const fieldContainerStyle = {
   marginBottom: '20px',
   display: 'flex',
-  alignItems: 'center',
+  alignItems: 'flex-start',
   justifyContent: 'center'
 };
 
@@ -588,7 +592,7 @@ const Questionnaire: React.FC = () => {
                 {/* Lifestyle (multiple) */}
                 <div style={{ marginBottom: '30px' }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
-                    <label style={{ ...labelStyle, paddingTop: '8px' }}>Which of these describe your lifestyle?</label>
+                    <label style={{ ...labelStyle, paddingTop: '8px' }}>Which of these describe your lifestyle the best?</label>
                     <div style={inputWrapperStyle}>
                       <p className="text-sm text-gray-600 mb-3">(Select all that apply)</p>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -603,14 +607,16 @@ const Questionnaire: React.FC = () => {
                             cursor: 'pointer',
                             backgroundColor: formData.lifestyle.includes(item) ? '#f3f4f6' : 'white'
                           }}>
-                            <input
-                              type="checkbox"
-                              name="lifestyle"
-                              value={item}
-                              checked={formData.lifestyle.includes(item)}
-                              onChange={handleChange}
-                              style={{ width: '16px', height: '16px' }}
-                            />
+                            <div style={{ width: '20px', marginRight: '12px', display: 'flex', justifyContent: 'center' }}>
+                              <input
+                                type="checkbox"
+                                name="lifestyle"
+                                value={item}
+                                checked={formData.lifestyle.includes(item)}
+                                onChange={handleChange}
+                                style={{ width: '16px', height: '16px' }}
+                              />
+                            </div>
                             <span style={{ fontSize: '14px' }}>{item.trim()}</span>
                           </label>
                         ))}
