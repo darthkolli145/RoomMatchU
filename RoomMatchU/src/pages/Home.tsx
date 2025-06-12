@@ -262,7 +262,7 @@ export default function Home() {
           </button>
           
           {useMockFirebase && populateStatus && (
-            <div className="mt-4 text-center text-sm text-gray-600">
+            <div className="mt-4 text-center text-sm text-[#be1818] font-medium">
               <p>{populateStatus}</p>
             </div>
           )}
