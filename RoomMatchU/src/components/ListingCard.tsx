@@ -142,7 +142,8 @@ console.log("DEBUG shortAddress:", listing.shortAddress);
                 backgroundColor: compatibilityScore.score >= 80 ? '#6dacdf' : 
                                compatibilityScore.score >= 60 ? '#fff9e8' : 
                                compatibilityScore.score >= 40 ? '#ffb77c' : '#be1818',
-                color: compatibilityScore.score >= 60 ? '#c1dde7' : '#fff'
+                color: compatibilityScore.score >= 80 ? '#c1dde7':
+                       compatibilityScore.score >= 60 ? '#6dacdf' : '#fff'
               }}
             >
               {compatibilityScore.score}% Match

@@ -768,7 +768,13 @@ const Questionnaire: React.FC = () => {
                 <h2 className="text-xl font-semibold mb-4 text-center">Review & Submit</h2>
                 <div className="text-center">
                   <div className="mb-8">
-                    <svg className="w-20 h-20 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      style={{ width: '48px', height: '48px', color: '#be1818', marginTop: '30px'}}
+                      className="mx-auto mb-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <p className="mb-2 text-lg">You're all set!</p>

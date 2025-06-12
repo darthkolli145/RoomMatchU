@@ -145,10 +145,9 @@ export default function Matches() {
               </div>
             )}
 
-            <div className="mb-4 p-3 bg-indigo-100 rounded">
+            <div className="update-questionnaire">
               <button
                 onClick={() => navigate('/questionnaire')}
-                className="mt-2 w-full p-2 rounded bg-indigo-600 text-white text-sm"
               >
                 Update Questionnaire
               </button>
@@ -164,7 +163,6 @@ export default function Matches() {
               <div className="favorites-shortcut mt-4">
                 <button
                   onClick={() => navigate('/favorites')}
-                  className="w-full p-3 rounded bg-rose-100 text-rose-600 hover:bg-rose-200"
                 >
                   View Your Favorites ({favorites.length})
                 </button>
@@ -182,8 +180,8 @@ export default function Matches() {
           </div>
 
             {userQuestionnaire?.maxDistanceFromCampus && (
-                <div className="distance-filter-toggle mb-4 p-4 bg-gray-100 rounded">
-                    <label className="flex items-center gap-2 text-sm" style={{ color: '#dc2626', fontWeight: 'bold' }}>
+                <div>
+                    <label>
                     <input
                       type="checkbox"
                       checked={filterByDistance}
@@ -194,7 +192,7 @@ export default function Matches() {
                     />
                     Only show listings within {filters.maxDistance || userQuestionnaire.maxDistanceFromCampus} miles of campus
                     {filters.maxDistance && filters.maxDistance !== userQuestionnaire.maxDistanceFromCampus && (
-                      <span className="text-xs text-gray-500 ml-1">(filter overrides questionnaire)</span>
+                      <span>(filter overrides questionnaire)</span>
                     )}
                     </label>
                 </div>
@@ -205,7 +203,7 @@ export default function Matches() {
 
             {matches.length === 0 && (
                 <>
-                <p className="text-sm text-gray-600 mt-1">
+                <p>
                     But check out the rest of our{' '}
                     <button onClick={() => navigate('/listings')} className="listings-link">
                     listings
@@ -235,8 +233,8 @@ export default function Matches() {
                 );
               })
             ) : (
-              <div className="no-listings text-center p-6 bg-gray-100 rounded shadow-sm">
-                <p className="text-lg font-medium"></p>
+              <div className='show-nothing'>
+                <p></p>
               </div>
             )}
           </div>
