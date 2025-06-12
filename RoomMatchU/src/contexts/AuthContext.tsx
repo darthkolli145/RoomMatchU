@@ -8,6 +8,11 @@ import { setDoc } from 'firebase/firestore';
 import { fetchQuestionnaireByUserId } from '../firebase/firebaseHelpers';
 import toast from 'react-hot-toast';
 
+/**
+ * Creates a user document in Firestore if it doesn't already exist
+ * @param firebaseUser - The Firebase user object from authentication
+ * @returns Promise<void>
+ */
 const createUserDocumentIfNotExists = async (firebaseUser: FirebaseUser) => {
   const userDocRef = doc(db, 'users', firebaseUser.uid);
   const userDoc = await getDoc(userDocRef);
@@ -42,6 +47,10 @@ const AuthContext = createContext<AuthContextType>({
   signOutUser: async () => {},
 });
 
+/**
+ * Custom hook to access the authentication context
+ * @returns AuthContextType - The authentication context value
+ */
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -49,7 +58,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [favorites, setFavorites] = useState<string[]>([]);
 
-  // Function to fetch user's questionnaire data
+  /**
+   * Fetches user data from Firestore and merges it with Firebase user data
+   * Retrieves questionnaire data and updates user profile if needed
+   * @param firebaseUser - The authenticated Firebase user
+   * @returns Promise<void>
+   */
   const fetchUserData = async (firebaseUser: FirebaseUser) => {
     try {
       // Make sure user's email is stored in Firestore
@@ -114,7 +128,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Function to fetch user's favorites from Firebase
+  /**
+   * Fetches and updates the user's favorite listings from Firebase
+   * @returns Promise<void>
+   */
   const refreshFavorites = async () => {
     if (currentUser) {
       try {
@@ -130,10 +147,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+  /**
+   * Listens for authentication state changes and handles user sign-in/sign-out
+   * Validates UCSC email addresses and fetches user data on sign-in
+   */
   const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
     if (firebaseUser) {
       const email = firebaseUser.email || '';
 
+      // Validate UCSC email requirement
       if (!email.endsWith('@ucsc.edu')) {
         console.warn(`Blocked non-UCSC email sign-in: ${email}`);
         toast.error('Only UCSC email addresses are allowed.');
@@ -143,7 +165,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }, 3000); // 3 second delay to allow pop-up error to show
         return;
       }
-
 
       await fetchUserData(firebaseUser);
     } else {
@@ -165,11 +186,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [currentUser]);
 
+  /**
+   * Signs in a user using Google OAuth popup
+   * Validates UCSC email requirement and fetches user data
+   * @returns Promise<void>
+   */
   const signIn = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const email = result.user.email || '';
   
+      // Validate UCSC email requirement
       if (!email.endsWith('@ucsc.edu')) {
         console.warn(`Blocked non-UCSC email sign-in: ${email}`);
         alert('Only UCSC email addresses are allowed.');
@@ -187,6 +214,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
   
 
+  /**
+   * Signs out the current user and clears all user-related state
+   * Dispatches a custom event to notify components of the sign-out
+   * @returns Promise<void>
+   */
   const signOutUser = async () => {
     try {
       // Sign out from Firebase

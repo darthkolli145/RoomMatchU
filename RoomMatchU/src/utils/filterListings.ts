@@ -11,8 +11,14 @@ export type ListingWithScore = ListingType & {
 };
 
 /**
- * Filter listings based on the provided filter options and optional user questionnaire 
- * for compatibility scoring
+ * Main filtering function that applies user-specified filters and calculates compatibility scores
+ * Processes listings through multiple filter stages: basic filters, distance, compatibility, and priority categories
+ * @param listings - Array of all available listings to filter
+ * @param filters - User-specified filter options (price, location, compatibility, etc.)
+ * @param userQuestionnaire - Optional user questionnaire for compatibility scoring
+ * @returns Promise<{filteredListings: ListingWithScore[], listingsWithScores: ListingWithScore[]}> 
+ *          - filteredListings: listings that pass all filters
+ *          - listingsWithScores: all listings with compatibility scores calculated
  */
 export async function filterListings(
   listings: ListingType[],
@@ -35,19 +41,19 @@ export async function filterListings(
     }
   }
 
-  // Apply filters
+  // Apply filters sequentially to narrow down results
   const filteredListings: ListingWithScore[] = [];
   
   for (const listing of listingsWithScores) {
-    // Price filters
+    // Price filters - exclude listings outside user's budget range
     if (filters.minPrice && listing.price < filters.minPrice) continue;
     if (filters.maxPrice && listing.price > filters.maxPrice) continue;
     
-    // Room configuration
+    // Room configuration filters
     if (filters.bedrooms && listing.bedrooms < filters.bedrooms) continue;
     if (filters.bathrooms && listing.bathrooms < filters.bathrooms) continue;
     
-    // Location
+    // Location filters - on/off campus preference
     if (filters.onCampus !== undefined && listing.onCampus !== filters.onCampus) continue;
 
     // Distance filter using improved road distance calculation
@@ -60,10 +66,10 @@ export async function filterListings(
       if (distance === null || distance > filters.maxDistance) continue;
     }
     
-    // Pets
+    // Pet policy filters
     if (filters.pets !== undefined && listing.pets !== filters.pets) continue;
     
-    // Compatibility score - Only filter if minCompatibility is explicitly set
+    // Compatibility score filter - Only filter if minCompatibility is explicitly set
     if (
       filters.minCompatibility && 
       filters.minCompatibility > 0 &&
@@ -73,7 +79,7 @@ export async function filterListings(
       continue;
     }
 
-    // Priority category filtering
+    // Priority category filtering - match specific lifestyle preferences
     if (filters.priorityCategories && filters.priorityCategories.length > 0 && userQuestionnaire) {
       let shouldInclude = true;
       
@@ -81,7 +87,7 @@ export async function filterListings(
         let userResponse: string | string[] | undefined;
         let listingResponse: string | string[] | undefined;
 
-        // Map fields based on the UserQuestionnaire structure
+        // Map questionnaire fields to listing tags based on category
         switch (category) {
           case 'sleepSchedule':
             userResponse = userQuestionnaire.sleepSchedule;
@@ -113,7 +119,7 @@ export async function filterListings(
             break;
           case 'pets':
             userResponse = userQuestionnaire.pets;
-            // For pets, we need to check the listing.pets boolean, not the tags
+            // For pets, check the listing.pets boolean, not the tags
             if (listing.pets !== (userResponse === 'Yes')) {
               shouldInclude = false;
               break;
@@ -126,8 +132,9 @@ export async function filterListings(
           continue;
         }
 
-        // Handle array vs string comparisons
+        // Handle different data type comparisons (arrays vs strings)
         if (Array.isArray(userResponse) && Array.isArray(listingResponse)) {
+          // Both are arrays - check for any overlap
           const overlap = userResponse.some(val => 
             listingResponse.some(listVal => 
               String(val).trim().toLowerCase() === String(listVal).trim().toLowerCase()
@@ -138,11 +145,13 @@ export async function filterListings(
             break;
           }
         } else if (typeof userResponse === "string" && typeof listingResponse === "string") {
+          // Both are strings - check for exact match
           if (userResponse.trim().toLowerCase() !== listingResponse.trim().toLowerCase()) {
             shouldInclude = false;
             break;
           }
         } else if (Array.isArray(userResponse) && typeof listingResponse === "string") {
+          // User has array, listing has string - check if string is in user's array
           const match = userResponse.some(val => 
             String(val).trim().toLowerCase() === listingResponse.trim().toLowerCase()
           );
@@ -151,6 +160,7 @@ export async function filterListings(
             break;
           }
         } else if (typeof userResponse === "string" && Array.isArray(listingResponse)) {
+          // User has string, listing has array - check if user's string is in listing's array
           const match = listingResponse.some(val => 
             userResponse.trim().toLowerCase() === String(val).trim().toLowerCase()
           );
@@ -174,7 +184,9 @@ export async function filterListings(
 }
 
 /**
- * Sort listings by compatibility score (highest first)
+ * Sorts listings by their compatibility score in descending order (highest scores first)
+ * @param listings - Array of listings with compatibility scores
+ * @returns ListingWithScore[] - Sorted array with highest compatibility scores first
  */
 export function sortListingsByCompatibility(
   listings: ListingWithScore[]

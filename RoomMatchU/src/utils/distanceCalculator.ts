@@ -1,37 +1,53 @@
-// UC Santa Cruz coordinates
-const UCSC_LAT = 36.9916;
-const UCSC_LNG = -122.0583;
+/**
+ * Geographic distance calculation utilities for determining proximity to UCSC campus
+ * Contains functions for calculating straight-line and road distances from listings to campus
+ */
+
+// UCSC campus coordinates (latitude and longitude)
+const UCSC_COORDINATES = {
+  lat: 36.9914,
+  lng: -122.0588
+};
 
 // Multiplier to estimate road distance from straight-line distance
 // Road distances are typically 1.2-1.5x straight-line distances
 const ROAD_DISTANCE_MULTIPLIER = 1.3;
 
 /**
- * Calculate distance between two points using the Haversine formula
- * @param lat1 Latitude of first point
- * @param lng1 Longitude of first point
- * @param lat2 Latitude of second point
- * @param lng2 Longitude of second point
- * @returns Distance in miles
+ * Converts degrees to radians for trigonometric calculations
+ * @param degrees - Angle in degrees
+ * @returns number - Angle in radians
+ */
+function toRadians(degrees: number): number {
+  return degrees * (Math.PI / 180);
+}
+
+/**
+ * Calculates the straight-line distance between two geographic points using the Haversine formula
+ * This gives the "as the crow flies" distance, not accounting for roads or terrain
+ * @param lat1 - Latitude of first point
+ * @param lng1 - Longitude of first point  
+ * @param lat2 - Latitude of second point
+ * @param lng2 - Longitude of second point
+ * @returns number - Distance in miles
  */
 export function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  // Validate coordinates
-  if (!isValidCoordinate(lat1, lng1) || !isValidCoordinate(lat2, lng2)) {
-    console.warn('Invalid coordinates provided to calculateDistance');
-    return 0;
-  }
+  const earthRadiusMiles = 3959; // Earth's radius in miles
   
-  const R = 3959; // Radius of the Earth in miles
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
+  // Convert latitude and longitude differences to radians
+  const dLat = toRadians(lat2 - lat1);
+  const dLng = toRadians(lng2 - lng1);
   
-  const a = 
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  // Convert latitudes to radians
+  const lat1Rad = toRadians(lat1);
+  const lat2Rad = toRadians(lat2);
   
+  // Haversine formula calculation
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLng / 2) * Math.sin(dLng / 2) * Math.cos(lat1Rad) * Math.cos(lat2Rad);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distance = R * c;
+  
+  const distance = earthRadiusMiles * c;
   
   // Apply road distance multiplier for more realistic estimates
   const estimatedRoadDistance = distance * ROAD_DISTANCE_MULTIPLIER;
@@ -39,8 +55,15 @@ export function calculateDistance(lat1: number, lng1: number, lat2: number, lng2
   return Math.round(estimatedRoadDistance * 10) / 10; // Round to 1 decimal place
 }
 
-function toRad(degrees: number): number {
-  return degrees * (Math.PI / 180);
+/**
+ * Calculates the straight-line distance from a given location to UCSC campus
+ * Convenience function that uses the predefined UCSC coordinates
+ * @param lat - Latitude of the location
+ * @param lng - Longitude of the location
+ * @returns number - Distance in miles from the location to UCSC campus
+ */
+export function calculateDistanceFromUCSC(lat: number, lng: number): number {
+  return calculateDistance(lat, lng, UCSC_COORDINATES.lat, UCSC_COORDINATES.lng);
 }
 
 /**
@@ -56,20 +79,6 @@ function isValidCoordinate(lat: number, lng: number): boolean {
          lng >= -180 && 
          lng <= 180 &&
          !(lat === 0 && lng === 0); // Exclude 0,0 as it's often a default/error value
-}
-
-/**
- * Calculate distance from UC Santa Cruz
- * @param lat Latitude of the location
- * @param lng Longitude of the location
- * @returns Distance in miles from UCSC, or null if coordinates are invalid
- */
-export function calculateDistanceFromUCSC(lat?: number, lng?: number): number | null {
-  if (lat === undefined || lng === undefined || !isValidCoordinate(lat, lng)) {
-    return null;
-  }
-  
-  return calculateDistance(UCSC_LAT, UCSC_LNG, lat, lng);
 }
 
 /**

@@ -5,6 +5,7 @@ import { postQuestionnaire } from '../firebase/firebaseHelpers';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
+// Initial empty form state with all questionnaire fields
 const initialForm: UserQuestionnaire = {
   lifestyle: [],
   cleanliness: '',
@@ -30,6 +31,13 @@ const initialForm: UserQuestionnaire = {
   priorities: {},
 };
 
+/**
+ * Priority selector component for setting importance levels on questionnaire categories
+ * @param category - The questionnaire category being rated
+ * @param label - Display label for the priority selector
+ * @param value - Current priority level value
+ * @param onChange - Callback function when priority changes
+ */
 const PrioritySelector = ({
   category,
   label,
@@ -59,6 +67,7 @@ const PrioritySelector = ({
   </div>
 );
 
+// Multi-step form steps configuration
 const steps = [
   'Personal Info',
   'Living Habits',
@@ -108,14 +117,19 @@ const Questionnaire: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const navigate = useNavigate();
 
-
   const isLastStep = step === steps.length - 1;
 
+  /**
+   * Handles input changes for text inputs, selects, and textareas
+   * Also handles checkbox arrays for multi-select fields
+   * @param e - The input change event
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
 
     if (type === 'checkbox' && checked !== undefined) {
+      // Handle checkbox arrays (like lifestyle choices)
       setFormData((prev) => ({
         ...prev,
         [name]: checked
@@ -123,6 +137,7 @@ const Questionnaire: React.FC = () => {
           : (prev[name as keyof UserQuestionnaire] as string[]).filter((item) => item !== value),
       }));
     } else {
+      // Handle regular input fields
       setFormData((prev) => ({
         ...prev,
         [name]: value,
@@ -130,6 +145,11 @@ const Questionnaire: React.FC = () => {
     }
   };
 
+  /**
+   * Handles priority level changes for compatibility categories
+   * @param category - The questionnaire category being updated
+   * @param value - The new priority level value
+   */
   const handlePriorityChange = (category: QuestionnaireCategory, value: PriorityLevel) => {
     setFormData((prev) => ({
       ...prev,
@@ -140,14 +160,27 @@ const Questionnaire: React.FC = () => {
     }));
   };
 
+  /**
+   * Advances to the next step in the multi-step form
+   */
   const handleNext = () => setStep((prev) => Math.min(prev + 1, steps.length - 1));
+  
+  /**
+   * Goes back to the previous step in the multi-step form
+   */
   const handleBack = () => setStep((prev) => Math.max(prev - 1, 0));
 
+  /**
+   * Handles form submission with comprehensive validation
+   * Validates all required fields and submits to Firebase
+   * @param e - The form submit event
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
   
     const missingFields: string[] = [];
 
+    // Validate all required fields
     if (formData.fullname.length === 0) missingFields.push('full name');
     if (formData.Major.length === 0) missingFields.push('major');
     if (formData.yearlvl === '') missingFields.push('year level');
@@ -165,11 +198,8 @@ const Questionnaire: React.FC = () => {
     if (formData.okPets === '') missingFields.push('okay with pets');
     if (formData.prefGender === '') missingFields.push('preferred roommate gender');
     if (formData.lifestyle.length === 0) missingFields.push('lifestyle');
-    // if (formData.sharing.length === 0) missingFields.push('about yourself');
-    // if (formData.Hobbies.length === 0) missingFields.push('hobbies');
-    // if (formData.dealMust.length === 0) missingFields.push('dealbreakers / must-haves');
 
-    // Priorities
+    // Validate priority settings for all categories
     if (!formData.priorities.sleepSchedule) missingFields.push('sleep schedule priority');
     if (!formData.priorities.wakeupSchedule) missingFields.push('wake-up schedule priority');
     if (!formData.priorities.cleanliness) missingFields.push('cleanliness priority');
@@ -185,7 +215,7 @@ const Questionnaire: React.FC = () => {
     }
 
     try {
-      // Clean the data
+      // Clean the data before submission
       const cleanedData = { ...formData };
       if (cleanedData.maxDistanceFromCampus === undefined) {
         delete cleanedData.maxDistanceFromCampus;
@@ -198,9 +228,9 @@ const Questionnaire: React.FC = () => {
       console.error('Error submitting questionnaire:', error);
       toast.error('❌ There was an error submitting your form. Please try again.');
     }
-
   };
 
+  // Animation variants for step transitions
   const variants = {
     initial: { opacity: 0, x: 50 },
     animate: { opacity: 1, x: 0 },

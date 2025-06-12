@@ -1,22 +1,25 @@
+/**
+ * ListingCard component - displays individual housing listing information in a card format
+ * Handles favorite toggling, image galleries, and compatibility score display
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ListingType } from '../types/index';
+import { ListingType, CompatibilityScore } from '../types/index';
 import { useAuth } from '../contexts/AuthContext';
 import { toggleFavorite } from '../firebase/favoritesService';
 import { Listing } from '../firebase/firebaseHelpers';
 import { calculateDistanceFromUCSC, formatDistance } from '../utils/distanceCalculator';
 import { extractShortAddress } from '../utils/addressParser';
 import { getRoadDistanceFromUCSC } from '../utils/roadDistance';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 interface ListingCardProps {
-  listing: Listing;
-  onFavorite?: (id: string) => void;
+  listing: ListingType;
+  onFavorite?: (listingId: string) => void;
   isFavorited?: boolean;
-  compatibilityScore?: {
-    score: number;
-    matches: string[];
-    conflicts: string[];
-  };
+  compatibilityScore?: CompatibilityScore;
   showCompatibilityScore?: boolean;
 }
 
@@ -28,43 +31,82 @@ export default function ListingCard({
   showCompatibilityScore = false
 }: ListingCardProps) {
   const { currentUser, favorites, refreshFavorites } = useAuth();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showAuthMessage, setShowAuthMessage] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [distance, setDistance] = useState<number | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
+  const [isLoadingDistance, setIsLoadingDistance] = useState(false);
+
+  // Get the images to display (use placeholder if none available)
+  const imagesToShow = listing.imageURLs && listing.imageURLs.length > 0 
+    ? listing.imageURLs 
+    : ['https://placehold.co/400x300?text=No+Image'];
 
   useEffect(() => {
-    async function fetchDistance() {
-      if (listing.lat && listing.lng) {
-        const roadDist = await getRoadDistanceFromUCSC(listing.lat, listing.lng);
-        setDistance(roadDist);
+    /**
+     * Calculates and sets the road distance from listing to UCSC campus
+     * Only runs if listing has valid coordinates
+     */
+    const calculateDistance = async () => {
+      if (listing.lat !== undefined && listing.lng !== undefined) {
+        setIsLoadingDistance(true);
+        try {
+          const roadDistance = await getRoadDistanceFromUCSC(listing.lat, listing.lng);
+          setDistance(roadDistance);
+        } catch (error) {
+          console.error('Error calculating distance:', error);
+        } finally {
+          setIsLoadingDistance(false);
+        }
       }
-    }
-    fetchDistance();
+    };
+
+    calculateDistance();
   }, [listing.lat, listing.lng]);
   
 
+  /**
+   * Handles clicking on the listing card to navigate to the detailed view
+   * @param e - Click event
+   */
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Prevent navigation if clicking on interactive elements
+    const target = e.target as HTMLElement;
+    if (target.closest('.favorite-btn') || target.closest('.image-nav-btn')) {
+      return;
+    }
+    navigate(`/listing/${listing.id}`);
+  };
+
+  /**
+   * Handles toggling the favorite status of a listing
+   * Shows appropriate success/error messages and updates UI state
+   * @param e - Click event from favorite button
+   */
   const handleFavorite = async (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent navigation to the listing detail
-    
-    if (isLoading) return; // Prevent multiple clicks
+    e.stopPropagation(); // Prevent card click navigation
     
     if (!currentUser) {
-      setShowAuthMessage(true);
-      setTimeout(() => {
-        setShowAuthMessage(false);
-      }, 3000);
+      toast.error('Please sign in to save favorites');
+      navigate('/login');
       return;
     }
 
+    if (isTogglingFavorite) return; // Prevent multiple rapid clicks
+
+    setIsTogglingFavorite(true);
+    
     try {
-      setIsLoading(true);
+      const newFavoriteStatus = await toggleFavorite(currentUser.id, listing.id);
       
-      // Toggle favorite in Firebase
-      const newIsFavorited = await toggleFavorite(currentUser.id, listing.id);
-      
-      // Refresh the favorites in the auth context
-      await refreshFavorites();
+      if (newFavoriteStatus) {
+        toast.success('Added to favorites! ❤️');
+      } else {
+        toast.success('Removed from favorites');
+      }
       
       // Call the parent component's callback if provided
       if (onFavorite) {
@@ -72,9 +114,55 @@ export default function ListingCard({
       }
     } catch (error) {
       console.error('Error toggling favorite:', error);
+      toast.error('Failed to update favorites');
     } finally {
-      setIsLoading(false);
+      setIsTogglingFavorite(false);
     }
+  };
+
+  /**
+   * Advances to the next image in the gallery
+   * Wraps around to the first image if at the end
+   * @param e - Click event from next button
+   */
+  const nextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev + 1) % imagesToShow.length);
+  };
+
+  /**
+   * Goes back to the previous image in the gallery
+   * Wraps around to the last image if at the beginning
+   * @param e - Click event from previous button
+   */
+  const prevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev - 1 + imagesToShow.length) % imagesToShow.length);
+  };
+
+  /**
+   * Formats the availability date for display
+   * @param date - The availability date
+   * @returns string - Formatted date string
+   */
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    }).format(date);
+  };
+
+  /**
+   * Gets the appropriate CSS class for compatibility score styling
+   * @param score - Compatibility score (0-100)
+   * @returns string - CSS class name based on score range
+   */
+  const getCompatibilityClass = (score: number) => {
+    if (score >= 80) return 'compatibility-excellent';
+    if (score >= 60) return 'compatibility-good';
+    if (score >= 40) return 'compatibility-fair';
+    return 'compatibility-poor';
   };
 
   // Check if listing is favorited using the context's favorites array
@@ -91,7 +179,7 @@ export default function ListingCard({
     }
     
     if (listing.imageURLs && listing.imageURLs.length > 0) {
-      return listing.imageURLs[0];
+      return listing.imageURLs[currentImageIndex];
     }
     
     return `https://placehold.co/400x300?text=${encodeURIComponent(listing.title || 'Listing')}`;
@@ -137,14 +225,7 @@ console.log("DEBUG shortAddress:", listing.shortAddress);
           
           {showCompatibilityScore && compatibilityScore && (
             <div 
-              className="compatibility-score" 
-              style={{ 
-                backgroundColor: compatibilityScore.score >= 80 ? '#6dacdf' : 
-                               compatibilityScore.score >= 60 ? '#fff9e8' : 
-                               compatibilityScore.score >= 40 ? '#ffb77c' : '#be1818',
-                color: compatibilityScore.score >= 80 ? '#c1dde7':
-                       compatibilityScore.score >= 60 ? '#6dacdf' : '#fff'
-              }}
+              className={`compatibility-score ${getCompatibilityClass(compatibilityScore.score)}`}
             >
               {compatibilityScore.score}% Match
             </div>

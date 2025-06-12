@@ -31,7 +31,13 @@ const ALL_CATEGORIES: QuestionnaireCategory[] = [
   'studyHabits'
 ];
 
-// Calculate compatibility between a user's questionnaire and a listing
+/**
+ * Main compatibility calculation function that compares a user's questionnaire with a listing
+ * Calculates weighted scores across all categories and includes distance from campus
+ * @param userQuestionnaire - The user's complete questionnaire responses
+ * @param listing - The housing listing with its compatibility tags
+ * @returns Promise<CompatibilityScore> - Object containing score (0-100), matches array, and conflicts array
+ */
 export async function calculateCompatibility(
   userQuestionnaire: UserQuestionnaire,
   listing: ListingType
@@ -43,7 +49,11 @@ export async function calculateCompatibility(
   let totalScore = 0;
   let totalWeight = 0;
 
-  // Helper to get weight for a category
+  /**
+   * Helper function to get the priority weight for a specific category
+   * @param category - The questionnaire category to get weight for
+   * @returns number - The weight value (1-4) based on user's priority setting
+   */
   const getCategoryWeight = (category: QuestionnaireCategory): number => {
     const priority = userQuestionnaire.priorities[category];
     return priority ? PRIORITY_WEIGHTS[priority] : DEFAULT_PRIORITY_WEIGHT;
@@ -232,7 +242,7 @@ export async function calculateCompatibility(
     totalWeight += weight;
   }
   
-  // Distance from Campus
+  // Distance from Campus calculation
   if (userQuestionnaire.maxDistanceFromCampus && listing.lat !== undefined && listing.lng !== undefined) {
     const actualDistance = await getRoadDistanceFromUCSC(listing.lat, listing.lng);  
     
@@ -331,7 +341,13 @@ export async function calculateCompatibility(
 
 // Helper functions
 
-// Calculate match score for simple category matches (exact match = 100, partial match based on options)
+/**
+ * Calculates compatibility score between two category values (sleep schedule, cleanliness, etc.)
+ * Uses specific logic for different categories to determine compatibility
+ * @param userValue - The user's preference for this category
+ * @param listingValue - The listing's value for this category
+ * @returns number - Compatibility score from 0-100
+ */
 function calculateCategoryMatch(userValue: string, listingValue: string): number {
   if (!userValue || !listingValue) return 0;
   
@@ -386,7 +402,14 @@ function calculateCategoryMatch(userValue: string, listingValue: string): number
   return 30;
 }
 
-// Calculate pet compatibility
+/**
+ * Calculates pet compatibility between user preferences and listing pet policy
+ * Takes into account whether user has pets, is okay with pets, and if listing allows pets
+ * @param userHasPets - Whether the user has pets ("Yes"/"No")
+ * @param userOkWithPets - Whether user is okay with roommates having pets
+ * @param listingAllowsPets - Whether the listing allows pets
+ * @returns number - Compatibility score from 0-100
+ */
 function calculatePetsMatch(userHasPets: string, userOkWithPets: string, listingAllowsPets: boolean): number {
   // User has pets but listing doesn't allow them - deal breaker
   if (userHasPets === 'Yes' && !listingAllowsPets) return 0;
@@ -414,7 +437,12 @@ function calculatePetsMatch(userHasPets: string, userOkWithPets: string, listing
   return 50;
 }
 
-// Calculate lifestyle compatibility
+/**
+ * Calculates lifestyle compatibility by finding overlapping interests/habits
+ * @param userLifestyle - Array of user's lifestyle choices/habits
+ * @param listingLifestyle - Array of listing owner's lifestyle choices/habits
+ * @returns number - Compatibility score from 0-100 based on overlap percentage
+ */
 function calculateLifestyleMatch(userLifestyle: string[], listingLifestyle: string[]): number {
   if (!userLifestyle.length || !listingLifestyle.length) return 0;
   
@@ -424,7 +452,12 @@ function calculateLifestyleMatch(userLifestyle: string[], listingLifestyle: stri
   return (matches / totalItems) * 100;
 }
 
-// Extract tags from a user questionnaire (useful when creating listings)
+/**
+ * Extracts compatibility tags from a user's questionnaire to be used when creating a listing
+ * Maps questionnaire fields to the listing tags structure
+ * @param questionnaire - The user's complete questionnaire data
+ * @returns ListingType['tags'] - Object containing all compatibility tags for the listing
+ */
 export function extractTagsFromQuestionnaire(questionnaire: UserQuestionnaire): ListingType['tags'] {
   return {
     sleepSchedule: questionnaire.sleepSchedule,

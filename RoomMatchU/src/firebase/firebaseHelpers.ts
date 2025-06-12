@@ -33,6 +33,11 @@ interface GeocodingResult {
   status: string;
 }
 
+/**
+ * Fetches a user's email from Firestore by their UID
+ * @param uid - The user's unique identifier
+ * @returns Promise<string | null> - The user's email or null if not found
+ */
 export const fetchUserEmail = async (uid: string): Promise<string | null> => {
   try {
     const userDoc = await getDoc(doc(db, "users", uid));
@@ -45,6 +50,12 @@ export const fetchUserEmail = async (uid: string): Promise<string | null> => {
   return null;
 };
 
+/**
+ * Converts an address to latitude and longitude coordinates using Google Geocoding API
+ * @param address - The address string to geocode
+ * @returns Promise<{lat: number, lng: number}> - The coordinates
+ * @throws Error if geocoding fails or API key is missing
+ */
 async function geocodeAddress(address: string): Promise<{ lat: number; lng: number }> {
   // Read API key from process.env
   const KEY = import.meta.env.VITE_GEOCODING_API_KEY;
@@ -145,6 +156,12 @@ export interface Listing {
   };
 }
 
+/**
+ * Creates a new housing listing in Firestore with geocoding and image handling
+ * @param formData - The listing form data from the PostListing component
+ * @returns Promise<string> - The ID of the created listing document
+ * @throws Error if user is not authenticated or geocoding fails
+ */
 export const postListing = async (formData: ListingFormData): Promise<string> => {
   // Only authenticated users can post
   const user = auth.currentUser as User | null;
@@ -200,7 +217,11 @@ export const postListing = async (formData: ListingFormData): Promise<string> =>
   return docRef.id;
 };
 
-// FETCH all listings from Firestore
+/**
+ * Retrieves all housing listings from Firestore and converts them to the Listing interface
+ * @returns Promise<Listing[]> - Array of all listings with proper type conversion
+ * @throws Error if there's an issue fetching from Firestore
+ */
 export const fetchListings = async (): Promise<Listing[]> => {
   try {
     const snapshot = await getDocs(collection(db, "listings"));
@@ -240,6 +261,14 @@ export const fetchListings = async (): Promise<Listing[]> => {
   }
 };
 
+/**
+ * Saves a user's questionnaire responses to Firestore in two locations:
+ * 1. questionnaireResponses collection (primary storage)
+ * 2. user's profile document (for quick access)
+ * @param questionnaireData - The complete questionnaire data from the user
+ * @returns Promise<string> - The ID of the questionnaire document
+ * @throws Error if user is not authenticated
+ */
 export const postQuestionnaire = async (questionnaireData: UserQuestionnaire): Promise<string> => {
   const user = auth.currentUser as User | null;
   if (!user) {
@@ -272,6 +301,11 @@ export const postQuestionnaire = async (questionnaireData: UserQuestionnaire): P
   return docRef.id;
 };
 
+/**
+ * Deletes a housing listing from Firestore after verifying ownership
+ * @param listingId - The ID of the listing to delete
+ * @throws Error if user is not authenticated, listing doesn't exist, or user is not the owner
+ */
 export const deleteListing = async (listingId: string) => {
   const user = auth.currentUser;
   if (!user) throw new Error("User not authenticated");
@@ -300,7 +334,11 @@ export const deleteListing = async (listingId: string) => {
   }
 };
 
-
+/**
+ * Adds a listing to the user's favorites in Firestore
+ * @param listingId - The ID of the listing to favorite
+ * @throws Error if user is not authenticated
+ */
 export const addFavorite = async (listingId: string) => {
   const user = auth.currentUser;
   if (!user) throw new Error("User not authenticated");
@@ -309,6 +347,11 @@ export const addFavorite = async (listingId: string) => {
   await setDoc(favRef, { favoritedAt: new Date() });
 };
 
+/**
+ * Retrieves all of the current user's favorited listings
+ * @returns Promise<string[]> - Array of listing IDs that the user has favorited
+ * @throws Error if user is not authenticated
+ */
 export const fetchFavorites = async () => {
   const user = auth.currentUser;
   if (!user) throw new Error("User not authenticated");
@@ -319,34 +362,23 @@ export const fetchFavorites = async () => {
   return snapshot.docs.map(doc => doc.id); // listing IDs
 };
 
-// Remove a favorite listing
+/**
+ * Removes a listing from the user's favorites
+ * @param listingId - The ID of the listing to unfavorite
+ * @throws Error if user is not authenticated
+ */
 export const removeFavorite = async (listingId: string) => {
   const user = auth.currentUser;
   if (!user) throw new Error("User not authenticated");
   await deleteDoc(doc(db, `users/${user.uid}/favorites/${listingId}`));
 };
 
-// export const fetchQuestionnaireByUserId = async (userId: string): Promise<UserQuestionnaire | null> => {
-//   try {
-//     const q = query(
-//       collection(db, "questionnaireResponses"),
-//       where("userId", "==", userId)
-//     );
-
-//     const snapshot = await getDocs(q);
-
-//     if (!snapshot.empty) {
-//       const docData = snapshot.docs[0].data();
-//       return docData as UserQuestionnaire;
-//     }
-
-//     return null;
-//   } catch (error) {
-//     console.error("Error fetching questionnaire:", error);
-//     return null;
-//   }
-// };
-
+/**
+ * Fetches a user's questionnaire data from Firestore by their user ID
+ * Uses the questionnaireResponses collection for direct document lookup
+ * @param userId - The user's unique identifier
+ * @returns Promise<UserQuestionnaire | null> - The questionnaire data or null if not found
+ */
 export const fetchQuestionnaireByUserId = async (userId: string): Promise<UserQuestionnaire | null> => {
   try {
     const docSnap = await getDoc(doc(db, "questionnaireResponses", userId));
@@ -360,7 +392,12 @@ export const fetchQuestionnaireByUserId = async (userId: string): Promise<UserQu
   }
 };
 
-// Upload image to Firebase Storage
+/**
+ * Uploads an image file to Firebase Storage with compression and unique naming
+ * @param file - The image file to upload
+ * @returns Promise<string> - The download URL of the uploaded image
+ * @throws Error if user is not authenticated or upload fails
+ */
 export const uploadImageToFirebase = async (file: File): Promise<string> => {
   try {
     const user = auth.currentUser;

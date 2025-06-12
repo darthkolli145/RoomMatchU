@@ -10,11 +10,16 @@ export default function Navbar() {
   const desktopMenuRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
-
   useEffect(() => {
+    /**
+     * Handles clicking outside of dropdown menus to close them
+     * Uses refs to detect clicks outside of menu boundaries
+     * @param event - The mouse click event
+     */
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
 
+      // Close desktop user menu if clicked outside
       if (
         desktopMenuRef.current &&
         !desktopMenuRef.current.contains(target)
@@ -22,6 +27,7 @@ export default function Navbar() {
         setShowUserMenu(false);
       }
 
+      // Close mobile menu if clicked outside
       if (
         mobileMenuRef.current &&
         !mobileMenuRef.current.contains(target)
@@ -34,16 +40,26 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-
   useEffect(() => {
+    /**
+     * Closes all menus when the route changes
+     * Prevents menus from staying open after navigation
+     */
     setShowUserMenu(false);
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
+  /**
+   * Handles the sign in button click by navigating to the login page
+   */
   const handleSignIn = () => {
     navigate('/login');
   };
 
+  /**
+   * Handles user sign out process
+   * Signs out the user, closes menus, and redirects to home page
+   */
   const handleSignOut = async () => {
     try {
       await signOutUser();

@@ -1,3 +1,8 @@
+/**
+ * Firebase service for managing user's favorite listings
+ * Handles adding, removing, and retrieving favorited housing listings
+ */
+
 import { 
   collection, 
   doc, 
@@ -15,65 +20,59 @@ import { db, auth } from './config';
 const getUserFavoritesPath = (userId: string) => `users/${userId}/favorites`;
 
 /**
- * Add a listing to a user's favorites
- * @param userId User ID
- * @param listingId Listing ID
+ * Adds a listing to the user's favorites collection in Firestore
+ * Creates a subcollection under the user's document to store favorites
+ * @param userId - The ID of the user favoriting the listing
+ * @param listingId - The ID of the listing being favorited
+ * @returns Promise<void>
+ * @throws Error if the database operation fails
  */
-export const addFavorite = async (userId: string, listingId: string): Promise<void> => {
+export const addToFavorites = async (userId: string, listingId: string): Promise<void> => {
   try {
-    const favoriteRef = doc(db, getUserFavoritesPath(userId), listingId);
+    const favoriteRef = doc(db, 'users', userId, 'favorites', listingId);
     await setDoc(favoriteRef, {
-      createdAt: serverTimestamp()
+      listingId,
+      favoritedAt: serverTimestamp(),
+      userId
     });
     console.log(`Added listing ${listingId} to favorites for user ${userId}`);
   } catch (error) {
-    console.error('Error adding favorite:', error);
+    console.error('Error adding to favorites:', error);
     throw error;
   }
 };
 
 /**
- * Remove a listing from a user's favorites
- * @param userId User ID
- * @param listingId Listing ID
+ * Removes a listing from the user's favorites collection
+ * @param userId - The ID of the user unfavoriting the listing
+ * @param listingId - The ID of the listing being removed from favorites
+ * @returns Promise<void>
+ * @throws Error if the database operation fails
  */
-export const removeFavorite = async (userId: string, listingId: string): Promise<void> => {
+export const removeFromFavorites = async (userId: string, listingId: string): Promise<void> => {
   try {
-    const favoriteRef = doc(db, getUserFavoritesPath(userId), listingId);
+    const favoriteRef = doc(db, 'users', userId, 'favorites', listingId);
     await deleteDoc(favoriteRef);
     console.log(`Removed listing ${listingId} from favorites for user ${userId}`);
   } catch (error) {
-    console.error('Error removing favorite:', error);
+    console.error('Error removing from favorites:', error);
     throw error;
   }
 };
 
 /**
- * Get all favorite listing IDs for a user
- * @param userId User ID
- * @returns Array of listing IDs
+ * Retrieves all favorited listing IDs for a specific user
+ * @param userId - The ID of the user whose favorites to retrieve
+ * @returns Promise<string[]> - Array of listing IDs that the user has favorited
+ * @throws Error if the database operation fails
  */
 export const getUserFavorites = async (userId: string): Promise<string[]> => {
   try {
-    // Create a query for the user's favorites subcollection
-    const favoritesRef = collection(db, getUserFavoritesPath(userId));
-    const querySnapshot = await getDocs(favoritesRef);
+    const favoritesCollection = collection(db, 'users', userId, 'favorites');
+    const favoritesSnapshot = await getDocs(favoritesCollection);
     
-    const favoriteIds: string[] = [];
-    
-    // Get all favorite IDs and verify they exist in the listings collection
-    for (const docSnap of querySnapshot.docs) {
-      // The document ID is the listing ID
-      const listingId = docSnap.id;
-      
-      // Optionally verify the listing still exists
-      const listingRef = doc(db, "listings", listingId);
-      const listingSnap = await getDoc(listingRef);
-
-      if (listingSnap.exists()) {
-        favoriteIds.push(listingId);
-      }
-    }
+    const favoriteIds = favoritesSnapshot.docs.map(doc => doc.id);
+    console.log(`Retrieved ${favoriteIds.length} favorites for user ${userId}`);
     
     return favoriteIds;
   } catch (error) {
@@ -83,37 +82,39 @@ export const getUserFavorites = async (userId: string): Promise<string[]> => {
 };
 
 /**
- * Check if a listing is favorited by a user
- * @param userId User ID
- * @param listingId Listing ID
- * @returns Boolean indicating if the listing is favorited
+ * Checks if a specific listing is favorited by a user
+ * @param userId - The ID of the user to check
+ * @param listingId - The ID of the listing to check
+ * @returns Promise<boolean> - True if the listing is favorited, false otherwise
  */
-export const isFavorited = async (userId: string, listingId: string): Promise<boolean> => {
+export const isListingFavorited = async (userId: string, listingId: string): Promise<boolean> => {
   try {
-    const favoriteRef = doc(db, getUserFavoritesPath(userId), listingId);
-    const docSnap = await getDoc(favoriteRef);
-    return docSnap.exists();
+    const favoriteRef = doc(db, 'users', userId, 'favorites', listingId);
+    const favoriteDoc = await getDoc(favoriteRef);
+    
+    return favoriteDoc.exists();
   } catch (error) {
-    console.error('Error checking if favorited:', error);
-    throw error;
+    console.error('Error checking if listing is favorited:', error);
+    return false;
   }
 };
 
 /**
- * Toggle favorite status for a listing
- * @param userId User ID
- * @param listingId Listing ID
- * @returns New favorite status (true if added, false if removed)
+ * Toggles the favorite status of a listing for a user
+ * If the listing is currently favorited, it removes it; if not favorited, it adds it
+ * @param userId - The ID of the user toggling the favorite
+ * @param listingId - The ID of the listing being toggled
+ * @returns Promise<boolean> - True if the listing is now favorited, false if unfavorited
  */
 export const toggleFavorite = async (userId: string, listingId: string): Promise<boolean> => {
   try {
-    const isFavorite = await isFavorited(userId, listingId);
+    const isFavorited = await isListingFavorited(userId, listingId);
     
-    if (isFavorite) {
-      await removeFavorite(userId, listingId);
+    if (isFavorited) {
+      await removeFromFavorites(userId, listingId);
       return false;
     } else {
-      await addFavorite(userId, listingId);
+      await addToFavorites(userId, listingId);
       return true;
     }
   } catch (error) {

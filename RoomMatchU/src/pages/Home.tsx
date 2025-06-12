@@ -117,10 +117,17 @@ const sampleListings = [
   }
 ];
 
+/**
+ * Custom hook to detect if the user is on a mobile device
+ * @returns boolean - True if window width is 768px or less
+ */
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
+    /**
+     * Event handler for window resize events to update mobile state
+     */
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -140,6 +147,14 @@ export default function Home() {
   const isMobile = useIsMobile();
 
   useEffect(() => {
+    /**
+     * Main function to fetch listings from Firebase and process them for display
+     * - Fetches all listings from Firestore
+     * - Sorts by creation date for "New Listings" section
+     * - Calculates compatibility scores if user has completed questionnaire
+     * - Filters by distance preferences and compatibility threshold
+     * - Sets up different listing categories for the home page sections
+     */
     const fetchAndSetListings = async () => {
       try {
         const listingsData = await fetchListings();
@@ -156,6 +171,7 @@ export default function Home() {
           if (currentUser?.questionnaire) {
             console.log('Generating matches based on questionnaire');
 
+            // Calculate compatibility scores for all listings
             const listingsWithScores = await Promise.all(
               listingsData.map(async (listing) => {
                 const compatibilityScore = await calculateCompatibility(currentUser.questionnaire!, listing);
@@ -163,7 +179,7 @@ export default function Home() {
               })
             );
 
-            // Filter by max distance from UCSC if available
+            // Filter by max distance from UCSC if user specified a preference
             let filteredByDistance = listingsWithScores;
             if (currentUser.questionnaire.maxDistanceFromCampus) {
               const distanceChecks = await Promise.all(
@@ -179,12 +195,12 @@ export default function Home() {
               filteredByDistance = listingsWithScores.filter((_, idx) => distanceChecks[idx]);
             }
 
-            // Now apply score threshold
+            // Apply compatibility score threshold (only show listings with 60%+ compatibility)
             const filteredByScore = filteredByDistance.filter(listing =>
               (listing.compatibilityScore?.score || 0) >= 60
             );
 
-            // Sort remaining listings by score
+            // Sort remaining listings by compatibility score (highest first)
             const sortedByCompatibility = filteredByScore.sort((a, b) => {
               const scoreA = a.compatibilityScore?.score || 0;
               const scoreB = b.compatibilityScore?.score || 0;
@@ -193,17 +209,18 @@ export default function Home() {
 
             setMatchedListings(sortedByCompatibility.slice(0, 4));
           } else {
+            // If no questionnaire, show random selection of listings
             setMatchedListings([...listingsData].sort(() => 0.5 - Math.random()).slice(0, 4));
           }
 
-          
-          // Additional listings
+          // Additional listings for other sections
           setRoommateListings(sortedByDate.slice(4, 8));
         }
   
         setLoading(false);
       } catch (error) {
         console.error('Error loading listings:', error);
+        // Use fallback data if Firebase fails
         setNewListings(fallbackListings);
         setRoommateListings(fallbackListings);
         setMatchedListings(fallbackListings);
@@ -214,6 +231,11 @@ export default function Home() {
     fetchAndSetListings();
   }, [currentUser]);
 
+  /**
+   * Handles favoriting/unfavoriting a listing
+   * Redirects to login if user is not authenticated, otherwise refreshes favorites
+   * @param listingId - The ID of the listing to toggle favorite status for
+   */
   const handleFavorite = async (listingId: string) => {
     if (!currentUser) {
       // Redirect to login if not logged in
@@ -225,6 +247,10 @@ export default function Home() {
     await refreshFavorites();
   };
   
+  /**
+   * Development helper function to populate Firebase with sample listing data
+   * Only available in mock/development mode
+   */
   const handlePopulateDatabase = async () => {
     setPopulateStatus('Adding sample listings to Firebase...');
     
@@ -237,6 +263,9 @@ export default function Home() {
     }
   };
   
+  /**
+   * Navigates to the favorites page
+   */
   const goToFavorites = () => {
     navigate('/favorites');
   };

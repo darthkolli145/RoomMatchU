@@ -1,68 +1,70 @@
-import { calculateDistanceFromUCSC } from './distanceCalculator';
+/**
+ * Road distance calculation utility using Google Maps Distance Matrix API
+ * Provides more accurate distance measurements that account for actual roads and traffic patterns
+ */
 
-const UCSC_COORDS = [-122.0583, 36.9916]; // lng, lat
+// UCSC campus coordinates for distance calculations
+const UCSC_COORDINATES = {
+  lat: 36.9914,
+  lng: -122.0588
+};
 
-export interface DistanceResult {
-  distance: number | null;
-  isEstimate: boolean;
-}
+// Cache for storing distance calculations to avoid repeated API calls
+const distanceCache = new Map<string, number>();
 
+/**
+ * Calculates the actual road/driving distance from a location to UCSC campus using Google Maps API
+ * Uses caching to avoid redundant API calls for the same coordinates
+ * @param lat - Latitude of the location
+ * @param lng - Longitude of the location  
+ * @returns Promise<number | null> - Distance in miles, or null if calculation fails
+ */
 export async function getRoadDistanceFromUCSC(lat: number, lng: number): Promise<number | null> {
-  const result = await getRoadDistanceFromUCSCWithInfo(lat, lng);
-  return result.distance;
-}
-
-export async function getRoadDistanceFromUCSCWithInfo(lat: number, lng: number): Promise<DistanceResult> {
-  const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_API_KEY;
+  // Create a cache key based on coordinates (rounded to avoid minor variations)
+  const cacheKey = `${lat.toFixed(4)},${lng.toFixed(4)}`;
   
-  // Check if we have a valid Mapbox API key
-  if (!MAPBOX_TOKEN || MAPBOX_TOKEN === 'your_mapbox_token_here') {
-    console.warn('Mapbox API key not configured. Falling back to straight-line distance.');
-    // Fallback to Haversine formula for straight-line distance
-    return {
-      distance: calculateDistanceFromUCSC(lat, lng),
-      isEstimate: true
-    };
+  // Return cached result if available
+  if (distanceCache.has(cacheKey)) {
+    return distanceCache.get(cacheKey)!;
   }
-  
-  const destCoords = `${lng},${lat}`; // Mapbox uses lng,lat
-
-  const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${UCSC_COORDS[0]},${UCSC_COORDS[1]};${destCoords}?access_token=${MAPBOX_TOKEN}`;
 
   try {
-    const res = await fetch(url);
-    
-    // Check if the response is ok
-    if (!res.ok) {
-      console.warn(`Mapbox API returned ${res.status}: ${res.statusText}. Falling back to straight-line distance.`);
-      return {
-        distance: calculateDistanceFromUCSC(lat, lng),
-        isEstimate: true
-      };
+    // Get Google Maps API key from environment variables
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) {
+      console.warn('Google Maps API key not found - using fallback distance calculation');
+      return null;
     }
-    
-    const data = await res.json();
 
-    if (data.routes && data.routes[0] && data.routes[0].distance) {
-      const meters = data.routes[0].distance;
-      const miles = meters / 1609.34;
-      return {
-        distance: Math.round(miles * 10) / 10,
-        isEstimate: false
-      };
+    // Construct Google Distance Matrix API URL
+    const origin = `${UCSC_COORDINATES.lat},${UCSC_COORDINATES.lng}`;
+    const destination = `${lat},${lng}`;
+    const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&units=imperial&key=${apiKey}`;
+
+    // Make API request
+    const response = await fetch(url);
+    const data = await response.json();
+
+    // Validate API response structure
+    if (
+      data.status === 'OK' &&
+      data.rows?.[0]?.elements?.[0]?.status === 'OK' &&
+      data.rows[0].elements[0].distance?.text
+    ) {
+      // Extract distance value from response text (e.g., "5.2 mi" -> 5.2)
+      const distanceText = data.rows[0].elements[0].distance.text;
+      const distanceValue = parseFloat(distanceText.replace(/[^0-9.]/g, ''));
+      
+      // Cache the result for future use
+      distanceCache.set(cacheKey, distanceValue);
+      
+      return distanceValue;
     } else {
-      console.warn('No route returned from Mapbox. Falling back to straight-line distance.');
-      return {
-        distance: calculateDistanceFromUCSC(lat, lng),
-        isEstimate: true
-      };
+      console.warn('Google Distance Matrix API returned invalid data:', data);
+      return null;
     }
-  } catch (err) {
-    console.error('Mapbox Directions API error:', err);
-    // Fallback to straight-line distance calculation
-    return {
-      distance: calculateDistanceFromUCSC(lat, lng),
-      isEstimate: true
-    };
+  } catch (error) {
+    console.error('Error calculating road distance:', error);
+    return null;
   }
 }

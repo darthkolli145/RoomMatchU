@@ -1,314 +1,303 @@
-import { useState } from 'react';
-import { QuestionnaireCategory } from '../types/index';
+/**
+ * ListingFilter component - provides advanced filtering interface for housing listings
+ * Handles price, location, compatibility, and lifestyle filtering options
+ * Integrates with the user's questionnaire for personalized filtering
+ */
 
-type FilterProps = {
-  onFilterChange: (filters: FilterOptions) => void;
-  initialFilters?: FilterOptions;
-  minCompatibilityLimit?: number; // Add this prop (optional)
-};
+import React, { useState, useEffect } from 'react';
+import { QuestionnaireCategory, UserQuestionnaire } from '../types/index';
+import { useAuth } from '../contexts/AuthContext';
 
-export type FilterOptions = {
+// Interface defining all possible filter options
+export interface FilterOptions {
   minPrice?: number;
   maxPrice?: number;
   bedrooms?: number;
   bathrooms?: number;
   onCampus?: boolean;
+  pets?: boolean;
   maxDistance?: number;
   minCompatibility?: number;
-  pets?: boolean;
   priorityCategories?: QuestionnaireCategory[];
-};
+}
 
-export default function ListingFilter({ onFilterChange, initialFilters = {}, minCompatibilityLimit = 0 }: FilterProps) {
-  const [filters, setFilters] = useState<FilterOptions>(initialFilters);
-  const minScore = minCompatibilityLimit;
-  const currentScore = filters.minCompatibility ?? minScore;
+interface ListingFilterProps {
+  onFilterChange: (filters: FilterOptions) => void;
+  onClearFilters: () => void;
+  showCompatibilityFilters?: boolean;
+}
 
+export default function ListingFilter({ 
+  onFilterChange, 
+  onClearFilters, 
+  showCompatibilityFilters = true 
+}: ListingFilterProps) {
+  const { currentUser } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
+  const [filters, setFilters] = useState<FilterOptions>({});
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    
-    let newValue: any = value;
-    
-    // Convert string values to appropriate types
-    if (type === 'number') {
-      newValue = value ? Number(value) : undefined;
-    } else if (type === 'checkbox') {
-      newValue = (e.target as HTMLInputElement).checked;
-    }
-    
-    setFilters(prev => {
-      const newFilters = { ...prev, [name]: newValue };
-      onFilterChange(newFilters);
-      return newFilters;
-    });
+  // Priority categories that can be filtered on
+  const PRIORITY_CATEGORIES: { value: QuestionnaireCategory; label: string }[] = [
+    { value: 'sleepSchedule', label: 'Sleep Schedule' },
+    { value: 'wakeupSchedule', label: 'Wake-up Schedule' },
+    { value: 'cleanliness', label: 'Cleanliness' },
+    { value: 'noiseLevel', label: 'Noise Level' },
+    { value: 'visitors', label: 'Visitors' },
+    { value: 'pets', label: 'Pets' },
+    { value: 'studyHabits', label: 'Study Habits' },
+    { value: 'lifestyle', label: 'Lifestyle' },
+  ];
+
+  /**
+   * Notifies parent component whenever filters change
+   * Triggers the filtering logic in the parent component
+   */
+  useEffect(() => {
+    onFilterChange(filters);
+  }, [filters, onFilterChange]);
+
+  /**
+   * Updates a specific filter value and triggers re-filtering
+   * @param key - The filter property to update
+   * @param value - The new value for the filter
+   */
+  const updateFilter = (key: keyof FilterOptions, value: any) => {
+    setFilters(prev => ({
+      ...prev,
+      [key]: value === '' ? undefined : value
+    }));
   };
 
-  const handlePriorityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value, checked } = e.target;
-    const category = value as QuestionnaireCategory;
-    
+  /**
+   * Handles changes to priority category checkboxes
+   * Manages the array of selected priority categories for filtering
+   * @param category - The category being toggled
+   * @param checked - Whether the category is now checked
+   */
+  const handlePriorityCategoryChange = (category: QuestionnaireCategory, checked: boolean) => {
     setFilters(prev => {
-      let priorityCategories = [...(prev.priorityCategories || [])];
+      const currentCategories = prev.priorityCategories || [];
       
       if (checked) {
-        priorityCategories.push(category);
+        // Add category if not already present
+        if (!currentCategories.includes(category)) {
+          return {
+            ...prev,
+            priorityCategories: [...currentCategories, category]
+          };
+        }
       } else {
-        priorityCategories = priorityCategories.filter(c => c !== category);
+        // Remove category if present
+        return {
+          ...prev,
+          priorityCategories: currentCategories.filter(cat => cat !== category)
+        };
       }
       
-      const newFilters = { ...prev, priorityCategories };
-      onFilterChange(newFilters);
-      return newFilters;
+      return prev;
     });
   };
 
-  const handleReset = () => {
-    const resetFilters = {};
-    setFilters(resetFilters);
-    onFilterChange(resetFilters);
+  /**
+   * Clears all applied filters and resets the form
+   * Calls the parent component's clear filters callback
+   */
+  const handleClearFilters = () => {
+    setFilters({});
+    onClearFilters();
+  };
+
+  /**
+   * Checks if any filters are currently applied
+   * Used to show/hide the clear filters button
+   * @returns boolean - True if any filter has a value
+   */
+  const hasActiveFilters = () => {
+    return Object.keys(filters).some(key => {
+      const value = filters[key as keyof FilterOptions];
+      if (Array.isArray(value)) {
+        return value.length > 0;
+      }
+      return value !== undefined && value !== '';
+    });
+  };
+
+  /**
+   * Gets the count of active filters for display purposes
+   * @returns number - Number of active filters
+   */
+  const getActiveFilterCount = () => {
+    let count = 0;
+    Object.keys(filters).forEach(key => {
+      const value = filters[key as keyof FilterOptions];
+      if (value !== undefined && value !== '') {
+        if (Array.isArray(value)) {
+          if (value.length > 0) count++;
+        } else {
+          count++;
+        }
+      }
+    });
+    return count;
   };
 
   return (
     <div className="listing-filter">
-      <h2 className="filter-heading">Filter Listings</h2>
-      
-      <div className="filter-group">
-        <h3>Price Range</h3>
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <label htmlFor="minPrice">Min $</label>
-            <input
-              type="number"
-              id="minPrice"
-              name="minPrice"
-              value={filters.minPrice || ''}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-              min="0"
-            />
+      {/* Filter Toggle Button */}
+      <button
+        className={`filter-toggle ${isOpen ? 'open' : ''}`}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <span className="material-icon">tune</span>
+        <span>Filters</span>
+        {getActiveFilterCount() > 0 && (
+          <span className="filter-count">{getActiveFilterCount()}</span>
+        )}
+      </button>
+
+      {/* Filter Panel */}
+      {isOpen && (
+        <div className="filter-panel">
+          <div className="filter-header">
+            <h3>Filter Listings</h3>
+            {hasActiveFilters() && (
+              <button 
+                className="clear-filters-btn"
+                onClick={handleClearFilters}
+              >
+                Clear All
+              </button>
+            )}
           </div>
-          <div className="flex-1">
-            <label htmlFor="maxPrice">Max $</label>
-            <input
-              type="number"
-              id="maxPrice"
-              name="maxPrice"
-              value={filters.maxPrice || ''}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-              min="0"
-            />
-          </div>
-        </div>
-      </div>
-      
-      <div className="filter-group">
-        <h3>Room Configuration</h3>
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <label htmlFor="bedrooms">Bedrooms</label>
-            <select
-              id="bedrooms"
-              name="bedrooms"
-              value={filters.bedrooms || ''}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-            >
-              <option value="">Any</option>
-              <option value="1">1+</option>
-              <option value="2">2+</option>
-              <option value="3">3+</option>
-              <option value="4">4+</option>
-            </select>
-          </div>
-          <div className="flex-1">
-            <label htmlFor="bathrooms">Bathrooms</label>
-            <select
-              id="bathrooms"
-              name="bathrooms"
-              value={filters.bathrooms || ''}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-            >
-              <option value="">Any</option>
-              <option value="1">1+</option>
-              <option value="1.5">1.5+</option>
-              <option value="2">2+</option>
-              <option value="3">3+</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      
-      <div className="filter-group">
-        <h3>Location</h3>
-        <div className="mb-2">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              name="onCampus"
-              checked={filters.onCampus || false}
-              onChange={handleInputChange}
-              className="mr-2"
-            />
-            On Campus
-          </label>
-        </div>
-      </div>
-      
-      <div className="filter-group">
-        <h3>Distance</h3>
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <label htmlFor="maxDistance">Max Distance (miles)</label>
-            <input
-              type="number"
-              id="maxDistance"
-              name="maxDistance"
-              placeholder="e.g. 5"
-              min="0"
-              value={filters.maxDistance || ''}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-            />
-            {filters.maxDistance && (
-              <p className="text-sm text-gray-600 mt-1">
-                {initialFilters?.maxDistance === filters.maxDistance 
-                  ? "Using your preferred distance from questionnaire"
-                  : "Filtering by distance"}
-              </p>
+
+          <div className="filter-sections">
+            {/* Price Range */}
+            <div className="filter-section">
+              <h4>Price Range</h4>
+              <div className="price-inputs">
+                <input
+                  type="number"
+                  placeholder="Min price"
+                  value={filters.minPrice || ''}
+                  onChange={(e) => updateFilter('minPrice', parseInt(e.target.value) || undefined)}
+                />
+                <span>-</span>
+                <input
+                  type="number"
+                  placeholder="Max price"
+                  value={filters.maxPrice || ''}
+                  onChange={(e) => updateFilter('maxPrice', parseInt(e.target.value) || undefined)}
+                />
+              </div>
+            </div>
+
+            {/* Room Configuration */}
+            <div className="filter-section">
+              <h4>Room Configuration</h4>
+              <div className="room-selects">
+                <select
+                  value={filters.bedrooms || ''}
+                  onChange={(e) => updateFilter('bedrooms', parseInt(e.target.value) || undefined)}
+                >
+                  <option value="">Any bedrooms</option>
+                  {[1, 2, 3, 4, 5].map(num => (
+                    <option key={num} value={num}>{num}+ bedroom{num > 1 ? 's' : ''}</option>
+                  ))}
+                </select>
+                <select
+                  value={filters.bathrooms || ''}
+                  onChange={(e) => updateFilter('bathrooms', parseInt(e.target.value) || undefined)}
+                >
+                  <option value="">Any bathrooms</option>
+                  {[1, 2, 3, 4].map(num => (
+                    <option key={num} value={num}>{num}+ bathroom{num > 1 ? 's' : ''}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Location */}
+            <div className="filter-section">
+              <h4>Location</h4>
+              <div className="location-options">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={filters.onCampus === true}
+                    onChange={(e) => updateFilter('onCampus', e.target.checked ? true : undefined)}
+                  />
+                  On Campus Only
+                </label>
+                <div className="distance-input">
+                  <label>Max distance from campus (miles):</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="50"
+                    step="0.1"
+                    placeholder="Any distance"
+                    value={filters.maxDistance || ''}
+                    onChange={(e) => updateFilter('maxDistance', parseFloat(e.target.value) || undefined)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Amenities */}
+            <div className="filter-section">
+              <h4>Amenities</h4>
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={filters.pets === true}
+                  onChange={(e) => updateFilter('pets', e.target.checked ? true : undefined)}
+                />
+                Pet-Friendly
+              </label>
+            </div>
+
+            {/* Compatibility Filters - Only show if user has questionnaire */}
+            {showCompatibilityFilters && currentUser?.questionnaire && (
+              <>
+                <div className="filter-section">
+                  <h4>Compatibility</h4>
+                  <div className="compatibility-input">
+                    <label>Minimum compatibility score:</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="5"
+                      value={filters.minCompatibility || 0}
+                      onChange={(e) => updateFilter('minCompatibility', parseInt(e.target.value) || undefined)}
+                    />
+                    <span>{filters.minCompatibility || 0}%</span>
+                  </div>
+                </div>
+
+                <div className="filter-section">
+                  <h4>Priority Categories</h4>
+                  <p className="filter-description">
+                    Only show listings that match your preferences in these categories:
+                  </p>
+                  <div className="priority-checkboxes">
+                    {PRIORITY_CATEGORIES.map(({ value, label }) => (
+                      <label key={value} className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={filters.priorityCategories?.includes(value) || false}
+                          onChange={(e) => handlePriorityCategoryChange(value, e.target.checked)}
+                        />
+                        {label}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </>
             )}
           </div>
         </div>
-      </div>
-
-      <div className="filter-group">
-        <h3>Pets</h3>
-        <label className="flex items-center">
-          <input
-            type="checkbox"
-            name="pets"
-            checked={filters.pets || false}
-            onChange={handleInputChange}
-            className="mr-2"
-          />
-          Pet Friendly
-        </label>
-      </div>
-      
-      <div className="filter-group">
-        <h3>Compatibility</h3>
-        <label htmlFor="minCompatibility">Minimum Compatibility Score</label>
-        <p className="text-sm text-gray-600 mb-2">
-          Set to 0 to see all listings sorted by compatibility. Higher values will filter out listings below that score.
-        </p>
-        <div className="flex items-center">
-          <input
-            type="range"
-            id="minCompatibility"
-            name="minCompatibility"
-            min={minScore}
-            max={100}
-            step={10}
-            value={currentScore}
-            onChange={handleInputChange}
-            className="w-full"
-          />
-          <span className="ml-2">{currentScore}%</span>
-        </div>
-      </div>
-      
-      <div className="filter-group">
-        <h3>Priority Categories</h3>
-        <p className="text-sm text-gray-600 mb-2">Only show listings that match these categories from your questionnaire</p>
-        
-        <div className="space-y-1">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              value="sleepSchedule"
-              checked={filters.priorityCategories?.includes('sleepSchedule') || false}
-              onChange={handlePriorityChange}
-              className="mr-2"
-            />
-            Sleep Schedule
-          </label>
-          
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              value="cleanliness"
-              checked={filters.priorityCategories?.includes('cleanliness') || false}
-              onChange={handlePriorityChange}
-              className="mr-2"
-            />
-            Cleanliness
-          </label>
-          
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              value="noiseLevel"
-              checked={filters.priorityCategories?.includes('noiseLevel') || false}
-              onChange={handlePriorityChange}
-              className="mr-2"
-            />
-            Noise Level
-          </label>
-          
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              value="visitors"
-              checked={filters.priorityCategories?.includes('visitors') || false}
-              onChange={handlePriorityChange}
-              className="mr-2"
-            />
-            Visitors Policy
-          </label>
-          
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              value="pets"
-              checked={filters.priorityCategories?.includes('pets') || false}
-              onChange={handlePriorityChange}
-              className="mr-2"
-            />
-            Pet Preferences
-          </label>
-          
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              value="lifestyle"
-              checked={filters.priorityCategories?.includes('lifestyle') || false}
-              onChange={handlePriorityChange}
-              className="mr-2"
-            />
-            Lifestyle
-          </label>
-          
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              value="studyHabits"
-              checked={filters.priorityCategories?.includes('studyHabits') || false}
-              onChange={handlePriorityChange}
-              className="mr-2"
-            />
-            Study Habits
-          </label>
-        </div>
-      </div>
-      
-      <button
-        onClick={handleReset}
-        className="reset-filters-btn w-full p-2 bg-gray-200 rounded mt-4 hover:bg-gray-300"
-      >
-        Reset Filters
-      </button>
+      )}
     </div>
   );
 } 
